@@ -1,0 +1,57 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: lmwn_db
+      POSTGRES_USER: lmwn_user
+      POSTGRES_PASSWORD: 12345678
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lmwn_user -d lmwn_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "localhost", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - app-network
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lmwn_db
+  #     SPRING_DATASOURCE_USERNAME: lmwn_user
+  #     SPRING_DATASOURCE_PASSWORD: 12345678
+  #     SPRING_REDIS_HOST: redis
+  #     SPRING_REDIS_PORT: 6379
+  #   entrypoint: ["java", "-jar", "/app/products.jar"]
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
