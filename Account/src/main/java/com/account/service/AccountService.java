@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.account.model.Account;
+import com.account.model.DTO.AccountDTO;
 import com.account.repository.AccountRepository;
 
 @Service
@@ -22,8 +23,8 @@ public class AccountService {
         return accountRepository.findById(AccNo);
     }
 
-    public Account createAccount(Long IDCNo, String Name, Float Balance){
-        return accountRepository.save(new Account(IDCNo, Name, Balance));
+    public Account createAccount(AccountDTO accountDTO){
+        return accountRepository.save(new Account(accountDTO.getIdcNo(), accountDTO.getName(), accountDTO.getBalance()));
     }
 
     public void deleteAccount(Long AccNo){

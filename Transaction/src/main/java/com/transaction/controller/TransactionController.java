@@ -35,7 +35,11 @@ public class TransactionController {
     }
 
     @GetMapping("/GetTransByAccNo")
-    public ResponseEntity<List<Transaction>> getTransactionsByAccountNo(@RequestBody Long AccNo){
-        return ResponseEntity.status(HttpStatus.OK).body(transactionService.getAllTransactionByAccount(AccNo));
+    public ResponseEntity<?> getTransactionsByAccountNo(@RequestParam Long AccNo){
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(transactionService.getAllTransactionByAccount(AccNo));
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: "+e);
+        }
     }
 }

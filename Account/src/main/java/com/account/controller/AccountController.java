@@ -1,19 +1,13 @@
 package com.account.controller;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import com.account.model.DTO.AccountDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.account.model.Account;
 import com.account.service.AccountService;
@@ -27,79 +21,55 @@ public class AccountController {
     private AccountService accountService;
 
     @GetMapping("/checkAccount")
-    public ResponseEntity<?> checkAccountExists(@RequestBody AccountDTO request) {
-        try{
-            return ResponseEntity.status(HttpStatus.FOUND).body(accountService.checkBalance(request.getAccNo()).isPresent());
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    public ResponseEntity<?> checkAccountExists(@RequestParam Long accNo) {
+        try {
+            boolean exists = accountService.checkBalance(accNo).isPresent();
+            return ResponseEntity.ok(exists);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error checking account existence.");
         }
     }
 
-    /**
-     * Check the balance of an account by accNo.
-     *
-     * @param request.getAccNo() The account number to check.
-     * @return ResponseEntity with the account details or bad request if not found.
-     */
     @GetMapping("/checkBalance")
-    public ResponseEntity<?> checkBalance(@RequestBody AccountDTO request) {
+    public ResponseEntity<?> checkBalance(@RequestParam Long accNo) {
         try {
-            Account account = accountService.checkBalance(request.getAccNo()).get();
-            
-            return ResponseEntity.status(HttpStatus.FOUND).body(account);
-        }catch (IllegalArgumentException e){
+            Account account = accountService.checkBalance(accNo).orElseThrow(() -> new NoSuchElementException("Account not found."));
+            return ResponseEntity.ok(account);
+        } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error checking balance.");
         }
     }
 
-    /**
-     * Create a new account.
-     *
-     * @param account The account details to create.
-     * @return ResponseEntity with success or error message.
-     */
     @PostMapping("/createAccount")
-    public ResponseEntity<?> createAccount(@RequestBody Account account){
+    public ResponseEntity<?> createAccount(@RequestBody AccountDTO accountDTO) {
         try {
-            Account createdAccount = accountService.createAccount(
-                    account.getIDCNo(),
-                    account.getName(),
-                    account.getBalance()
-            );
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Account created successfully: " + createdAccount);
+            Account createdAccount = accountService.createAccount(accountDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error creating account: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error creating account: "+e.getMessage());
         }
     }
 
-    /**
-     * Delete an account by accNo.
-     *
-     * @param accNo The account number to delete.
-     */
     @DeleteMapping("/deleteAccount")
-    public ResponseEntity<String> deleteAccount(@RequestBody Long accNo) {
+    public ResponseEntity<String> deleteAccount(@RequestParam Long accNo) {
         try {
             accountService.deleteAccount(accNo);
-            return ResponseEntity.status(HttpStatus.OK).body("Account deleted successfully.");
+            return ResponseEntity.ok("Account deleted successfully.");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error deleting account: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error deleting account.");
         }
     }
 
     @GetMapping("/getAllAccounts")
     public ResponseEntity<?> getAllAccounts() {
         try {
-            List<Account> accounts = new ArrayList<>();
-            accountService.getAllAccounts().forEach(accounts::add);
-            return ResponseEntity.status(HttpStatus.FOUND).body(accounts);
-        }catch(Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: "+e);
+            List<Account> accounts = accountService.getAllAccounts();
+            return ResponseEntity.ok(accounts);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error fetching accounts.");
         }
     }
 }
+

@@ -3,6 +3,7 @@ package com.transaction.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.stereotype.Service;
 
 import com.transaction.model.Transaction;
@@ -10,7 +11,9 @@ import com.transaction.repository.TransactionRepository;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@EnableCaching
 public class TransactionService {
+    @Autowired
     private TransactionRepository transactionRepository;
 
     private final RestTemplate restTemplate;
@@ -21,7 +24,6 @@ public class TransactionService {
     }
 
     public Transaction transaction(Transaction transaction){
-
         return transactionRepository.save(transaction);
     }
 

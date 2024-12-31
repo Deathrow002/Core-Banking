@@ -3,7 +3,6 @@ package com.account.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.account.model.Account;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository

@@ -1,18 +1,19 @@
 package com.account.model;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @Entity
 @Table(name = "Account")
 @NoArgsConstructor
@@ -29,9 +30,10 @@ public class Account {
     private String Name;
 
     @Column(name = "Balance", nullable = false)
-    private Float Balance;
+    @PositiveOrZero
+    private BigDecimal Balance;
 
-    public Account(Long IDCNo, String Name, Float Balance){
+    public Account(Long IDCNo, String Name, BigDecimal Balance){
         this.IDCNo = IDCNo;
         this.Name = Name;
         this.Balance = Balance;

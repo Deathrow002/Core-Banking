@@ -1,26 +1,25 @@
 package com.account.model.DTO;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import java.math.BigDecimal;
+
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountDTO {
-    private Long AccNo;
+    private Long accNo;
 
-    private Long IDCNo;
+    private Long idcNo;
 
-    private String Name;
+    private String name;
 
-    private Float Balance;
+    private BigDecimal balance;
 
-    public AccountDTO(Long IDCNo, String Name, Float Balance){
-        this.IDCNo = IDCNo;
-        this.Name = Name;
-        this.Balance = Balance;
+    public AccountDTO(Long accNo, String name, BigDecimal Balance){
+        this.accNo = accNo;
+        this.name = name;
+        this.balance = balance;
     }
 }
