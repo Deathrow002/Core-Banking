@@ -1,5 +1,6 @@
 package com.transaction.controller;
 
+import com.transaction.model.DTO.TransactionDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,18 +21,45 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @PostMapping("/transaction")
-    public ResponseEntity<Transaction> transaction(@RequestBody Long AccNoOwner, @RequestBody Long AccNoReceive, @RequestBody Float Amount){
-        return ResponseEntity.status(HttpStatus.OK).body(transactionService.transaction(new Transaction(AccNoOwner, AccNoReceive, Amount, TransacType.Transaction)));
+    public ResponseEntity<?> transaction(@RequestBody TransactionDTO transactionDTO){
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(transactionService.transaction(
+                    new Transaction(
+                            transactionDTO.getAccNoOwner(),
+                            transactionDTO.getAccNoReceive(),
+                            transactionDTO.getAmount(),
+                            TransacType.Transaction)));
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: "+e);
+        }
     }
 
     @PostMapping("/deposit")
-    public ResponseEntity<Transaction> deposit(@RequestBody Long AccNoOwner, @RequestBody Long AccNoReceive, @RequestBody Float Amount){
-        return ResponseEntity.status(HttpStatus.OK).body(transactionService.transaction(new Transaction(AccNoOwner, AccNoReceive, Amount, TransacType.Deposit)));
+    public ResponseEntity<?> deposit(@RequestBody TransactionDTO transactionDTO){
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(transactionService.transaction(
+                    new Transaction(
+                            transactionDTO.getAccNoOwner(),
+                            transactionDTO.getAccNoOwner(),
+                            transactionDTO.getAmount(),
+                            TransacType.Deposit)));
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: "+e);
+        }
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<Transaction> withdraw(@RequestBody Long AccNoOwner, @RequestBody Long AccNoReceive, @RequestBody Float Amount){
-        return ResponseEntity.status(HttpStatus.OK).body(transactionService.transaction(new Transaction(AccNoOwner, AccNoReceive, Amount, TransacType.Withdraw)));
+    public ResponseEntity<?> withdraw(@RequestBody TransactionDTO transactionDTO){
+        try{
+            return ResponseEntity.status(HttpStatus.OK).body(transactionService.transaction(
+                    new Transaction(
+                            transactionDTO.getAccNoOwner(),
+                            transactionDTO.getAccNoReceive(),
+                            transactionDTO.getAmount(),
+                            TransacType.Withdraw)));
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: "+e);
+        }
     }
 
     @GetMapping("/GetTransByAccNo")

@@ -6,29 +6,25 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionDTO {
-    private Long TransacID;
-
-    private Long AccNoOwner;
-
-    private Long AccNoReceive;
-
-    private Float Amount;
-
+    private Long transacId;
+    private Long accNoOwner;
+    private Long accNoReceive;
+    private BigDecimal amount;
     private TransacType transacType;
+    private Date transacAt;
 
-    private Date TransacAt;
-
-    public TransactionDTO(Long AccNoOwner, Long AccNoReceive, Float Amount, TransacType transacType){
-        this.AccNoOwner = AccNoOwner;
-        this.AccNoReceive = AccNoReceive;
-        this.Amount = Amount;
+    public TransactionDTO(Long accNoOwner, Long accNoReceive, BigDecimal amount, TransacType transacType) {
+        this.accNoOwner = accNoOwner;
+        this.accNoReceive = accNoReceive;
+        this.amount = amount;
         this.transacType = transacType;
-        this.TransacAt = new Date();
+        this.transacAt = new Date();
     }
 }

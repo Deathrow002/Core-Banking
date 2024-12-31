@@ -1,5 +1,6 @@
 package com.transaction.model;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import jakarta.persistence.Column;
@@ -36,7 +37,7 @@ public class Transaction {
     private Long AccNoReceive;
 
     @Column(name = "Amount", nullable = false)
-    private Float Amount;
+    private BigDecimal Amount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "TransacType", nullable = false)
@@ -46,7 +47,7 @@ public class Transaction {
     @Temporal(TemporalType.TIMESTAMP)
     private Date TransacAt;
 
-    public Transaction(Long AccNoOwner, Long AccNoReceive, Float Amount, TransacType transacType){
+    public Transaction(Long AccNoOwner, Long AccNoReceive, BigDecimal Amount, TransacType transacType){
         this.AccNoOwner = AccNoOwner;
         this.AccNoReceive = AccNoReceive;
         this.Amount = Amount;
