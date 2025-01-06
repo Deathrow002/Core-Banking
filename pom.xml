@@ -16,7 +16,6 @@
 		<module>Account</module>
 		<module>transaction</module>
 		<module>discovery</module>
-		<module>Test</module>
 	</modules>
 	<name>core-bank</name>
 	<description>Demo project for Spring Boot</description>
