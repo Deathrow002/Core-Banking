@@ -1,6 +1,7 @@
 package com.transaction.model;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Date;
 
 import jakarta.persistence.Column;
@@ -26,15 +27,15 @@ import lombok.Setter;
 @Table(name = "Transaction")
 public class Transaction {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "TransacID", nullable = false)
-    private Long TransacID;
+    private BigInteger TransacID;
 
     @Column(name = "AccNoOwner", nullable = false)
-    private Long AccNoOwner;
+    private BigInteger AccNoOwner;
 
     @Column(name = "AccNoReceive", nullable = false)
-    private Long AccNoReceive;
+    private BigInteger AccNoReceive;
 
     @Column(name = "Amount", nullable = false)
     private BigDecimal Amount;
@@ -47,7 +48,7 @@ public class Transaction {
     @Temporal(TemporalType.TIMESTAMP)
     private Date TransacAt;
 
-    public Transaction(Long AccNoOwner, Long AccNoReceive, BigDecimal Amount, TransacType transacType){
+    public Transaction(BigInteger AccNoOwner, BigInteger AccNoReceive, BigDecimal Amount, TransacType transacType){
         this.AccNoOwner = AccNoOwner;
         this.AccNoReceive = AccNoReceive;
         this.Amount = Amount;

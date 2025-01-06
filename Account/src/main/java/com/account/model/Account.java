@@ -1,6 +1,7 @@
 package com.account.model;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,10 +22,10 @@ import lombok.NoArgsConstructor;
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long AccNo;
+    private BigInteger AccNo;
 
     @Column(name = "IDCNo", nullable = false)
-    private Long IDCNo;
+    private BigInteger IDCNo;
 
     @Column(name = "Name", nullable  = false)
     private String Name;
@@ -33,7 +34,7 @@ public class Account {
     @PositiveOrZero
     private BigDecimal Balance;
 
-    public Account(Long IDCNo, String Name, BigDecimal Balance){
+    public Account(BigInteger IDCNo, String Name, BigDecimal Balance){
         this.IDCNo = IDCNo;
         this.Name = Name;
         this.Balance = Balance;
