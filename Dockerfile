@@ -15,7 +15,7 @@ RUN git clone https://github.com/Deathrow002/Core-Banking.git .
 
 # Build the application (assumes Maven is used)
 RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
-RUN mvn clean package -DskipTests
+RUN mvn clean package
 
 # Expose the port
 EXPOSE 8080
