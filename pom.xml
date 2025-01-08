@@ -14,8 +14,8 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>Account</module>
-		<module>transaction</module>
-		<module>discovery</module>
+		<module>Transaction</module>
+		<module>Discovery</module>
 	</modules>
 	<name>core-bank</name>
 	<description>Demo project for Spring Boot</description>
