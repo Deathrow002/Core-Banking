@@ -30,24 +30,24 @@ services:
       timeout: 5s
       retries: 5
 
-  # app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   depends_on:
-  #     - postgres
-  #     - redis
-  #   ports:
-  #     - "8080:8080"
-  #   networks:
-  #     - app-network
-  #   environment:
-  #     SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lmwn_db
-  #     SPRING_DATASOURCE_USERNAME: lmwn_user
-  #     SPRING_DATASOURCE_PASSWORD: 12345678
-  #     SPRING_REDIS_HOST: redis
-  #     SPRING_REDIS_PORT: 6379
-  #   entrypoint: ["java", "-jar", "/app/products.jar"]
+  app:
+     build:
+       context: .
+       dockerfile: Dockerfile
+     depends_on:
+       - postgres
+       - redis
+     ports:
+       - "8080:8080"
+     networks:
+       - app-network
+     environment:
+       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lmwn_db
+       SPRING_DATASOURCE_USERNAME: lmwn_user
+       SPRING_DATASOURCE_PASSWORD: 12345678
+       SPRING_REDIS_HOST: redis
+       SPRING_REDIS_PORT: 6379
+     entrypoint: ["java", "-jar", "/app/products.jar"]
 
 volumes:
   postgres_data:
