@@ -21,8 +21,8 @@ public class TransactionApplication {
         SpringApplication.run(TransactionApplication.class, args);
     }
 
-    @PostConstruct
-    public void init() {
-        discoveryServiceChecker.waitForDiscoveryService();
-    }
+//    @PostConstruct
+//    public void init() {
+//        discoveryServiceChecker.waitForDiscoveryService();
+//    }
 }

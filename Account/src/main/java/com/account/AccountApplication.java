@@ -19,8 +19,8 @@ public class AccountApplication {
         SpringApplication.run(AccountApplication.class, args);
     }
 
-    @PostConstruct
-    public void init() {
-        discoveryServiceChecker.waitForDiscoveryService();
-    }
+//    @PostConstruct
+//    public void init() {
+//        discoveryServiceChecker.waitForDiscoveryService();
+//    }
 }
