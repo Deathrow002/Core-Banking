@@ -96,10 +96,10 @@ public class TransactionController {
             AccountPayload OwnerPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoOwner());
 
             // Deduct balance from Owner and add it to Receiver
-            OwnerPayload.setBalance(OwnerPayload.getBalance().subtract(transactionDTO.getAmount()));
+            OwnerPayload.setBalance(OwnerPayload.getBalance().add(transactionDTO.getAmount()));
 
             // Update Account Balances and Record Transaction
-            boolean ownerUpdateSuccess = transactionService.updateAccountBalance(updateAccountUrl, OwnerPayload);
+            transactionService.updateAccountBalance(updateAccountUrl, OwnerPayload);
 
             if (OwnerPayload.getBalance().compareTo(transactionDTO.getAmount()) >= 0){
                 return ResponseEntity.status(HttpStatus.OK).body(transactionService.transaction(
@@ -131,7 +131,7 @@ public class TransactionController {
             OwnerPayload.setBalance(OwnerPayload.getBalance().subtract(transactionDTO.getAmount()));
 
             // Update Account Balances and Record Transaction
-            boolean ownerUpdateSuccess = transactionService.updateAccountBalance(updateAccountUrl, OwnerPayload);
+            transactionService.updateAccountBalance(updateAccountUrl, OwnerPayload);
 
             if (OwnerPayload.getBalance().compareTo(transactionDTO.getAmount()) >= 0){
                 return ResponseEntity.status(HttpStatus.OK).body(transactionService.transaction(

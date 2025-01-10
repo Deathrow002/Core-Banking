@@ -11,6 +11,14 @@ services:
       - "5432:5432"
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lmwn_user -d lmwn_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s  # Allow PostgreSQL some time to initialize
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:alpine
@@ -18,58 +26,64 @@ services:
       - "6379:6379"
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "localhost", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  account:
+  discovery-service:
     build:
-      context: .
+      context: ./Discovery
       dockerfile: Dockerfile
-    depends_on:
-      - postgres
-      - redis
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lmwn_db
-      SPRING_DATASOURCE_USERNAME: lmwn_user
-      SPRING_DATASOURCE_PASSWORD: 12345678
     ports:
-      - "8081:8080"  # Exposing Account service on port 8081
+      - "8761:8761"
     networks:
       - app-network
-    entrypoint: ["java", "-jar", "/app/Account.jar"]
-
-  transaction:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    depends_on:
-      - postgres
-      - redis
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lmwn_db
-      SPRING_DATASOURCE_USERNAME: lmwn_user
-      SPRING_DATASOURCE_PASSWORD: 12345678
+      spring.application.name: discovery-service
+      eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
+    command: ["java", "-jar", "/app/discovery-service.jar"]
+
+  account-service:
+    build:
+      context: ./Account
+      dockerfile: Dockerfile
     ports:
-      - "8082:8080"  # Exposing Transaction service on port 8082
+      - "8081:8081"
     networks:
       - app-network
-    entrypoint: ["java", "-jar", "/app/Transaction.jar"]
-
-  discovery:
-    build:
-      context: .
-      dockerfile: Dockerfile
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      discovery-service:
+        condition: service_started
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lmwn_db
-      SPRING_DATASOURCE_USERNAME: lmwn_user
-      SPRING_DATASOURCE_PASSWORD: 12345678
+      spring.application.name: account-service
+      eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
+    command: ["java", "-jar", "/app/account-service.jar"]
+
+  transaction-service:
+    build:
+      context: ./Transaction
+      dockerfile: Dockerfile
     ports:
-      - "8083:8080"  # Exposing Discovery service on port 8083
+      - "8082:8082"
     networks:
       - app-network
-    entrypoint: ["java", "-jar", "/app/Discovery.jar"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-service:
+        condition: service_started
+    environment:
+      spring.application.name: transaction-service
+      eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
+    command: ["java", "-jar", "/app/transaction-service.jar"]
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  postgres_data:

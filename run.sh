@@ -1,13 +1,33 @@
 #!/bin/bash
 
-# Start Account service
-nohup java -jar /app/Account.jar &
+# Define a usage function
+usage() {
+  echo "Usage: $0 {account|transaction|discovery}"
+  exit 1
+}
 
-# Start Transaction service
-nohup java -jar /app/Transaction.jar &
+# Check for the provided argument
+if [ $# -eq 0 ]; then
+  usage
+fi
 
-# Start Discovery service
-nohup java -jar /app/Discovery.jar &
+SERVICE=$1
 
-# Wait indefinitely (or you could include something else to keep the container running)
-wait
+# Start the selected service
+case $SERVICE in
+  account)
+    echo "Starting Account Service..."
+    java -jar /app/Account.jar
+    ;;
+  transaction)
+    echo "Starting Transaction Service..."
+    java -jar /app/Transaction.jar
+    ;;
+  discovery)
+    echo "Starting Discovery Service..."
+    java -jar /app/Discovery.jar
+    ;;
+  *)
+    usage
+    ;;
+esac

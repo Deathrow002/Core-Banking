@@ -34,7 +34,7 @@ public class Transaction {
     @Column(name = "AccNoOwner", nullable = false)
     private BigInteger AccNoOwner;
 
-    @Column(name = "AccNoReceive", nullable = false)
+    @Column(name = "AccNoReceive")
     private BigInteger AccNoReceive;
 
     @Column(name = "Amount", nullable = false)
