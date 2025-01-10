@@ -14,8 +14,8 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnableCaching
 public class TransactionApplication {
 
-    @Autowired
-    private DiscoveryServiceChecker discoveryServiceChecker;
+//    @Autowired
+//    private DiscoveryServiceChecker discoveryServiceChecker;
 
     public static void main(String[] args) {
         SpringApplication.run(TransactionApplication.class, args);
