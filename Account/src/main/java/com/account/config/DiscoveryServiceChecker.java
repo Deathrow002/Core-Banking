@@ -3,7 +3,7 @@ package com.account.config;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-@Component
+//@Component
 public class DiscoveryServiceChecker {
 
     private final RestTemplate restTemplate = new RestTemplate();
