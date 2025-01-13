@@ -19,3 +19,6 @@ WORKDIR /app
 COPY --from=builder /app/Discovery/target/Discovery-1.0-SNAPSHOT.jar discovery-service.jar
 EXPOSE 8081
 ENTRYPOINT ["java", "-jar", "discovery-service.jar"]
+
+# Health check
+HEALTHCHECK --interval=60s --retries=5 --start-period=5s --timeout=10s CMD wget --no-verbose --tries=1 --spider localhost:8000/api/actuator/health || exit 1
