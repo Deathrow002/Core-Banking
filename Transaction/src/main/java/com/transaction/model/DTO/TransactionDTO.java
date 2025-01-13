@@ -1,7 +1,6 @@
 package com.transaction.model.DTO;
 
 import com.transaction.model.TransacType;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +9,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.Date;
 
 @Data
 @NoArgsConstructor

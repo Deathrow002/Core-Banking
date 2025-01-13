@@ -60,6 +60,9 @@ services:
         condition: service_started
     environment:
       spring.application.name: account-service
+      spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
+      spring.datasource.username: lmwn_user
+      spring.datasource.password: 12345678
       eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
     command: ["java", "-jar", "/app/account-service.jar"]
 
@@ -76,8 +79,13 @@ services:
         condition: service_healthy
       discovery-service:
         condition: service_started
+      account-service:
+        condition: service_started
     environment:
       spring.application.name: transaction-service
+      spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
+      spring.datasource.username: lmwn_user
+      spring.datasource.password: 12345678
       eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
     command: ["java", "-jar", "/app/transaction-service.jar"]
 
