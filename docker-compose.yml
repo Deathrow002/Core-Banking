@@ -44,6 +44,11 @@ services:
       spring.application.name: discovery-service
       eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
     command: ["java", "-jar", "/app/discovery-service.jar"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   account-service:
     build:
@@ -65,6 +70,12 @@ services:
       spring.datasource.password: 12345678
       eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
     command: ["java", "-jar", "/app/account-service.jar"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   transaction-service:
     build:
@@ -88,6 +99,12 @@ services:
       spring.datasource.password: 12345678
       eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
     command: ["java", "-jar", "/app/transaction-service.jar"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:
   app-network:
