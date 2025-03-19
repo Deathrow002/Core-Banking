@@ -6,34 +6,41 @@ LABEL authors="krittamettanboontor"
 WORKDIR /app
 
 # Copy local source code to the container
-COPY . .
+#COPY . .
 
 # Pass repository URL and branch as arguments
-#ARG REPO_URL=https://github.com/Deathrow002/Core-Banking.git
-#ARG BRANCH=master
+ARG REPO_URL=https://github.com/Deathrow002/Core-Banking.git
+ARG BRANCH=master
 
 # Clone the repository and debug
-#RUN git clone --branch ${BRANCH} ${REPO_URL} .
+RUN git clone --branch ${BRANCH} ${REPO_URL} .
 
-# Build the project (skip tests for faster build)
+# Now build Discovery service
 RUN mvn clean package -DskipTests -X
 
 # Check if JAR is created and verify the structure
 RUN ls -l /app/Discovery/target
 
-# Runtime stage
+# Stage 2: Build the actual JAR file (using the resolved dependencies)
 FROM openjdk:21-jdk-slim
 
-LABEL authors="Krittamet Tanboontor"
+LABEL authors="krittamettanboontor"
 
 WORKDIR /app
 
-# Install curl for debugging & health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Copy the necessary files (including the resolved dependencies)
+COPY --from=dependency-builder /app /app
 
-# Copy the built JAR from the build stage
-COPY --from=builder /app/Discovery/target/Discovery-1.0-SNAPSHOT.jar /app/discovery-service.jar
+# Build the Discovery module
+RUN mvn clean package -DskipTests
 
-EXPOSE 8761
+# Runtime stage: Run the application
+FROM openjdk:21-jdk-slim
 
-ENTRYPOINT ["java", "-jar", "discovery-service.jar"]
+RUN apt update ; DEBIAN_FRONTEND=noninteractive apt install -y wget
+
+WORKDIR /app
+
+# Copy the built JAR from the builder stage
+COPY --from=builder /app/Discovery/target/Discovery-1.0-SNAPSHOT.jar discovery-service.jar
+#COPY target/Discovery-1.0-SNAPSHOT.jar discovery-service.jar
