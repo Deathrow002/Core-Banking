@@ -6,14 +6,14 @@ LABEL authors="krittamettanboontor"
 WORKDIR /app
 
 # Copy local source code to the container
-#COPY . .
+COPY . .
 
 # Pass repository URL and branch as arguments
-ARG REPO_URL=https://github.com/Deathrow002/Core-Banking.git
-ARG BRANCH=master
+#ARG REPO_URL=https://github.com/Deathrow002/Core-Banking.git
+#ARG BRANCH=master
 
 # Clone the repository and debug
-RUN git clone --branch ${BRANCH} ${REPO_URL} .
+#RUN git clone --branch ${BRANCH} ${REPO_URL} .
 
 # Now build Discovery service
 RUN mvn clean package -DskipTests -X
