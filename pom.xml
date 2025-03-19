@@ -13,9 +13,9 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<modules>
-		<module>Account</module>
-		<module>Transaction</module>
 		<module>Discovery</module>
+		<module>Transaction</module>
+		<module>Account</module>
 	</modules>
 	<name>core-bank</name>
 	<description>Demo project for Spring Boot</description>

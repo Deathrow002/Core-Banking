@@ -9,8 +9,8 @@ WORKDIR /app
 COPY . .
 
 # Pass repository URL and branch as arguments
-# ARG REPO_URL=https://github.com/Deathrow002/Core-Banking.git
-# ARG BRANCH=master
+ARG REPO_URL=https://github.com/Deathrow002/Core-Banking.git
+ARG BRANCH=master
 
 # Clone the repository and debug
 # RUN git clone --branch ${BRANCH} ${REPO_URL} .
