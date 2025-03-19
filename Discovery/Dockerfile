@@ -37,7 +37,7 @@ RUN mvn clean package -DskipTests
 # Runtime stage: Run the application
 FROM openjdk:21-jdk-slim
 
-RUN apt update ; DEBIAN_FRONTEND=noninteractive apt install -y wget
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y wget curl && apt-get clean
 
 WORKDIR /app
 
