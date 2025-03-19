@@ -41,8 +41,6 @@ services:
     environment:
       spring.application.name: discovery-service
       eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka/
-      eureka.client.register-with-eureka: false
-      eureka.client.fetch.registry: false
     command: ["java", "-jar", "/app/discovery-service.jar"]
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent http://discovery-service:8761/actuator/health || exit 1"]
