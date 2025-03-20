@@ -19,16 +19,17 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   redis:
-    image: redis:alpine
+    image: redis:6.2
     ports:
       - "6379:6379"
     networks:
       - core-bank-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-h", "redis", "-p", "6379", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
     volumes:
       - redis_data:/data
 
@@ -72,8 +73,8 @@ services:
       spring.datasource.username: lmwn_user
       spring.datasource.password: 12345678
       eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
-#      spring.redis.host: redis  # Ensure this is 'redis'
-#      spring.redis.port: 6379
+      spring.redis.host: redis  # Ensure this is 'redis'
+      spring.redis.port: 6379
     command: [ "java", "-jar", "/app/account-service.jar" ]
     healthcheck:
       test: [ "CMD", "curl", "--fail", "--silent", "http://localhost:8081/actuator/health" ]
@@ -104,8 +105,8 @@ services:
       spring.datasource.username: lmwn_user
       spring.datasource.password: 12345678
       eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
-#      spring.redis.host: redis
-#      spring.redis.port: 6379
+      spring.redis.host: redis
+      spring.redis.port: 6379
     command: ["java", "-jar", "/app/transaction-service.jar"]
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8082/actuator/health"]
