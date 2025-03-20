@@ -13,7 +13,11 @@ ARG REPO_URL=https://github.com/Deathrow002/Core-Banking.git
 ARG BRANCH=master
 
 # Clone the repository and debug
-RUN git clone --branch ${BRANCH} ${REPO_URL} .
+RUN git clone --branch ${BRANCH} ${REPO_URL} . && \
+    cd /app && \
+    git fetch origin && \
+    git checkout ${BRANCH} && \
+    git pull origin ${BRANCH}
 
 # Now build Discovery service
 RUN mvn clean package -DskipTests -X

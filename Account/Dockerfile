@@ -6,14 +6,18 @@ LABEL authors="krittamettanboontor"
 WORKDIR /app
 
 # Copy local source code to the container
-COPY . .
+#COPY . .
 
 # Pass repository URL and branch as arguments
-#ARG REPO_URL=https://github.com/Deathrow002/Core-Banking.git
-#ARG BRANCH=master
+ARG REPO_URL=https://github.com/Deathrow002/Core-Banking.git
+ARG BRANCH=master
 
 # Clone the repository and debug
-#RUN git clone --branch ${BRANCH} ${REPO_URL} .
+RUN git clone --branch ${BRANCH} ${REPO_URL} . && \
+    cd /app && \
+    git fetch origin && \
+    git checkout ${BRANCH} && \
+    git pull origin ${BRANCH}
 
 # Now build Discovery service
 RUN mvn clean package -DskipTests -X
@@ -21,7 +25,7 @@ RUN mvn clean package -DskipTests -X
 # Runtime stage
 FROM openjdk:21-jdk-slim
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y wget curl && apt-get clean
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y wget curl && apt-get clean && apt-get install -y telnet
 
 WORKDIR /app
 
