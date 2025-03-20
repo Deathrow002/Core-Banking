@@ -25,7 +25,9 @@ RUN mvn clean package -DskipTests -X
 # Runtime stage
 FROM openjdk:21-jdk-slim
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y wget curl && apt-get clean
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y wget curl redis-tools && \
+    apt-get clean
 
 WORKDIR /app
 
