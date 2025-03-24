@@ -25,8 +25,8 @@ public class TransactionController {
     @Autowired
     private AppConfig appConfig;
 
-    String checkAccountUrl = "http://ACCOUNT-SERVICE/accounts/validateAccount";
-    String checkBalanceUrl = "http://ACCOUNT-SERVICE/accounts/getAccount";
+    String checkAccountUrl  = "http://ACCOUNT-SERVICE/accounts/validateAccount";
+    String checkBalanceUrl  = "http://ACCOUNT-SERVICE/accounts/getAccount";
     String updateAccountUrl = "http://ACCOUNT-SERVICE/accounts/updateAccountBalance";
 
     private boolean isValidAccount(BigInteger accountNumber) {
