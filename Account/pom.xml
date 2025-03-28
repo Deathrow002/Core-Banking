@@ -9,7 +9,7 @@
         <relativePath>../pom.xml</relativePath> <!-- Adjust the path if necessary -->
     </parent>
 
-    <groupId>com</groupId>
+    <groupId>com.account</groupId>
     <artifactId>Account</artifactId>
     <version>1.0-SNAPSHOT</version>
 
