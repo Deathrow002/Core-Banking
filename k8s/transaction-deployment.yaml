@@ -15,43 +15,52 @@ spec:
       containers:
         - name: transaction-service
           image: core-bank-transaction-service:latest
+          imagePullPolicy: Never  # Prevents Kubernetes from trying to pull the image
           ports:
             - containerPort: 8082
           env:
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres:5432/lmwn_db
-            - name: SPRING_DATASOURCE_USERNAME
-              value: lmwn_user
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: 12345678
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://discovery-service:8761/eureka
-            - name: SPRING_REDIS_HOST
-              value: redis
-            - name: SPRING_REDIS_PORT
+            - name: spring.application.name
+              value: "transaction-service"
+            - name: spring.datasource.url
+              value: "jdbc:postgresql://postgres:5432/lmwn_db"
+            - name: spring.datasource.username
+              value: "lmwn_user"
+            - name: spring.datasource.password
+              value: "12345678"
+            - name: eureka.client.service-url.defaultZone
+              value: "http://discovery-service:8761/eureka"
+            - name: spring.redis.host
+              value: "redis"
+            - name: spring.redis.port
               value: "6379"
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8082
-            initialDelaySeconds: 30
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8082
-            initialDelaySeconds: 30
-            periodSeconds: 30
+          command: ["java", "-jar", "/app/transaction-service.jar"]
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: transaction-service
 spec:
+  type: ClusterIP
+  ports:
+    - port: 8082
+      targetPort: 8082
   selector:
     app: transaction-service
-  ports:
-    - protocol: TCP
-      port: 8082
-      targetPort: 8082
-  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: transaction-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: transaction.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: transaction-service
+                port:
+                  number: 8082

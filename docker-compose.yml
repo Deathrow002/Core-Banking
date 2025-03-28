@@ -57,27 +57,27 @@ services:
 
   discovery-service:
     build:
-      context: ./Discovery
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Discovery/Dockerfile
     ports:
       - "8761:8761"
     networks:
       - core-bank-network
     environment:
       spring.application.name: discovery-service
-      eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka/
+      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
     command: ["java", "-jar", "/app/discovery-service.jar"]
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent http://discovery-service:8761/actuator/health || exit 1"]
-      interval: 30s
+      test: [ "CMD-SHELL", "curl --fail --silent http://discovery-service:8761/actuator/health" ]
+      interval: 20s
       timeout: 10s
-      retries: 5
-      start_period: 60s
+      retries: 10
+      start_period: 300s  # Increase start period to 5 minutes
 
   account-service:
     build:
-      context: ./Account
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Account/Dockerfile
     ports:
       - "8081:8081"
     networks:
@@ -105,11 +105,10 @@ services:
       retries: 3
       start_period: 40s
 
-
   transaction-service:
     build:
-      context: ./Transaction
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Transaction/Dockerfile
     ports:
       - "8082:8082"
     networks:
@@ -132,6 +131,27 @@ services:
     command: ["java", "-jar", "/app/transaction-service.jar"]
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  gateway-service:
+    build:
+      context: .
+      dockerfile: Gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - core-bank-network
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    environment:
+      eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
+    command: ["java", "-jar", "/app/gateway-service.jar"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3

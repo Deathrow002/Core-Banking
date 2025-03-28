@@ -15,18 +15,30 @@ spec:
       containers:
         - name: postgres
           image: postgres:15-alpine
-          ports:
-            - containerPort: 5432
           env:
             - name: POSTGRES_DB
-              value: lmwn_db
+              value: "lmwn_db"
             - name: POSTGRES_USER
-              value: lmwn_user
+              value: "lmwn_user"
             - name: POSTGRES_PASSWORD
-              value: 12345678
+              value: "12345678"
+          ports:
+            - containerPort: 5432
           volumeMounts:
-            - mountPath: /var/lib/postgresql/data
-              name: postgres-data
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          livenessProbe:
+            exec:
+              command:
+                - "pg_isready"
+                - "-U"
+                - "lmwn_user"
+                - "-d"
+                - "lmwn_db"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
@@ -37,13 +49,11 @@ kind: Service
 metadata:
   name: postgres
 spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
   selector:
     app: postgres
-  ports:
-    - protocol: TCP
-      port: 5432
-      targetPort: 5432
-  type: ClusterIP
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -54,4 +64,4 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: "1Gi"
