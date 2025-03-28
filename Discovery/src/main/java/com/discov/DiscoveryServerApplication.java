@@ -1,13 +1,1 @@
-package com.discov;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
-
-@SpringBootApplication
-@EnableEurekaServer
-public class DiscoveryServerApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(DiscoveryServerApplication.class, args);
-    }
-}
+// File removed as Discovery Service is merged into Gateway Service.
