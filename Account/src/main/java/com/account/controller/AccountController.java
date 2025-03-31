@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import com.account.model.Account;
 import com.account.service.AccountService;
@@ -25,10 +27,11 @@ public class AccountController {
     private AccountService accountService;
 
     @GetMapping("/validateAccount")
+    @Cacheable(value = "accountExistsCache", key = "#accNo")
     public ResponseEntity<?> checkAccountExists(@RequestParam BigInteger accNo) {
         try {
-            boolean validate = accountService.checkBalance(accNo).isPresent();
-            if (validate) {
+            boolean exists = accountService.existsById(accNo);
+            if (exists) {
                 return ResponseEntity.ok(true);
             } else {
                 // If account does not exist, return 404 (Not Found)
@@ -42,6 +45,7 @@ public class AccountController {
     }
 
     @GetMapping("/getAccount")
+    @Cacheable(value = "accountCache", key = "#accNo")
     public ResponseEntity<?> getAccount(@RequestParam BigInteger accNo) {
         try {
             Account account = accountService.checkBalance(accNo).orElseThrow(() -> new NoSuchElementException("Account not found."));
@@ -74,6 +78,7 @@ public class AccountController {
     }
 
     @PutMapping("/updateAccountBalance")
+    @CacheEvict(value = {"accountExistsCache", "accountCache"}, key = "#accountDTO.accNo")
     public ResponseEntity<?> updateAccountBalance(@RequestBody AccountDTO accountDTO){
         try{
             Account updatedAccount = accountService.updateAccountBalance(accountDTO);
@@ -84,6 +89,7 @@ public class AccountController {
     }
 
     @DeleteMapping("/deleteAccount")
+    @CacheEvict(value = {"accountExistsCache", "accountCache"}, key = "#accNo")
     public ResponseEntity<String> deleteAccount(@RequestParam BigInteger accNo) {
         try {
             accountService.deleteAccount(accNo);

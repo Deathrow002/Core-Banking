@@ -9,4 +9,5 @@ import java.math.BigInteger;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, BigInteger> {
+    boolean existsById(BigInteger id);
 }

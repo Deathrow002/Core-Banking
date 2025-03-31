@@ -49,4 +49,8 @@ public class AccountService {
     public List<Account> getAllAccounts(){
         return accountRepository.findAll();
     }
+
+    public boolean existsById(BigInteger AccNo) {
+        return accountRepository.existsById(AccNo);
+    }
 }
