@@ -1,4 +1,4 @@
-package com.transaction.kafkaconfig;
+package com.transaction.service.kafka;
 
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;

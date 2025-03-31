@@ -36,8 +36,6 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
     networks:
@@ -89,6 +87,8 @@ services:
         condition: service_healthy
       discovery-service:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
     environment:
       spring.application.name: account-service
       spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
@@ -120,6 +120,8 @@ services:
         condition: service_healthy
       account-service:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
     environment:
       spring.application.name: transaction-service
       spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
@@ -136,26 +138,42 @@ services:
       retries: 3
       start_period: 40s
 
-  gateway-service:
-    build:
-      context: .
-      dockerfile: Gateway/Dockerfile
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - "8080:8080"
+      - "2181:2181"
     networks:
       - core-bank-network
+    healthcheck:
+      test: ["CMD", "zookeeper-shell", "localhost:2181", "ls", "/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
     depends_on:
-      discovery-service:
+      zookeeper:
         condition: service_healthy
     environment:
-      eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
-    command: ["java", "-jar", "/app/gateway-service.jar"]
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    networks:
+      - core-bank-network
     healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 networks:
   core-bank-network:

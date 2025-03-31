@@ -1,4 +1,4 @@
-package com.account.service;
+package com.account.service.kafka;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;

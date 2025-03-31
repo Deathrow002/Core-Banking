@@ -24,6 +24,6 @@ WORKDIR /app
 # Copy the built JAR from the builder stage
 COPY --from=builder /app/Discovery/target/Discovery-1.0-SNAPSHOT.jar discovery-service.jar
 
-EXPOSE 8081
+EXPOSE 8761
 
 ENTRYPOINT ["java", "-jar", "discovery-service.jar"]
