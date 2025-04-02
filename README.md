@@ -17,6 +17,33 @@ This project is a microservices-based core banking system. It includes multiple 
 - **Prometheus**: Monitoring and alerting toolkit.
 - **Grafana**: Visualization and analytics platform.
 
+## How It Works
+
+The Core Bank System operates as a collection of microservices that communicate with each other to provide core banking functionalities:
+
+1. **Discovery Service**:
+   - Acts as a service registry using Eureka.
+   - All services register themselves with the Discovery Service to enable dynamic service discovery.
+
+2. **Account Service**:
+   - Manages user accounts, including account creation, updates, and retrieval.
+   - Uses PostgreSQL for persistent storage and Redis for caching frequently accessed data.
+
+3. **Transaction Service**:
+   - Processes financial transactions such as deposits, withdrawals, and transfers.
+   - Publishes transaction events to Kafka for asynchronous processing and auditing.
+
+4. **Supporting Infrastructure**:
+   - **PostgreSQL**: Stores account and transaction data persistently.
+   - **Redis**: Provides caching to improve performance.
+   - **Kafka**: Facilitates asynchronous communication between services.
+   - **Prometheus and Grafana**: Monitor system health and provide visual analytics.
+
+5. **Workflow**:
+   - A client sends a request to the Account or Transaction Service.
+   - The service processes the request, interacts with the database or cache as needed, and optionally publishes events to Kafka.
+   - Other services consume Kafka events to perform additional tasks, such as generating reports or updating analytics.
+
 ## Prerequisites
 
 - Docker
