@@ -97,6 +97,7 @@ services:
       eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
       spring.redis.host: redis  # Ensure this is 'redis'
       spring.redis.port: 6379
+      encryption.secret-key: 1234567890123456
     command: [ "java", "-jar", "/app/account-service.jar" ]
     healthcheck:
       test: [ "CMD", "curl", "--fail", "--silent", "http://localhost:8081/actuator/health" ]
@@ -130,6 +131,7 @@ services:
       eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
       spring.redis.host: redis
       spring.redis.port: 6379
+      encryption.secret-key: 1234567890123456
     command: ["java", "-jar", "/app/transaction-service.jar"]
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8082/actuator/health"]
@@ -164,12 +166,14 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_BROKER_ID: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true" # Enable auto-creation of topics
     ports:
       - "9092:9092"
     networks:
       - core-bank-network
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092"]
       interval: 10s
       timeout: 5s
       retries: 5

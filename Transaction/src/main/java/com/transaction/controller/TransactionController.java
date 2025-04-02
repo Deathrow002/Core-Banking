@@ -2,13 +2,12 @@ package com.transaction.controller;
 
 import com.transaction.model.DTO.AccountPayload;
 import com.transaction.model.DTO.TransactionDTO;
-import com.transaction.service.kafka.KafkaProducerService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.transaction.config.AppConfig;
 import com.transaction.model.TransacType;
 import com.transaction.model.Transaction;
 import com.transaction.service.TransactionService;
@@ -23,15 +22,8 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
-    @Autowired
-    private AppConfig appConfig;
-
-    @Autowired
-    private KafkaProducerService kafkaProducerService;
-
     String checkAccountUrl  = "http://ACCOUNT-SERVICE/accounts/validateAccount";
     String checkBalanceUrl  = "http://ACCOUNT-SERVICE/accounts/getAccount";
-    String updateAccountUrl = "http://ACCOUNT-SERVICE/accounts/updateAccountBalance";
 
     private boolean isValidAccount(BigInteger accountNumber) {
         return transactionService.isAccountValid(checkAccountUrl, accountNumber);
@@ -62,14 +54,9 @@ public class TransactionController {
             ownerPayload.setBalance(ownerPayload.getBalance().subtract(transactionDTO.getAmount()));
             receiverPayload.setBalance(receiverPayload.getBalance().add(transactionDTO.getAmount()));
 
-            // Ensure the balance is not null before sending
-            if (ownerPayload.getBalance() == null || receiverPayload.getBalance() == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid account balance detected.");
-            }
-
-            // Update Account Balances and Record Transaction
-            boolean ownerUpdateSuccess = transactionService.updateAccountBalance(updateAccountUrl, ownerPayload);
-            boolean receiverUpdateSuccess = transactionService.updateAccountBalance(updateAccountUrl, receiverPayload);
+            // Publish account balance updates to Kafka
+            boolean ownerUpdateSuccess = transactionService.updateAccountBalance("account-updates", ownerPayload);
+            boolean receiverUpdateSuccess = transactionService.updateAccountBalance("account-updates", receiverPayload);
 
             if (ownerUpdateSuccess && receiverUpdateSuccess) {
                 // Record the transaction
@@ -79,8 +66,8 @@ public class TransactionController {
                         transactionDTO.getAmount(),
                         TransacType.Transaction));
 
-                // Publish transaction event to Kafka
-                kafkaProducerService.sendMessage("transaction-events", transaction.toString());
+                // Save Transaction to Database
+                transactionService.transaction(transaction);
 
                 return ResponseEntity.status(HttpStatus.OK).body("Transaction completed successfully: " + transaction);
             } else {
@@ -92,23 +79,23 @@ public class TransactionController {
     }
 
     @PostMapping("/Deposit")
-    public ResponseEntity<?> deposit(@RequestBody TransactionDTO transactionDTO){
+    public ResponseEntity<?> deposit(@RequestBody TransactionDTO transactionDTO) {
         try {
-            // Validate both Owner's account
+            // Validate Owner's account
             if (!transactionService.isAccountValid(checkAccountUrl, transactionDTO.getAccNoOwner())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Owner Account verification failed.");
             }
 
-            //Retrieve account details for Owner
-            AccountPayload OwnerPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoOwner());
+            // Retrieve account details for Owner
+            AccountPayload ownerPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoOwner());
 
-            // Deduct balance from Owner and add it to Receiver
-            OwnerPayload.setBalance(OwnerPayload.getBalance().add(transactionDTO.getAmount()));
+            // Add balance to Owner's account
+            ownerPayload.setBalance(ownerPayload.getBalance().add(transactionDTO.getAmount()));
 
-            // Update Account Balances and Record Transaction
-            transactionService.updateAccountBalance(updateAccountUrl, OwnerPayload);
+            // Publish account balance update to Kafka
+            boolean ownerUpdateSuccess = transactionService.updateAccountBalance("account-updates", ownerPayload);
 
-            if (OwnerPayload.getBalance().compareTo(transactionDTO.getAmount()) >= 0){
+            if (ownerUpdateSuccess) {
                 Transaction transaction = transactionService.transaction(
                         new Transaction(
                                 transactionDTO.getAccNoOwner(),
@@ -116,36 +103,39 @@ public class TransactionController {
                                 transactionDTO.getAmount(),
                                 TransacType.Deposit));
 
-                // Publish transaction event to Kafka
-                kafkaProducerService.sendMessage("transaction-events", transaction.toString());
+                // Save Transaction to Database
+                transactionService.transaction(transaction);
 
                 return ResponseEntity.status(HttpStatus.OK).body(transaction);
-            }else {
-                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Owner Account Balance is not Enough to Create Transaction");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Error while updating balance.");
             }
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while Create Transaction on: "+e);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while creating transaction: " + e.getMessage());
         }
     }
 
     @PostMapping("/Withdraw")
-    public ResponseEntity<?> withdraw(@RequestBody TransactionDTO transactionDTO){
+    public ResponseEntity<?> withdraw(@RequestBody TransactionDTO transactionDTO) {
         try {
-            // Validate both Owner's account
+            // Validate Owner's account
             if (!transactionService.isAccountValid(checkAccountUrl, transactionDTO.getAccNoOwner())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Owner Account verification failed.");
             }
 
-            //Retrieve account details for Owner
-            AccountPayload OwnerPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoOwner());
+            // Retrieve account details for Owner
+            AccountPayload ownerPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoOwner());
 
-            // Deduct balance from Owner and add it to Receiver
-            OwnerPayload.setBalance(OwnerPayload.getBalance().subtract(transactionDTO.getAmount()));
+            // Subtract balance from Owner's account
+            if (ownerPayload.getBalance().compareTo(transactionDTO.getAmount()) < 0) {
+                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Insufficient balance in Owner's account.");
+            }
+            ownerPayload.setBalance(ownerPayload.getBalance().subtract(transactionDTO.getAmount()));
 
-            // Update Account Balances and Record Transaction
-            transactionService.updateAccountBalance(updateAccountUrl, OwnerPayload);
+            // Publish account balance update to Kafka
+            boolean ownerUpdateSuccess = transactionService.updateAccountBalance("account-updates", ownerPayload);
 
-            if (OwnerPayload.getBalance().compareTo(transactionDTO.getAmount()) >= 0){
+            if (ownerUpdateSuccess) {
                 Transaction transaction = transactionService.transaction(
                         new Transaction(
                                 transactionDTO.getAccNoOwner(),
@@ -153,15 +143,16 @@ public class TransactionController {
                                 transactionDTO.getAmount(),
                                 TransacType.Withdraw));
 
-                // Publish transaction event to Kafka
-                kafkaProducerService.sendMessage("transaction-events", transaction.toString());
+                // Save Transaction to Database
+                transactionService.transaction(transaction);
+
 
                 return ResponseEntity.status(HttpStatus.OK).body(transaction);
-            }else {
-                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Owner Account Balance is not Enough to Create Transaction");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Error while updating balance.");
             }
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while Create Transaction on: "+e);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while creating transaction: " + e.getMessage());
         }
     }
 
@@ -171,18 +162,6 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.OK).body(transactionService.getAllTransactionByAccount(AccNo));
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while Request Transaction by Account: "+e);
-        }
-    }
-
-    @PostMapping("/publish")
-    public ResponseEntity<String> publishTransaction(@RequestBody TransactionDTO transactionDTO) {
-        try {
-            // Serialize the transactionDTO to JSON (or use a custom serializer)
-            String message = transactionDTO.toString(); // Replace with JSON serialization if needed
-            kafkaProducerService.sendMessage("transaction-events", message);
-            return ResponseEntity.ok("Transaction event published successfully.");
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Failed to publish transaction event: " + e.getMessage());
         }
     }
 }

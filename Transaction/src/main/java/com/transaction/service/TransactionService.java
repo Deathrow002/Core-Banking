@@ -1,13 +1,15 @@
 package com.transaction.service;
 
 import java.math.BigInteger;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.transaction.model.DTO.AccountPayload;
+import com.transaction.service.kafka.KafkaProducerService;
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.*;
@@ -19,6 +21,8 @@ import org.springframework.web.client.RestTemplate;
 import com.transaction.model.Transaction;
 import com.transaction.repository.TransactionRepository;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Service
 @EnableCaching
 public class TransactionService {
@@ -26,10 +30,12 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    private final KafkaProducerService kafkaProducerService;
     private final RestTemplate restTemplate;
 
     @Autowired
-    public TransactionService(RestTemplate restTemplate) {
+    public TransactionService(KafkaProducerService kafkaProducerService, RestTemplate restTemplate) {
+        this.kafkaProducerService = kafkaProducerService;
         this.restTemplate = restTemplate;
     }
 
@@ -107,49 +113,19 @@ public class TransactionService {
         return null;
     }
 
-    public Boolean updateAccountBalance(String url, AccountPayload accountPayload) {
+    public Boolean updateAccountBalance(String topic, AccountPayload accountPayload) {
         try {
-            // Construct the request URL (the account number is now part of the request body)
-            String requestUrl = String.format("%s", url); // Assuming the URL does not require query parameters for account number
+            // Serialize the AccountPayload as a JSON string
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonPayload = objectMapper.writeValueAsString(accountPayload);
 
-            // Prepare the payload (using the AccountDTO as the body)
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("accNo", accountPayload.getAccNo());
-            payload.put("idcNo", accountPayload.getIdcNo());
-            payload.put("name", accountPayload.getName());
-            payload.put("balance", accountPayload.getBalance());
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(payload, headers);
-
-            // Send the PUT request
-            ResponseEntity<Void> response = restTemplate.exchange(
-                    requestUrl,
-                    HttpMethod.PUT,
-                    requestEntity,
-                    Void.class
-            );
-
-            // Validate the response
-            if (response.getStatusCode().is2xxSuccessful()) {
-                log.info("Successfully updated account balance for account: {}", accountPayload.getAccNo());
-                return true;
-            } else {
-                log.warn("Failed to update account balance for account: {}, Status Code: {}, Response Body: {}", accountPayload.getAccNo(), response.getStatusCode(), response.getBody());
-                return false;
-            }
-        } catch (HttpClientErrorException e) {
-            log.error("Client error while updating account balance for account {}: {}, Response Body: {}", accountPayload.getAccNo(), e.getMessage(), e.getResponseBodyAsString());
-        } catch (ResourceAccessException e) {
-            log.error("Resource access error for URL {}: {}", url, e.getMessage());
+            // Send the serialized message to Kafka
+            kafkaProducerService.sendMessage(topic, jsonPayload.getBytes());
+            log.info("Successfully sent account balance update for account: {}", accountPayload.getAccNo());
+            return true;
         } catch (Exception e) {
-            log.error("Unexpected error while updating account balance for account {}: {}", accountPayload.getAccNo(), e);
+            log.error("Error while sending account balance update for account {}: {}", accountPayload.getAccNo(), e.getMessage());
+            return false;
         }
-
-        return false;
     }
-
-
 }

@@ -59,5 +59,34 @@
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>1.11.4</version>
+        </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro-maven-plugin</artifactId>
+                <version>1.11.4</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>schema</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <sourceDirectory>${project.basedir}/src/main/avro</sourceDirectory>
+                    <outputDirectory>${project.basedir}/target/generated-sources/avro</outputDirectory>
+                    <stringType>String</stringType>
+                    <createSetters>true</createSetters>
+                    <createOptionalGetters>true</createOptionalGetters>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
