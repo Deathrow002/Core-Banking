@@ -106,6 +106,33 @@ services:
       retries: 3
       start_period: 40s
 
+  customer-service:
+    build:
+      context: .
+      dockerfile: Customer/Dockerfile
+    ports:
+      - "8083:8083"
+    networks:
+      - core-bank-network
+    depends_on:
+      account-service:
+        condition: service_healthy
+    environment:
+      spring.application.name: customer-service
+      spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
+      spring.datasource.username: lmwn_user
+      spring.datasource.password: 12345678
+      eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
+      spring.redis.host: redis
+      spring.redis.port: 6379
+    command: ["java", "-jar", "/app/customer-service.jar"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   transaction-service:
     build:
       context: .
