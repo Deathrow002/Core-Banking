@@ -141,3 +141,33 @@ Persistent data is stored in Docker volumes:
 ## License
 
 This project is licensed under the MIT License.
+
+
+## Postman Collection
+
+To simplify testing and interacting with the Core Bank System, a Postman collection is provided. Follow these steps to use it:
+
+1. Download the Postman collection file: [Core Bank Postman Collection](./postman/CoreBank.postman_collection.json)
+2. Import the collection into Postman:
+   - Open Postman.
+   - Click on "Import" in the top-left corner.
+   - Select the downloaded `.json` file.
+3. Use the pre-configured requests to test the services:
+   - **Customer Service**:
+     - Create Customer
+     - Get Customer by ID
+     - Get All Customers
+     - Update Customer
+   - **Account Service**:
+     - Validate Account
+     - Get Account
+     - Create Account
+     - Update Account Balance
+     - Delete Account
+   - **Transaction Service**:
+     - Perform Transaction
+     - Deposit
+     - Withdraw
+     - Get Transactions by Account
+
+Ensure that the services are running locally or on the specified endpoints before testing.
