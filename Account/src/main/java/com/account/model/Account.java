@@ -2,6 +2,7 @@ package com.account.model;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,21 +23,19 @@ import lombok.NoArgsConstructor;
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private BigInteger AccNo;
+    private UUID accountId;
 
-    @Column(name = "IDCNo", nullable = false)
-    private BigInteger IDCNo;
-
-    @Column(name = "Name", nullable  = false)
-    private String Name;
+    @Column(name = "customerId", nullable = false)
+    private UUID customerId;
 
     @Column(name = "Balance", nullable = false)
     @PositiveOrZero
     private BigDecimal Balance;
 
+    @Column(name = "currency", nullable = false)
+    private String Currency;
+
     public Account(BigInteger IDCNo, String Name, BigDecimal Balance){
-        this.IDCNo = IDCNo;
-        this.Name = Name;
         this.Balance = Balance;
     }
 }

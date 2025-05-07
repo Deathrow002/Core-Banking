@@ -1,8 +1,8 @@
 package com.account.service;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
 
-    public Optional<Account> checkBalance(BigInteger AccNo){
+    public Optional<Account> checkBalance(UUID AccNo){
         return accountRepository.findById(AccNo);
     }
 
@@ -33,7 +33,7 @@ public class AccountService {
 
     public Account updateAccountBalance(@NotNull AccountDTO accountDTO){
         //Prepare Payload
-        Account payload = accountRepository.findById(accountDTO.getAccNo()).get();
+        Account payload = accountRepository.findById(UUID.fromString(accountDTO.getAccNo().toString())).get();
 
         //Set New Balance to Payload
         payload.setBalance(accountDTO.getBalance());
@@ -42,7 +42,7 @@ public class AccountService {
         return accountRepository.save(payload);
     }
 
-    public void deleteAccount(BigInteger AccNo){
+    public void deleteAccount(UUID AccNo){
         accountRepository.deleteById(AccNo);
     }
 
@@ -50,7 +50,7 @@ public class AccountService {
         return accountRepository.findAll();
     }
 
-    public boolean existsById(BigInteger AccNo) {
+    public boolean existsById(UUID AccNo) {
         return accountRepository.existsById(AccNo);
     }
 }

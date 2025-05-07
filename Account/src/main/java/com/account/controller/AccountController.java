@@ -1,20 +1,28 @@
 package com.account.controller;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
-import com.account.model.DTO.AccountDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.account.model.Account;
+import com.account.model.DTO.AccountDTO;
 import com.account.service.AccountService;
 
 @RestController
@@ -28,7 +36,7 @@ public class AccountController {
 
     @GetMapping("/validateAccount")
     @Cacheable(value = "accountExistsCache", key = "#accNo")
-    public ResponseEntity<?> checkAccountExists(@RequestParam BigInteger accNo) {
+    public ResponseEntity<?> checkAccountExists(@RequestParam UUID accNo) {
         try {
             boolean exists = accountService.existsById(accNo);
             if (exists) {
@@ -46,7 +54,7 @@ public class AccountController {
 
     @GetMapping("/getAccount")
     @Cacheable(value = "accountCache", key = "#accNo")
-    public ResponseEntity<?> getAccount(@RequestParam BigInteger accNo) {
+    public ResponseEntity<?> getAccount(@RequestParam UUID accNo) {
         try {
             Account account = accountService.checkBalance(accNo).orElseThrow(() -> new NoSuchElementException("Account not found."));
             return ResponseEntity.ok(account);
@@ -90,7 +98,7 @@ public class AccountController {
 
     @DeleteMapping("/deleteAccount")
     @CacheEvict(value = {"accountExistsCache", "accountCache"}, key = "#accNo")
-    public ResponseEntity<String> deleteAccount(@RequestParam BigInteger accNo) {
+    public ResponseEntity<String> deleteAccount(@RequestParam UUID accNo) {
         try {
             accountService.deleteAccount(accNo);
             return ResponseEntity.ok("Account deleted successfully.");

@@ -2,7 +2,9 @@ package com.transaction.model;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Date;
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,15 +14,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -45,14 +43,13 @@ public class Transaction {
     private TransacType transacType;
 
     @Column(name = "TransacAt", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date TransacAt;
+    @CreationTimestamp
+    private LocalDateTime TransacAt;
 
     public Transaction(BigInteger AccNoOwner, BigInteger AccNoReceive, BigDecimal Amount, TransacType transacType){
         this.AccNoOwner = AccNoOwner;
         this.AccNoReceive = AccNoReceive;
         this.Amount = Amount;
         this.transacType = transacType;
-        this.TransacAt = new Date();
     }
 }

@@ -33,7 +33,6 @@ public class TransactionService {
     private final KafkaProducerService kafkaProducerService;
     private final RestTemplate restTemplate;
 
-    @Autowired
     public TransactionService(KafkaProducerService kafkaProducerService, RestTemplate restTemplate) {
         this.kafkaProducerService = kafkaProducerService;
         this.restTemplate = restTemplate;
