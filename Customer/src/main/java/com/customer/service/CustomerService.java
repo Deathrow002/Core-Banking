@@ -58,7 +58,7 @@ public class CustomerService {
             String jsonPayload = objectMapper.writeValueAsString(accountPayload);
 
             // Send customer data to Kafka
-            kafkaProducerService.sendMessage("customer-topic", jsonPayload.getBytes());
+            kafkaProducerService.sendMessage("account-create", jsonPayload.getBytes());
 
             return savedCustomer;
         } catch (JsonProcessingException e) {
