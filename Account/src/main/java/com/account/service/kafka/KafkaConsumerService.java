@@ -1,20 +1,20 @@
 package com.account.service.kafka;
 
-import com.account.model.DTO.AccountDTO;
-import com.account.service.AccountService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import java.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Service;
+
+import com.account.model.DTO.AccountDTO;
+import com.account.service.AccountService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class KafkaConsumerService {
@@ -29,6 +29,27 @@ public class KafkaConsumerService {
 
     @KafkaListener(topics = "account-updates", groupId = "account-service-group")
     public void consumeTransactionEvent(String message) {
+        try {
+            log.info("Received message from Kafka: {}", message);
+
+            // Decrypt the message
+            String decryptedMessage = decrypt(message);
+            log.debug("Decrypted message: {}", decryptedMessage);
+
+            // Deserialize the JSON string into an AccountDTO object
+            ObjectMapper objectMapper = new ObjectMapper();
+            AccountDTO accountDTO = objectMapper.readValue(decryptedMessage, AccountDTO.class);
+
+            // Process the account balance update
+            accountService.updateAccountBalance(accountDTO);
+            log.info("Successfully processed transaction event for account: {}", accountDTO.getAccNo());
+        } catch (Exception e) {
+            log.error("Error processing transaction event: {}", e.getMessage(), e);
+        }
+    }
+
+    @KafkaListener(topics = "account-create", groupId = "account-service-group")
+    public void consumeCutomerEvent(String message) {
         try {
             log.info("Received message from Kafka: {}", message);
 

@@ -6,7 +6,6 @@ import java.util.List;
 import com.transaction.model.DTO.AccountPayload;
 import com.transaction.service.kafka.KafkaProducerService;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,8 +15,10 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.transaction.model.Transaction;
 import com.transaction.repository.TransactionRepository;
 
@@ -57,7 +58,7 @@ public class TransactionService {
             // Check response status and body
             if (response.getStatusCode().is2xxSuccessful()) {
                 Boolean isValid = response.getBody();
-                return isValid;
+                return Boolean.TRUE.equals(isValid);
             } else {
                 log.warn("Non-success HTTP response: {} for account {} from URL: {}",
                         response.getStatusCode(), accountNumber, requestUrl);
@@ -69,7 +70,7 @@ public class TransactionService {
         } catch (ResourceAccessException e) {
             log.error("Resource access error for URL {}: {}", url, e.getMessage());
             return false;
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.error("Unexpected error while verifying account {}: {}", accountNumber, e.getMessage());
             return false;
         }
@@ -105,8 +106,8 @@ public class TransactionService {
             log.error("Client error while verifying account {}: {}", accountNumber, e.getMessage());
         } catch (ResourceAccessException e) {
             log.error("Resource access error for URL {}: {}", url, e.getMessage());
-        } catch (Exception e) {
-            log.error("Unexpected error while validating account {}: {}", accountNumber, e);
+        } catch (RestClientException e) {
+            log.error("Unexpected error while validating account {}: {}", accountNumber, e.getMessage());
         }
 
         return null;
@@ -120,10 +121,10 @@ public class TransactionService {
 
             // Send the serialized message to Kafka
             kafkaProducerService.sendMessage(topic, jsonPayload.getBytes());
-            log.info("Successfully sent account balance update for account: {}", accountPayload.getAccNo());
+            log.info("Successfully sent account balance update for account: {}", accountPayload.getAccountId());
             return true;
-        } catch (Exception e) {
-            log.error("Error while sending account balance update for account {}: {}", accountPayload.getAccNo(), e.getMessage());
+        } catch (JsonProcessingException e) {
+            log.error("Error while sending account balance update for account {}: {}", accountPayload.getAccountId(), e.getMessage());
             return false;
         }
     }

@@ -4,12 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.UUID;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,8 +27,9 @@ public class Account {
     @PositiveOrZero
     private BigDecimal Balance;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "currency", nullable = false)
-    private String Currency;
+    private CurrencyType Currency;
 
     public Account(BigInteger IDCNo, String Name, BigDecimal Balance){
         this.Balance = Balance;

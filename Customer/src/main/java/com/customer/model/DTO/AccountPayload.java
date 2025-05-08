@@ -1,4 +1,4 @@
-package com.transaction.model.DTO;
+package com.customer.model.DTO;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -23,10 +23,10 @@ public class AccountPayload {
     private BigDecimal balance;
 
     @JsonProperty("currency")
-    private String currency;
+    private CurrencyType currency;
 
-    public AccountPayload(UUID accountId, BigDecimal balance, String currency) {
-        this.accountId = accountId;
+    public AccountPayload(UUID customerId, BigDecimal balance, CurrencyType currency) {
+        this.customerId = customerId;
         this.balance = balance;
         this.currency = currency;
     }

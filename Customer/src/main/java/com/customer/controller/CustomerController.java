@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -24,25 +26,29 @@ public class CustomerController {
 
     // Create a new customer with addresses
     @PostMapping
-    public Customer createCustomer(@RequestBody Customer customer) {
-        return customerService.createCustomer(customer, customer.getAddresses());
+    public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
+        Customer createdCustomer = customerService.createCustomer(customer, customer.getAddresses());
+        return new ResponseEntity<>(createdCustomer, HttpStatus.CREATED);
     }
 
     // Get customer by ID
     @GetMapping
-    public Customer getCustomerById(@RequestParam UUID customerId) {
-        return customerService.getCustomerById(customerId);
+    public ResponseEntity<Customer> getCustomerById(@RequestParam UUID customerId) {
+        Customer customer = customerService.getCustomerById(customerId);
+        return new ResponseEntity<>(customer, HttpStatus.OK);
     }
 
     // Get all customers
-    @GetMapping
-    public List<Customer> getAllCustomers() {
-        return customerService.getAllCustomers();
+    @GetMapping("/all")
+    public ResponseEntity<List<Customer>> getAllCustomers() {
+        List<Customer> customers = customerService.getAllCustomers();
+        return new ResponseEntity<>(customers, HttpStatus.OK);
     }
 
     // Update an existing customer
     @PutMapping
-    public Customer updateCustomer(@RequestParam UUID customerId, @RequestBody Customer customerDetails) {
-        return customerService.updateCustomer(customerId, customerDetails);
+    public ResponseEntity<Customer> updateCustomer(@RequestParam UUID customerId, @RequestBody Customer customerDetails) {
+        Customer updatedCustomer = customerService.updateCustomer(customerId, customerDetails);
+        return new ResponseEntity<>(updatedCustomer, HttpStatus.OK);
     }
 }

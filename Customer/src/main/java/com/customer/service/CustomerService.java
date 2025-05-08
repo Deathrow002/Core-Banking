@@ -1,5 +1,6 @@
 package com.customer.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -8,8 +9,13 @@ import org.springframework.stereotype.Service;
 
 import com.customer.model.Address;
 import com.customer.model.Customer;
+import com.customer.model.DTO.AccountPayload;
+import com.customer.model.DTO.CurrencyType;
 import com.customer.repository.AddressRepository;
 import com.customer.repository.CustomerRepository;
+import com.customer.service.kafka.KafkaProducerService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class CustomerService {
@@ -20,16 +26,44 @@ public class CustomerService {
     @Autowired
     private AddressRepository addressRepository;
 
+    @Autowired
+    private final KafkaProducerService kafkaProducerService;
+
+    public CustomerService(KafkaProducerService kafkaProducerService) {
+        this.kafkaProducerService = kafkaProducerService;
+    }
+
     // Create a new customer with addresses
     public Customer createCustomer(Customer customer, List<Address> addresses) {
-        customer.setAddresses(addresses); // Set addresses
-        customerRepository.save(customer);
-        // Save each address separately to ensure the relation with customer is persisted
-        for (Address address : addresses) {
-            address.setCustomer(customer);
-            addressRepository.save(address);
+        try {
+            // Save the customer
+            Customer savedCustomer = customerRepository.save(customer);
+
+            // Save the addresses
+            for (Address address : addresses) {
+                address.setCustomer(savedCustomer);
+                addressRepository.save(address);
+            }
+
+            // Serialize the Customer Payload as a JSON string
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            // Create an AccountPayload object
+            AccountPayload accountPayload = new AccountPayload(
+                savedCustomer.getCustomerId(),
+                BigDecimal.ZERO,
+                CurrencyType.THB
+            );
+
+            String jsonPayload = objectMapper.writeValueAsString(accountPayload);
+
+            // Send customer data to Kafka
+            kafkaProducerService.sendMessage("customer-topic", jsonPayload.getBytes());
+
+            return savedCustomer;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error creating customer: " + e.getMessage());
         }
-        return customer;
     }
 
     // Get customer by ID (including addresses)
