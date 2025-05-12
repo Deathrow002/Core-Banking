@@ -9,19 +9,20 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionDTO {
-    private BigInteger transacId;
-    private BigInteger accNoOwner;
-    private BigInteger accNoReceive;
+    private UUID transacId;
+    private UUID accNoOwner;
+    private UUID accNoReceive;
     private BigDecimal amount;
     private TransacType transacType;
     private Timestamp transacAt;
 
-    public TransactionDTO(BigInteger accNoOwner, BigInteger accNoReceive, BigDecimal amount, TransacType transacType) {
+    public TransactionDTO(UUID accNoOwner, UUID accNoReceive, BigDecimal amount, TransacType transacType) {
         this.accNoOwner = accNoOwner;
         this.accNoReceive = accNoReceive;
         this.amount = amount;

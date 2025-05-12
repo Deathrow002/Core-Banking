@@ -1,8 +1,9 @@
 package com.account.model.DTO;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.util.UUID;
 
+import com.account.model.CurrencyType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,17 +12,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountDTO {
-    private BigInteger accNo;
+    private UUID accountId;
 
-    private BigInteger idcNo;
+    private UUID customerId;
 
-    private String name;
+    private BigDecimal Balance;
 
-    private BigDecimal balance;
+    private CurrencyType Currency;
 
-    public AccountDTO(BigInteger accNo, String name, BigDecimal Balance){
-        this.accNo = accNo;
-        this.name = name;
-        this.balance = Balance;
+    public AccountDTO(UUID customerId, BigDecimal Balance, CurrencyType Currency){
+        this.customerId = customerId;
+        this.Balance = Balance;
+        this.Currency = Currency;
     }
 }

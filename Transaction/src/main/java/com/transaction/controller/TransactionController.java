@@ -1,18 +1,23 @@
 package com.transaction.controller;
 
-import com.transaction.model.DTO.AccountPayload;
-import com.transaction.model.DTO.TransactionDTO;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.transaction.model.DTO.AccountPayload;
+import com.transaction.model.DTO.TransactionDTO;
 import com.transaction.model.TransacType;
 import com.transaction.model.Transaction;
 import com.transaction.service.TransactionService;
-
-import java.math.BigInteger;
 
 @RestController
 @RequestMapping("/transactions")
@@ -25,7 +30,7 @@ public class TransactionController {
     String checkAccountUrl  = "http://ACCOUNT-SERVICE/accounts/validateAccount";
     String checkBalanceUrl  = "http://ACCOUNT-SERVICE/accounts/getAccount";
 
-    private boolean isValidAccount(BigInteger accountNumber) {
+    private boolean isValidAccount(UUID accountNumber) {
         return transactionService.isAccountValid(checkAccountUrl, accountNumber);
     }
 

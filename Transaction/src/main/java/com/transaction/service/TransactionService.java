@@ -2,6 +2,7 @@ package com.transaction.service;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.UUID;
 
 import com.transaction.model.DTO.AccountPayload;
 import com.transaction.service.kafka.KafkaProducerService;
@@ -47,7 +48,7 @@ public class TransactionService {
         return transactionRepository.getAllTransactionByAccount(AccNo);
     }
 
-    public boolean isAccountValid(String url, BigInteger accountNumber) {
+    public boolean isAccountValid(String url, UUID accountNumber) {
         try {
             // Prepare the request body
             String requestUrl = url + "?accNo=" + accountNumber;
@@ -76,7 +77,7 @@ public class TransactionService {
         }
     }
 
-    public AccountPayload getAccountDetail(String url, BigInteger accountNumber) {
+    public AccountPayload getAccountDetail(String url, UUID accountNumber) {
         try {
             // Prepare the request URL
             String requestUrl = url + "?accNo=" + accountNumber;

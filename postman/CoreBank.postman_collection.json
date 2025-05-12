@@ -54,11 +54,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "http://localhost:8083/customers",
+              "raw": "http://localhost:8083/customers/all",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8083",
-              "path": ["customers"]
+              "path": ["customers", "all"]
             }
           }
         },
@@ -135,6 +135,19 @@
           }
         },
         {
+          "name": "Get All Accounts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8081/accounts/getAllAccounts",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["accounts", "getAllAccounts"]
+            }
+          }
+        },
+        {
           "name": "Create Account",
           "request": {
             "method": "POST",
@@ -146,7 +159,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idcNo\": \"123456\",\n  \"name\": \"John's Account\",\n  \"balance\": 1000.0\n}"
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"balance\": 1000.0,\n  \"currency\": \"USD\"\n}"
             },
             "url": {
               "raw": "http://localhost:8081/accounts/createAccount",
@@ -194,6 +207,25 @@
                 {
                   "key": "accNo",
                   "value": "{{accountNumber}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Account By Customer ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8081/accounts/getAccountByCustomerId?customerId={{customerId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["accounts", "getAccountByCustomerId"],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{customerId}}"
                 }
               ]
             }

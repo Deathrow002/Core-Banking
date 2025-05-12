@@ -45,6 +45,13 @@ public class CustomerController {
         return new ResponseEntity<>(customers, HttpStatus.OK);
     }
 
+    // Customer Exists by ID
+    @GetMapping("/validate")
+    public ResponseEntity<Boolean> validateCustomer(@RequestParam UUID customerId) {
+        Boolean isValid = customerService.existsById(customerId);
+        return new ResponseEntity<>(isValid, HttpStatus.OK);
+    }
+
     // Update an existing customer
     @PutMapping
     public ResponseEntity<Customer> updateCustomer(@RequestParam UUID customerId, @RequestBody Customer customerDetails) {

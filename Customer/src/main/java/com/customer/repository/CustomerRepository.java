@@ -10,6 +10,7 @@ import com.customer.model.Customer;
 
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
+    boolean existsByCustomerId(UUID customerId);
     Optional<Customer> findByEmail(String email);
     boolean existsByNationalId(String nationalId);
 }

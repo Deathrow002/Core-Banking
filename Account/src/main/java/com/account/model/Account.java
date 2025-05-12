@@ -1,7 +1,6 @@
 package com.account.model;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.UUID;
 
 import jakarta.persistence.*;
@@ -31,7 +30,9 @@ public class Account {
     @Column(name = "currency", nullable = false)
     private CurrencyType Currency;
 
-    public Account(BigInteger IDCNo, String Name, BigDecimal Balance){
+    public Account(UUID customerId, BigDecimal Balance, CurrencyType Currency){
+        this.customerId = customerId;
         this.Balance = Balance;
+        this.Currency = Currency;
     }
 }

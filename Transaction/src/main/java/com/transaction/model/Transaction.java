@@ -1,8 +1,8 @@
 package com.transaction.model;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -27,13 +27,13 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "TransacID", nullable = false)
-    private BigInteger TransacID;
+    private UUID TransacID;
 
     @Column(name = "AccNoOwner", nullable = false)
-    private BigInteger AccNoOwner;
+    private UUID AccNoOwner;
 
     @Column(name = "AccNoReceive")
-    private BigInteger AccNoReceive;
+    private UUID AccNoReceive;
 
     @Column(name = "Amount", nullable = false)
     private BigDecimal Amount;
@@ -46,7 +46,7 @@ public class Transaction {
     @CreationTimestamp
     private LocalDateTime TransacAt;
 
-    public Transaction(BigInteger AccNoOwner, BigInteger AccNoReceive, BigDecimal Amount, TransacType transacType){
+    public Transaction(UUID AccNoOwner, UUID AccNoReceive, BigDecimal Amount, TransacType transacType){
         this.AccNoOwner = AccNoOwner;
         this.AccNoReceive = AccNoReceive;
         this.Amount = Amount;

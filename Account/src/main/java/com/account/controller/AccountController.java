@@ -65,6 +65,20 @@ public class AccountController {
         }
     }
 
+    @GetMapping("/getAccountByCustomerId")
+    @Cacheable(value = "accountCache", key = "#customerId")
+    public ResponseEntity<?> getAccountByCustomerId(@RequestParam UUID customerId) {
+        try {
+            List<Account> accounts = accountService.searchByCustomerId(customerId);
+            if (accounts.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No accounts found for the given customer ID.");
+            }
+            return ResponseEntity.ok(accounts);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error fetching accounts.");
+        }
+    }
+
     @GetMapping("/getAllAccounts")
     public ResponseEntity<?> getAllAccounts() {
         try {
