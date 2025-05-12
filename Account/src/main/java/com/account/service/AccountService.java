@@ -40,6 +40,37 @@ public class AccountService {
         return accountRepository.findById(AccNo);
     }
 
+    //Create First Account
+    @Transactional
+    // This method creates the first account for a customer
+    public void createFirstAccount(@NotNull AccountDTO accountDTO) {
+        try {
+            log.debug("Starting first account creation for customer ID: {}", accountDTO.getCustomerId());
+
+            // Validate input
+            if (accountDTO.getCustomerId() == null) {
+                throw new IllegalArgumentException("Customer ID is null");
+            }
+
+            // Create and save the account
+            Account account = new Account(
+                accountDTO.getCustomerId(),
+                accountDTO.getBalance(),
+                accountDTO.getCurrency()
+            );
+
+            // Save the account
+            log.debug("Saving first account for customer ID: {}", accountDTO.getCustomerId());
+            Account savedAccount = accountRepository.save(account);
+
+            // Log success
+            log.info("First account successfully created for customer ID: {}", accountDTO.getCustomerId());
+        } catch (RuntimeException e) {
+            log.error("Error during first account creation: {}", e.getMessage(), e);
+            throw new RuntimeException("First account creation failed", e);
+        }
+    }
+
     //Create Account
     @Transactional
     public Account createAccount(@NotNull AccountDTO accountDTO) {

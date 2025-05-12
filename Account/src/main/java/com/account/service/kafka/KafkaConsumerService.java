@@ -98,7 +98,7 @@ public class KafkaConsumerService {
             }
 
             // Process the account creation
-            accountService.createAccount(accountDTO);
+            accountService.createFirstAccount(accountDTO);
 
             // Send a success response back to Kafka
             kafkaProducerService.sendMessageWithHeaders(
