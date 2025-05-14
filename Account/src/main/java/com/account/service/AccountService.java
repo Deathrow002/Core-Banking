@@ -61,7 +61,7 @@ public class AccountService {
 
             // Save the account
             log.debug("Saving first account for customer ID: {}", accountDTO.getCustomerId());
-            Account savedAccount = accountRepository.save(account);
+            accountRepository.save(account);
 
             // Log success
             log.info("First account successfully created for customer ID: {}", accountDTO.getCustomerId());

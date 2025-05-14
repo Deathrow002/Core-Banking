@@ -10,10 +10,11 @@ import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.customer.config.KafkaResponseHandler;
 import com.customer.model.Address;
 import com.customer.model.Customer;
 import com.customer.model.DTO.AccountPayload;
@@ -21,26 +22,25 @@ import com.customer.model.DTO.CurrencyType;
 import com.customer.repository.AddressRepository;
 import com.customer.repository.CustomerRepository;
 import com.customer.service.kafka.KafkaProducerService;
-import com.customer.config.KafkaResponseHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+@Component
 @Service
 public class CustomerService {
 
     private static final Logger log = LoggerFactory.getLogger(CustomerService.class);
 
-    @Autowired
-    private CustomerRepository customerRepository;
+    private final CustomerRepository customerRepository;
 
-    @Autowired
-    private AddressRepository addressRepository;
+    private final AddressRepository addressRepository;
 
-    @Autowired
-    private KafkaProducerService kafkaProducerService;
+    private final KafkaProducerService kafkaProducerService;
 
-    @Autowired
-    private KafkaResponseHandler kafkaResponseHandler;
+    private final KafkaResponseHandler kafkaResponseHandler;
 
     // Create a new customer with addresses
     @Transactional
