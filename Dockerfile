@@ -1,5 +1,8 @@
 # Use an official OpenJDK runtime as a parent image
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jdk-jammy
+
+# Ensure all packages are up to date to minimize vulnerabilities
+RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 LABEL authors="krittamettanboontor"
 

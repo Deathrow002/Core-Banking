@@ -1,5 +1,7 @@
 # Build Stage
-FROM maven:3.9.4-eclipse-temurin-21 AS builder
+FROM maven:3.9.9-eclipse-temurin-21-noble
+
+ARG AS builder
 
 WORKDIR /app
 
@@ -16,9 +18,12 @@ COPY ./Customer /app/Customer
 RUN mvn clean package -DskipTests -f Customer/pom.xml
 
 # Runtime Stage
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jre-jammy
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y wget curl && apt-get clean
+RUN apt-get update && \
+	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends wget curl && \
+	apt-get clean && \
+	rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
