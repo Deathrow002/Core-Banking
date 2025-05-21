@@ -208,58 +208,6 @@ services:
       retries: 5
       start_period: 20s
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - core-bank-network
-    environment:
-      RABBITMQ_DEFAULT_USER: user
-      RABBITMQ_DEFAULT_PASS: password
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-
-  rabbitmq-consumer:
-    build:
-      context: .
-      dockerfile: RabbitMQ/Dockerfile
-    ports:
-      - "8084:8084"
-    networks:
-      - core-bank-network
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    environment:
-      spring.application.name: rabbitmq-consumer
-      spring.rabbitmq.host: rabbitmq
-      spring.rabbitmq.port: 5672
-      spring.rabbitmq.username: user
-      spring.rabbitmq.password: password
-      spring.rabbitmq.virtual-host: /
-    command: ["java", "-jar", "/app/rabbitmq-consumer.jar"]
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8084/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-      
-  rabbitmq-producer:
-    build:
-      context: .
-      dockerfile: RabbitMQ/Dockerfile
-    ports:
-      - "8085:8085"
-    networks:
-      - core-bank-network
-
 networks:
   core-bank-network:
     name: core-bank-network
