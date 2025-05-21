@@ -12,7 +12,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
-import com.account.config.KafkaResponseHandler;
+import com.account.config.kafka.KafkaResponseHandler;
 import com.account.model.DTO.AccountDTO;
 import com.account.service.AccountService;
 import com.fasterxml.jackson.databind.ObjectMapper;

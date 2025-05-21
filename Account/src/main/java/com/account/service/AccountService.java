@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.account.config.KafkaResponseHandler;
+import com.account.config.kafka.KafkaResponseHandler;
 import com.account.model.Account;
 import com.account.model.DTO.AccountDTO;
 import com.account.repository.AccountRepository;

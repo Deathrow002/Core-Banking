@@ -89,8 +89,6 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     environment:
       spring.application.name: account-service
       spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
