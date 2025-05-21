@@ -10,7 +10,6 @@ import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +26,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
-@Component
 @Service
+@RequiredArgsConstructor
 public class CustomerService {
 
     private static final Logger log = LoggerFactory.getLogger(CustomerService.class);

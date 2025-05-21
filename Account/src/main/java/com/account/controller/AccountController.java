@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
@@ -25,14 +24,17 @@ import com.account.model.Account;
 import com.account.model.DTO.AccountDTO;
 import com.account.service.AccountService;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/accounts")
 @CrossOrigin(origins = "http://localhost:8081")
 public class AccountController {
 
     private static final Logger log = LoggerFactory.getLogger(AccountController.class);
-    @Autowired
-    private AccountService accountService;
+
+    private final AccountService accountService;
 
     @GetMapping("/validateAccount")
     @Cacheable(value = "accountExistsCache", key = "#accNo")

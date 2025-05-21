@@ -1,18 +1,13 @@
 package com.transaction.service;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.UUID;
 
-import com.transaction.model.DTO.AccountPayload;
-import com.transaction.service.kafka.KafkaProducerService;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.http.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -20,13 +15,17 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.transaction.model.DTO.AccountPayload;
 import com.transaction.model.Transaction;
 import com.transaction.repository.TransactionRepository;
+import com.transaction.service.kafka.KafkaProducerService;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @EnableCaching
+@RequiredArgsConstructor
 public class TransactionService {
     private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
     @Autowired
@@ -34,11 +33,6 @@ public class TransactionService {
 
     private final KafkaProducerService kafkaProducerService;
     private final RestTemplate restTemplate;
-
-    public TransactionService(KafkaProducerService kafkaProducerService, RestTemplate restTemplate) {
-        this.kafkaProducerService = kafkaProducerService;
-        this.restTemplate = restTemplate;
-    }
 
     public Transaction transaction(Transaction transaction){
         return transactionRepository.save(transaction);

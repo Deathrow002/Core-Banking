@@ -11,7 +11,6 @@ import java.util.concurrent.TimeoutException;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,19 +20,18 @@ import com.account.model.DTO.AccountDTO;
 import com.account.repository.AccountRepository;
 import com.account.service.kafka.KafkaProducerService;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class AccountService {
     private static final Logger log = LoggerFactory.getLogger(AccountService.class);
 
-    //Inject Account Repository
-    @Autowired
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
 
-    @Autowired
-    private KafkaProducerService kafkaProducerService;
+    private final KafkaProducerService kafkaProducerService;
 
-    @Autowired
-    private KafkaResponseHandler kafkaResponseHandler;
+    private final KafkaResponseHandler kafkaResponseHandler;
 
     //Check Account Balance
     public Optional<Account> checkBalance(UUID AccNo){

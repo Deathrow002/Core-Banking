@@ -6,29 +6,28 @@ import java.util.UUID;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.customer.config.KafkaResponseHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.customer.config.KafkaResponseHandler;
 import com.customer.service.CustomerService;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class KafkaConsumerService {
     private static final Logger log = LoggerFactory.getLogger(KafkaConsumerService.class);
 
-    @Autowired
     private KafkaProducerService kafkaProducerService;
 
-    @Autowired 
     private KafkaResponseHandler kafkaResponseHandler;
 
-    @Autowired
     private CustomerService customerService;
 
     @Value("${encryption.secret-key}")

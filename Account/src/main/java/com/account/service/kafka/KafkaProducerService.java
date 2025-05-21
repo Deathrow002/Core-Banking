@@ -13,7 +13,10 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class KafkaProducerService {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaProducerService.class);
@@ -22,10 +25,6 @@ public class KafkaProducerService {
 
     @Value("${encryption.secret-key}")
     private String secretKey;
-
-    public KafkaProducerService(KafkaTemplate<String, String> kafkaTemplate) {
-        this.kafkaTemplate = kafkaTemplate;
-    }
 
     // Send a message to the specified Kafka topic
     public void sendMessage(String topic, String message) {

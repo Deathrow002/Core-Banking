@@ -2,7 +2,6 @@ package com.transaction.service;
 
 import java.util.UUID;
 
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,10 +10,8 @@ import com.transaction.model.DTO.TransactionDTO;
 
 import lombok.RequiredArgsConstructor;
 
-
-@RequiredArgsConstructor
-@Component
 @Service
+@RequiredArgsConstructor
 public class TransactionProcess {
     private final TransactionService transactionService;
 

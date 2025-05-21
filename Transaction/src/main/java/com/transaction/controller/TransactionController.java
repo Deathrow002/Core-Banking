@@ -1,6 +1,5 @@
 package com.transaction.controller;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -16,9 +15,11 @@ import com.transaction.model.DTO.TransactionDTO;
 import com.transaction.service.TransactionProcess;
 import com.transaction.service.TransactionService;
 
-@RequiredArgsConstructor
+import lombok.RequiredArgsConstructor;
+
 @Component
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/transactions")
 @CrossOrigin(origins = "http://localhost:8082")
 public class TransactionController {
