@@ -1,4 +1,4 @@
-package com.customer.config;
+package com.customer.config.kafka;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;

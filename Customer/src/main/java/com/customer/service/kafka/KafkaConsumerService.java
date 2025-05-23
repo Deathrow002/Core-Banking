@@ -14,7 +14,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.customer.config.KafkaResponseHandler;
+import com.customer.config.kafka.KafkaResponseHandler;
 import com.customer.service.CustomerService;
 
 import lombok.RequiredArgsConstructor;

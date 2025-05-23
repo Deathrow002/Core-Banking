@@ -9,20 +9,23 @@ import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import com.account.service.kafka.KafkaProducerService;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class KafkaResponseHandler {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaResponseHandler.class);
 
     private final ConcurrentHashMap<String, CompletableFuture<String>> responseMap = new ConcurrentHashMap<>();
 
-    @Autowired
-    private KafkaProducerService kafkaProducerService;
+    @Lazy
+    private final KafkaProducerService kafkaProducerService;
 
     // This method is called to register a CompletableFuture with a correlation ID
     // This allows us to wait for a response associated with that ID
