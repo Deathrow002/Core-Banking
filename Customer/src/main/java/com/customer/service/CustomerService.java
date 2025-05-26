@@ -27,10 +27,6 @@ public class CustomerService {
 
     private final AddressRepository addressRepository;
 
-    private final KafkaProducerService kafkaProducerService;
-
-    private final KafkaResponseHandler kafkaResponseHandler;
-
     // Create a new customer with addresses
     @Transactional
     public Customer createCustomer(Customer customer, List<Address> addresses) {

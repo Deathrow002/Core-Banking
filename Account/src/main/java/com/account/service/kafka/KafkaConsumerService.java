@@ -29,87 +29,8 @@ public class KafkaConsumerService {
 
     private final KafkaResponseHandler kafkaResponseHandler;
 
-    private final KafkaProducerService kafkaProducerService;
-
     @Value("${encryption.secret-key}")
     private String secretKey;
-
-    // This method listens for transaction events
-    // and processes account balance updates
-    // It uses the @KafkaListener annotation to listen to the "account-updates" topic
-    // and the "account-service-group" consumer group
-    @KafkaListener(topics = "account-updates", groupId = "account-service-group")
-    public void consumeTransactionEvent(String message) {
-        try {
-            log.info("Received message from Kafka: {}", message);
-
-            // Decrypt the message
-            String decryptedMessage = decrypt(message);
-            log.debug("Decrypted message: {}", decryptedMessage);
-
-            // Deserialize the JSON string into an AccountDTO object
-            ObjectMapper objectMapper = new ObjectMapper();
-            AccountDTO accountDTO = objectMapper.readValue(decryptedMessage, AccountDTO.class);
-
-            // Process the account balance update
-            accountService.updateAccountBalance(accountDTO);
-            log.info("Successfully processed transaction event for account: {}", accountDTO.getAccountId());
-        } catch (Exception e) {
-            log.error("Error processing transaction event: {}", e.getMessage(), e);
-        }
-    }
-
-    // This method listens for customer create events
-    // and processes account creation
-    // It uses the @KafkaListener annotation to listen to the "account-create" topic
-    // and the "account-service-group" consumer group
-    // It also uses the @Header annotation to extract the correlationId from the message headers
-    // and sends a response back to the "account-create-response" topic
-    // with the correlationId
-    // and a success message
-    // It uses the @Value annotation to inject the secret key for decryption
-    // and the @Autowired annotation to inject the AccountService and KafkaProducerService beans
-    // It also uses the @Autowired annotation to inject the KafkaResponseHandler bean
-    // and the @KafkaListener annotation to listen to the "account-create" topic
-    // and the "account-service-group" consumer group
-    // It also uses the @KafkaListener annotation to listen to the "account-create-response" topic
-    // and the "account-service-group" consumer group
-    // and the @Header annotation to extract the correlationId from the message headers
-    // and sends a response back to the "account-create-response" topic
-    // with the correlationId
-    // and a success message
-    @KafkaListener(topics = "account-create", groupId = "account-service-group")
-    public void consumeCutomerEvent(String message, @Header("correlationId") String correlationId) {
-        try {
-            log.info("Received message from Kafka: {}", message);
-
-            // Decrypt the message
-            String decryptedMessage = decrypt(message);
-            log.debug("Decrypted message: {}", decryptedMessage);
-
-            // Deserialize the JSON string into an AccountDTO object
-            ObjectMapper objectMapper = new ObjectMapper();
-            AccountDTO accountDTO = objectMapper.readValue(decryptedMessage, AccountDTO.class);
-
-            // Validate the AccountDTO
-            if (accountDTO.getCustomerId() == null) {
-                throw new IllegalArgumentException("Customer ID is null in the AccountDTO");
-            }
-
-            // Process the account creation
-            accountService.createFirstAccount(accountDTO);
-
-            // Send a success response back to Kafka
-            kafkaProducerService.sendMessageWithHeaders(
-                "account-create-response",
-                "success",
-                correlationId
-            );
-            log.info("Sent success response to account-create-response topic for correlation ID: {}", correlationId);
-        } catch (Exception e) {
-            log.error("Error processing customer event for create first account: {}", e.getMessage(), e);
-        }
-    }
 
     // This method listens for customer check events
     // and processes account balance checks
@@ -179,6 +100,27 @@ public class KafkaConsumerService {
             kafkaResponseHandler.complete(correlationId, message);
         } catch (Exception e) {
             log.error("Error processing account create response: {}", e.getMessage(), e);
+        }
+    }
+
+    @KafkaListener(topics = "account-balance-update", groupId = "account-service-group")
+    public void consumeAccountBalanceUpdate(String message) {
+        try {
+            log.info("Received account balance update from Kafka: {}", message);
+
+            // Decrypt the message
+            String decryptedMessage = decrypt(message);
+            log.debug("Decrypted message: {}", decryptedMessage);
+
+            // Deserialize the JSON string into an AccountDTO object
+            ObjectMapper objectMapper = new ObjectMapper();
+            AccountDTO accountDTO = objectMapper.readValue(decryptedMessage, AccountDTO.class);
+
+            // Process the account balance update
+            accountService.updateAccountBalance(accountDTO);
+            log.info("Successfully processed account balance update for account: {}", accountDTO.getAccountId());
+        } catch (Exception e) {
+            log.error("Error processing account balance update: {}", e.getMessage(), e);
         }
     }
 

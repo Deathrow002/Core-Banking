@@ -52,4 +52,10 @@ public class Transaction {
         this.Amount = Amount;
         this.transacType = transacType;
     }
+
+    public Transaction(UUID AccNoOwner, BigDecimal Amount, TransacType transacType){
+        this.AccNoOwner = AccNoOwner;
+        this.Amount = Amount;
+        this.transacType = transacType;
+    }
 }

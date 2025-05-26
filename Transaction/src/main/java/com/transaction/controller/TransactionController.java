@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.transaction.model.DTO.TransactionDTO;
+import com.transaction.model.Transaction;
 import com.transaction.service.TransactionProcess;
 import com.transaction.service.TransactionService;
 
@@ -31,7 +32,7 @@ public class TransactionController {
     @PostMapping("/Transaction")
     public ResponseEntity<?> transaction(@RequestBody TransactionDTO transactionDTO) {
         try {
-            TransactionDTO processedTransaction = transactionProcess.transactionProcess(transactionDTO);
+            Transaction processedTransaction = transactionProcess.transactionProcess(transactionDTO);
             return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid account details: " + e.getMessage());
@@ -43,7 +44,7 @@ public class TransactionController {
     @PostMapping("/Deposit")
     public ResponseEntity<?> deposit(@RequestBody TransactionDTO transactionDTO) {
         try {
-            TransactionDTO processedTransaction = transactionProcess.depositProcess(transactionDTO);
+            Transaction processedTransaction = transactionProcess.depositProcess(transactionDTO);
             return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while creating transaction: " + e.getMessage());
@@ -53,7 +54,7 @@ public class TransactionController {
     @PostMapping("/Withdraw")
     public ResponseEntity<?> withdraw(@RequestBody TransactionDTO transactionDTO) {
         try {
-            TransactionDTO processedTransaction = transactionProcess.withdrawProcess(transactionDTO);
+            Transaction processedTransaction = transactionProcess.withdrawProcess(transactionDTO);
             return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid account details: " + e.getMessage());

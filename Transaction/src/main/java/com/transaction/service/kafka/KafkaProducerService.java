@@ -19,21 +19,21 @@ public class KafkaProducerService {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaProducerService.class);
 
-    private final KafkaTemplate<String, byte[]> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Value("${encryption.secret-key}")
     private String secretKey;
 
-    public void sendMessage(String topic, byte[] message) {
+    public void sendMessage(String topic, String message) {
         try {
-            log.info("Sending message to topic {}: {}", topic, new String(message));
+            log.info("Sending message to topic {}: {}", topic, message);
 
             // Encrypt the message
-            String encryptedMessage = encrypt(new String(message));
+            String encryptedMessage = encrypt(message);
             log.debug("Encrypted message: {}", encryptedMessage);
 
             // Send the encrypted message to Kafka
-            kafkaTemplate.send(topic, encryptedMessage.getBytes());
+            kafkaTemplate.send(topic, encryptedMessage);
             log.info("Message successfully sent to topic {}", topic);
         } catch (Exception e) {
             log.error("Error encrypting and sending message: {}", e.getMessage(), e);

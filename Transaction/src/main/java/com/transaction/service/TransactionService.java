@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -28,9 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TransactionService {
     private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
-    @Autowired
-    private TransactionRepository transactionRepository;
-
+    private final TransactionRepository transactionRepository;
     private final KafkaProducerService kafkaProducerService;
     private final RestTemplate restTemplate;
 
@@ -115,7 +112,7 @@ public class TransactionService {
             String jsonPayload = objectMapper.writeValueAsString(accountPayload);
 
             // Send the serialized message to Kafka
-            kafkaProducerService.sendMessage(topic, jsonPayload.getBytes());
+            kafkaProducerService.sendMessage(topic, jsonPayload);
             log.info("Successfully sent account balance update for account: {}", accountPayload.getAccountId());
             return true;
         } catch (JsonProcessingException e) {
