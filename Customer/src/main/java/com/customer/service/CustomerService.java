@@ -36,7 +36,7 @@ public class CustomerService {
 
             // Check if customer already exists
             if (customerRepository.existsByNationalId(customer.getNationalId())) {
-                throw new RuntimeException("Customer with this national ID already exists");
+                throw new IllegalArgumentException("Customer with this national ID already exists");
             }
 
             // Save the customer
@@ -49,7 +49,11 @@ public class CustomerService {
             }
 
             return savedCustomer;
-        } catch (RuntimeException e) {
+        }catch (IllegalArgumentException e) {
+            log.error("Invalid customer details: {}", e.getMessage());
+            throw new RuntimeException("An error occurred while creating the customer.", e);
+        }
+         catch (Exception e) {
             log.error("Invalid customer details: {}", e.getMessage());
             throw new RuntimeException("An error occurred while creating the customer.", e);
         }
