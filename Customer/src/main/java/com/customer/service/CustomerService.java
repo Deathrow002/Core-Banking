@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.customer.exception.CustomerAlreadyExistsException;
 import com.customer.model.Address;
 import com.customer.model.Customer;
 import com.customer.repository.AddressRepository;
@@ -36,7 +37,7 @@ public class CustomerService {
 
             // Check if customer already exists
             if (customerRepository.existsByNationalId(customer.getNationalId())) {
-                throw new IllegalArgumentException("Customer with this national ID already exists");
+                throw new CustomerAlreadyExistsException("Customer with this national ID already exists");
             }
 
             // Save the customer
@@ -49,12 +50,15 @@ public class CustomerService {
             }
 
             return savedCustomer;
-        }catch (IllegalArgumentException e) {
-            log.error("Customer with this national ID already exists: {}", e.getMessage());
-            throw new IllegalArgumentException("Customer with this national ID already exists.", e);
         }
-         catch (Exception e) {
+        catch (IllegalArgumentException e) {
             log.error("Invalid customer details: {}", e.getMessage());
+            throw e;
+        } catch (CustomerAlreadyExistsException e) {
+            log.error("Customer already exists: {}", e.getMessage());
+            throw e;
+        }catch (Exception e) {
+            log.error("Unexpected error while creating customer: {}", e.getMessage());
             throw new RuntimeException("An error occurred while creating the customer.", e);
         }
     }

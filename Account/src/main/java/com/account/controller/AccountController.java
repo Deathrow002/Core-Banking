@@ -93,12 +93,8 @@ public class AccountController {
 
     @PostMapping("/createAccount")
     public ResponseEntity<?> createAccount(@RequestBody AccountDTO accountDTO) {
-        try {
-            Account createdAccount = accountService.createAccount(accountDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while creating account: "+e.getMessage());
-        }
+        Account createdAccount = accountService.createAccount(accountDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
     }
 
     @PutMapping("/updateAccountBalance")

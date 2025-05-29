@@ -1,5 +1,7 @@
 package com.transaction.controller;
 
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -31,44 +33,26 @@ public class TransactionController {
 
     @PostMapping("/Transaction")
     public ResponseEntity<?> transaction(@RequestBody TransactionDTO transactionDTO) {
-        try {
-            Transaction processedTransaction = transactionProcess.transactionProcess(transactionDTO);
-            return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid account details: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while processing transaction: " + e.getMessage());
-        }
+        Transaction processedTransaction = transactionProcess.transactionProcess(transactionDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
     }
 
     @PostMapping("/Deposit")
     public ResponseEntity<?> deposit(@RequestBody TransactionDTO transactionDTO) {
-        try {
-            Transaction processedTransaction = transactionProcess.depositProcess(transactionDTO);
-            return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while creating transaction: " + e.getMessage());
-        }
+        Transaction processedTransaction = transactionProcess.depositProcess(transactionDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
     }
 
     @PostMapping("/Withdraw")
     public ResponseEntity<?> withdraw(@RequestBody TransactionDTO transactionDTO) {
-        try {
-            Transaction processedTransaction = transactionProcess.withdrawProcess(transactionDTO);
-            return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid account details: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while creating transaction: " + e.getMessage());
-        }
+        Transaction processedTransaction = transactionProcess.withdrawProcess(transactionDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
+
     }
 
     @GetMapping("/GetTransByAccNo")
-    public ResponseEntity<?> getTransactionsByAccountNo(@RequestParam Long AccNo){
-        try {
-            return ResponseEntity.status(HttpStatus.OK).body(transactionService.getAllTransactionByAccount(AccNo));
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while Request Transaction by Account: "+e);
-        }
+    public ResponseEntity<?> getTransactionsByAccountNo(@RequestParam UUID AccNo){
+        return ResponseEntity.status(HttpStatus.OK).body(transactionService.getAllTransactionByAccount(AccNo));
+
     }
 }

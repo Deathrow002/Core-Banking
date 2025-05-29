@@ -35,91 +35,70 @@ public class TransactionService {
         return transactionRepository.save(transaction);
     }
 
-    public List<Transaction> getAllTransactionByAccount(Long AccNo){
+    public List<Transaction> getAllTransactionByAccount(UUID AccNo){
         return transactionRepository.getAllTransactionByAccount(AccNo);
     }
 
     public boolean isAccountValid(String url, UUID accountNumber) {
-        try {
-            // Prepare the request body
-            String requestUrl = url + "?accNo=" + accountNumber;
+        // Prepare the request body
+        String requestUrl = url + "?accNo=" + accountNumber;
 
-            // Make the request
-            ResponseEntity<Boolean> response = restTemplate.getForEntity(requestUrl, Boolean.class);
+        // Make the request
+        ResponseEntity<Boolean> response = restTemplate.getForEntity(requestUrl, Boolean.class);
 
-            // Check response status and body
-            if (response.getStatusCode().is2xxSuccessful()) {
-                Boolean isValid = response.getBody();
-                return Boolean.TRUE.equals(isValid);
-            } else {
-                log.warn("Non-success HTTP response: {} for account {} from URL: {}",
-                        response.getStatusCode(), accountNumber, requestUrl);
-                throw new RestClientException("Unsuccessful response from account validation service");
-            }
-        } catch (HttpClientErrorException e) {
-            log.error("Client error while verifying account {}: {}", accountNumber, e.getMessage());
-            throw new RestClientException("Client error while verifying account", e);
-        } catch (ResourceAccessException e) {
-            log.error("Resource access error for URL {}: {}", url, e.getMessage());
-            throw new RestClientException("Resource access error", e);
-        } catch (RestClientException e) {
-            log.error("Unexpected error while verifying account {}: {}", accountNumber, e.getMessage());
-            throw new RestClientException("Unexpected error while verifying account", e);
+        // Check response status and body
+        if (response.getStatusCode().is2xxSuccessful()) {
+            Boolean isValid = response.getBody();
+            return Boolean.TRUE.equals(isValid);
+        } else {
+            log.warn("Non-success HTTP response: {} for account {} from URL: {}",
+                    response.getStatusCode(), accountNumber, requestUrl);
+            throw new RestClientException("Unsuccessful response from account validation service");
         }
     }
 
     public AccountPayload getAccountDetail(String url, UUID accountNumber) {
-        try {
-            // Prepare the request URL
-            String requestUrl = url + "?accNo=" + accountNumber;
+        // Prepare the request URL
+        String requestUrl = url + "?accNo=" + accountNumber;
 
-            // Log raw response as a string for debugging
-            ResponseEntity<String> rawResponse = restTemplate.getForEntity(requestUrl, String.class);
-            log.info("Raw Response: {}", rawResponse.getBody());
+        // Log raw response as a string for debugging
+        ResponseEntity<String> rawResponse = restTemplate.getForEntity(requestUrl, String.class);
+        log.info("Raw Response: {}", rawResponse.getBody());
 
-            // Check if the response is a boolean
-            if ("true".equalsIgnoreCase(rawResponse.getBody()) || "false".equalsIgnoreCase(rawResponse.getBody())) {
-                log.warn("Received a boolean response instead of account details for account: {}", accountNumber);
-                throw new RestClientException("Received a boolean response instead of account details");
-            }
+        // Check if the response is a boolean
+        if ("true".equalsIgnoreCase(rawResponse.getBody()) || "false".equalsIgnoreCase(rawResponse.getBody())) {
+            log.warn("Received a boolean response instead of account details for account: {}", accountNumber);
+            throw new RestClientException("Received a boolean response instead of account details");
+        }
 
-            // Parse response directly to AccountPayload
-            ResponseEntity<AccountPayload> responsePayload = restTemplate.getForEntity(requestUrl, AccountPayload.class);
+        // Parse response directly to AccountPayload
+        ResponseEntity<AccountPayload> responsePayload = restTemplate.getForEntity(requestUrl, AccountPayload.class);
 
-            // Validate the response
-            if (responsePayload.getStatusCode().is2xxSuccessful() && responsePayload.getBody() != null) {
-                AccountPayload accountPayload = responsePayload.getBody();
-                log.info("Successfully retrieved account details for {}: {}", accountNumber, accountPayload);
-                return accountPayload;
-            } else {
-                log.warn("Unsuccessful response for account: {}, Status Code: {}", accountNumber, responsePayload.getStatusCode());
-                throw new RestClientException("Unsuccessful response for account: " + accountNumber);
-            }
-        } catch (HttpClientErrorException e) {
-            log.error("Client error while verifying account {}: {}", accountNumber, e.getMessage());
-            throw new RestClientException("Client error while verifying account", e);
-        } catch (ResourceAccessException e) {
-            log.error("Resource access error for URL {}: {}", url, e.getMessage());
-            throw new RestClientException("Resource access error", e);
-        } catch (RestClientException e) {
-            log.error("Unexpected error while validating account {}: {}", accountNumber, e.getMessage());
-            throw new RestClientException("Unexpected error while validating account", e);
+        // Validate the response
+        if (responsePayload.getStatusCode().is2xxSuccessful() && responsePayload.getBody() != null) {
+            AccountPayload accountPayload = responsePayload.getBody();
+            log.info("Successfully retrieved account details for {}: {}", accountNumber, accountPayload);
+            return accountPayload;
+        } else {
+            log.warn("Unsuccessful response for account: {}, Status Code: {}", accountNumber, responsePayload.getStatusCode());
+            throw new RestClientException("Unsuccessful response for account: " + accountNumber);
         }
     }
 
     public Boolean updateAccountBalance(String topic, AccountPayload accountPayload) {
+        // Serialize the AccountPayload as a JSON string
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonPayload;
         try {
-            // Serialize the AccountPayload as a JSON string
-            ObjectMapper objectMapper = new ObjectMapper();
-            String jsonPayload = objectMapper.writeValueAsString(accountPayload);
-
-            // Send the serialized message to Kafka
-            kafkaProducerService.sendMessage(topic, jsonPayload);
-            log.info("Successfully sent account balance update for account: {}", accountPayload.getAccountId());
-            return true;
+            jsonPayload = objectMapper.writeValueAsString(accountPayload);
         } catch (JsonProcessingException e) {
-            log.error("Error while sending account balance update for account {}: {}", accountPayload.getAccountId(), e.getMessage());
+            log.error("Failed to serialize AccountPayload for account: {}", accountPayload.getAccountId(), e);
             return false;
         }
+
+        // Send the serialized message to Kafka
+        kafkaProducerService.sendMessage(topic, jsonPayload);
+        log.info("Successfully sent account balance update for account: {}", accountPayload.getAccountId());
+        return true;
     }
 }

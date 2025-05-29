@@ -1,4 +1,4 @@
-package com.customer.exception;
+package com.account.exception;
 
 import java.time.LocalDateTime;
 
@@ -14,4 +14,5 @@ public class ErrorResponse {
     private int status;
     private String error;
     private String message;
+
 }

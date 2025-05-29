@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import com.account.exception.AccountAlreadyExistsException;
 import com.account.model.Account;
 import com.account.model.DTO.AccountDTO;
 import com.account.repository.AccountRepository;
@@ -41,7 +42,7 @@ public class AccountService {
             // Check if Customer ID already exists
             if(!validateCustomer(accountDTO.getCustomerId())){
                 log.error("Customer ID {} does not exist", accountDTO.getCustomerId());
-                throw new RuntimeException("Customer ID does not exist");
+                throw new AccountAlreadyExistsException("Customer ID does not exist");
             }
 
             // Create and save the account
@@ -57,7 +58,10 @@ public class AccountService {
             // Log success
             log.info("Account successfully created for customer ID: {}", accountDTO.getCustomerId());
             return savedAccount;
-        } catch (RuntimeException e) {
+        } catch (AccountAlreadyExistsException e) {
+            log.error("Account creation failed: {}", e.getMessage());
+            throw new AccountAlreadyExistsException("Customer ID does not exist");
+        } catch (Exception e) {
             log.error("Error during account creation: {}", e.getMessage(), e);
             throw new RuntimeException("Account creation failed", e);
         }

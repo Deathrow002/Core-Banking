@@ -51,7 +51,7 @@ public class TransactionProcess {
 
             // Check if Owner has sufficient balance
             if (ownerPayload.getBalance().compareTo(transactionDTO.getAmount()) < 0) {
-                throw new IllegalArgumentException("Insufficient balance");
+                throw new IllegalArgumentException("Insufficient funds");
             }
 
             // Deduct balance from Owner and add it to Receiver
@@ -73,10 +73,7 @@ public class TransactionProcess {
             log.info("Transaction amount: {}", transactionDTO.getAmount());
 
             return response;
-        } catch (IllegalArgumentException e) {
-            log.error("Error processing transaction: {}", e.getMessage());
-            throw new IllegalArgumentException("Error processing transaction: " + e.getMessage());
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Error processing transaction: {}", e.getMessage());
             throw new RuntimeException("Error processing transaction: " + e.getMessage());
         }
@@ -115,9 +112,6 @@ public class TransactionProcess {
             log.info("Deposit amount: {}", transactionDTO.getAmount());
 
             return response;
-        } catch (IllegalArgumentException e) {
-            log.error("Error processing deposit transaction: {}", e.getMessage());
-            throw new IllegalArgumentException("Error processing deposit transaction: " + e.getMessage());
         } catch (RuntimeException e) {
             log.error("Error processing deposit transaction: {}", e.getMessage());
             throw new RuntimeException("Error processing deposit transaction: " + e.getMessage());
@@ -143,7 +137,7 @@ public class TransactionProcess {
 
             // Check if Owner has sufficient balance
             if (ownerPayload.getBalance().compareTo(transactionDTO.getAmount()) < 0) {
-                throw new IllegalArgumentException("Insufficient balance");
+                throw new IllegalArgumentException("Insufficient funds");
             }
 
             // Deduct balance from Owner
@@ -162,9 +156,6 @@ public class TransactionProcess {
             log.info("Withdrawal amount: {}", transactionDTO.getAmount());
 
             return response;
-        } catch (IllegalArgumentException e) {
-            log.error("Error processing withdrawal transaction: {}", e.getMessage());
-            throw new IllegalArgumentException("Error processing withdrawal transaction: " + e.getMessage());
         } catch (RuntimeException e) {
             log.error("Error processing withdrawal transaction: {}", e.getMessage());
             throw new RuntimeException("Error processing withdrawal transaction: " + e.getMessage());

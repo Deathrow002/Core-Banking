@@ -12,5 +12,5 @@ import com.transaction.model.Transaction;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
     @Query("SELECT t FROM Transaction t WHERE t.AccNoOwner = :AccNo")
-    List<Transaction> getAllTransactionByAccount(Long AccNo);
+    List<Transaction> getAllTransactionByAccount(UUID AccNo);
 }
