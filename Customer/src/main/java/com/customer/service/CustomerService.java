@@ -50,8 +50,8 @@ public class CustomerService {
 
             return savedCustomer;
         }catch (IllegalArgumentException e) {
-            log.error("Invalid customer details: {}", e.getMessage());
-            throw new RuntimeException("An error occurred while creating the customer.", e);
+            log.error("Customer with this national ID already exists: {}", e.getMessage());
+            throw new IllegalArgumentException("Customer with this national ID already exists.", e);
         }
          catch (Exception e) {
             log.error("Invalid customer details: {}", e.getMessage());
