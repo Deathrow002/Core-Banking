@@ -64,6 +64,7 @@ public class AccountService {
     }
 
     //Update Account Balance
+    @Transactional
     public Account updateAccountBalance(@NotNull AccountDTO accountDTO){
         //Prepare Payload
         Account payload = accountRepository.findById(UUID.fromString(accountDTO.getAccountId().toString())).get();

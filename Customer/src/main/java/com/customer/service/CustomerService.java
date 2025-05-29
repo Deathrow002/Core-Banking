@@ -8,12 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.customer.config.kafka.KafkaResponseHandler;
 import com.customer.model.Address;
 import com.customer.model.Customer;
 import com.customer.repository.AddressRepository;
 import com.customer.repository.CustomerRepository;
-import com.customer.service.kafka.KafkaProducerService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -52,39 +50,60 @@ public class CustomerService {
 
             return savedCustomer;
         } catch (RuntimeException e) {
-            log.error("Unexpected error during customer creation: {}", e.getClass().getName(), e);
-            throw new RuntimeException("An unexpected error occurred.", e);
+            log.error("Invalid customer details: {}", e.getMessage());
+            throw new RuntimeException("An error occurred while creating the customer.", e);
         }
     }
 
     // Check if customer exists by ID
     public boolean existsById(UUID customerId) {
-        return customerRepository.existsByCustomerId(customerId);
+        try {
+            return customerRepository.existsById(customerId);
+        } catch (Exception e) {
+            log.error("Error checking if customer exists by ID: {}", e.getMessage());
+            throw new RuntimeException("An error occurred while checking customer existence.", e);
+        }
     }
 
     // Get customer by ID (including addresses)
     public Customer getCustomerById(UUID customerId) {
-        return customerRepository.findById(customerId).get();
+        try {
+            return customerRepository.findById(customerId)
+                    .orElseThrow(() -> new RuntimeException("Customer not found"));
+        } catch (RuntimeException e) {
+            log.error("Error retrieving customer by ID: {}", e.getMessage());
+            throw new RuntimeException("An error occurred while retrieving the customer.", e);
+        }
     }
 
     // Get all customers
     public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
+        try {
+            return customerRepository.findAll();
+        } catch (Exception e) {
+            log.error("Error retrieving all customers: {}", e.getMessage());
+            throw new RuntimeException("An error occurred while retrieving customers.", e);
+        }
     }
 
     // Update customer (and addresses if necessary)
+    @Transactional
     public Customer updateCustomer(UUID customerId, Customer customerDetails) {
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
-        
-        customer.setFirstName(customerDetails.getFirstName());
-        customer.setLastName(customerDetails.getLastName());
-        customer.setEmail(customerDetails.getEmail());
-        customer.setPhoneNumber(customerDetails.getPhoneNumber());
-        customer.setNationalId(customerDetails.getNationalId());
-        customer.setDateOfBirth(customerDetails.getDateOfBirth());
-        customer.setStatus(customerDetails.getStatus());
-        
-        return customerRepository.save(customer);
+        try {
+            Customer existingCustomer = customerRepository.findById(customerId)
+                    .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+            // Update customer details
+            existingCustomer.setFirstName(customerDetails.getFirstName());
+            existingCustomer.setLastName(customerDetails.getLastName());
+            existingCustomer.setNationalId(customerDetails.getNationalId());
+            existingCustomer.setEmail(customerDetails.getEmail());
+
+            // Save updated customer
+            return customerRepository.save(existingCustomer);
+        } catch (RuntimeException e) {
+            log.error("Error updating customer: {}", e.getMessage());
+            throw new RuntimeException("An error occurred while updating the customer.", e);
+        }
     }
 }

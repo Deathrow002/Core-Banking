@@ -1,4 +1,4 @@
-package com.customer.exception;
+package com.account.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(CustomerAlreadyExistsException.class)
-    public ResponseEntity<String> handleCustomerAlreadyExistsException(CustomerAlreadyExistsException ex) {
+    @ExceptionHandler(AccountAlreadyExistsException.class)
+    public ResponseEntity<String> handleAccountAlreadyExistsException(AccountAlreadyExistsException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
     }
 }
