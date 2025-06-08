@@ -18,7 +18,11 @@ RUN mvn clean package -DskipTests -f Account/pom.xml
 # Runtime Stage
 FROM eclipse-temurin:21-jre-jammy
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y wget curl && apt-get clean
+# Install wget and curl
+RUN apt-get update && \
+	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends wget curl && \
+	apt-get clean && \
+	rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

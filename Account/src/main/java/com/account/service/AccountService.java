@@ -22,10 +22,12 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AccountService {
-    String checkCustomerUrl  = "http://CUSTOMER-SERVICE/customers/validate";
+    String checkCustomerUrl  = "http://CUSTOMER-SERVICE/customers/validateById";
 
     private static final Logger log = LoggerFactory.getLogger(AccountService.class);
+    
     private final AccountRepository accountRepository;
+
     private final RestTemplate restTemplate;
 
     //Check Account Balance
@@ -103,19 +105,16 @@ public class AccountService {
     //Check if Customer Exists
     public boolean validateCustomer(UUID customerId) {
         try {
-            // Prepare the request body
             String requestUrl = checkCustomerUrl + "?customerId=" + customerId;
-
-            // Make the request
             ResponseEntity<Boolean> response = restTemplate.getForEntity(requestUrl, Boolean.class);
+            log.info("Response: {}", response);
 
-            // Check response status and body
             if (response.getStatusCode().is2xxSuccessful()) {
-                Boolean isValid = response.getBody();
-                return Boolean.TRUE.equals(isValid);
+                log.info("Valid Response: {}", response.getBody());
+                return Boolean.TRUE.equals(response.getBody());
             } else {
                 log.warn("Non-success HTTP response: {} for customer {} from URL: {}",
-                        response.getStatusCode(), customerId, requestUrl);
+                    response.getStatusCode(), customerId, requestUrl);
                 return false;
             }
         } catch (org.springframework.web.client.RestClientException e) {

@@ -8,9 +8,13 @@ import org.springframework.stereotype.Repository;
 
 import com.customer.model.Customer;
 
+import lombok.NonNull;
+
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
-    boolean existsByCustomerId(UUID customerId);
-    Optional<Customer> findByEmail(String email);
-    boolean existsByNationalId(String nationalId);
+    boolean existsByCustomerId(@NonNull UUID customerId);
+    Optional<Customer> findByEmail(@NonNull String email);
+    boolean existsByNationalId(@NonNull String nationalId);
+    boolean existsByEmail(@NonNull String email);
+    boolean existsByPhoneNumber(@NonNull String phoneNumber);
 }

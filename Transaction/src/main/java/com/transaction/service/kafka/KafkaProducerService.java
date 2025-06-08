@@ -12,6 +12,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -33,12 +34,23 @@ public class KafkaProducerService {
             log.debug("Encrypted message: {}", encryptedMessage);
 
             // Send the encrypted message to Kafka
-            kafkaTemplate.send(topic, encryptedMessage);
+            // kafkaTemplate.send(topic, encryptedMessage);
             log.info("Message successfully sent to topic {}", topic);
         } catch (Exception e) {
             log.error("Error encrypting and sending message: {}", e.getMessage(), e);
         }
     }
+
+public Mono<Void> sendMessageReactive(String topic, String message) {
+    return Mono.fromFuture(() -> {
+        try {
+            String encrypted = encrypt(message);
+            return kafkaTemplate.send(topic, encrypted).thenApply(result -> result); // returns CompletableFuture
+        } catch (Exception e) {
+            throw new RuntimeException("Encryption failed", e);
+        }
+    }).then();
+}
 
     private String encrypt(String message) throws Exception {
         SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(), "AES");

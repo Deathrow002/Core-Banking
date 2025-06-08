@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class TransactionProcess {
     private final TransactionService transactionService;
     private final TransactionRepository transactionRepository;
+    // private final TransactionReactiveRepository transactionReactiveRepository;
     private static final Logger log = LoggerFactory.getLogger(TransactionProcess.class);
 
     String checkAccountUrl  = "http://ACCOUNT-SERVICE/accounts/validateAccount";
@@ -161,4 +162,57 @@ public class TransactionProcess {
             throw new RuntimeException("Error processing withdrawal transaction: " + e.getMessage());
         }
     }
+
+    // public Mono<Transaction> transactionProcessReactive(TransactionDTO transactionDTO) {
+    //     // Validate both Owner and Receiver's account reactively
+    //     Mono<Boolean> ownerValid = transactionService.isAccountValidReactive(checkAccountUrl, transactionDTO.getAccNoOwner());
+    //     Mono<Boolean> receiverValid = transactionService.isAccountValidReactive(checkAccountUrl, transactionDTO.getAccNoReceive());
+
+    //     return Mono.zip(ownerValid, receiverValid)
+    //         .flatMap(validTuple -> { 
+    //             // Check if either account is invalid
+    //             if (validTuple.getT1() || validTuple.getT2()) {
+    //                 return Mono.error(new IllegalArgumentException("Invalid account details"));
+    //             }
+
+    //             // Retrieve account details for Owner and Receiver reactively
+    //             Mono<AccountPayload> ownerPayloadMono = transactionService.getAccountDetailReactive(checkBalanceUrl, transactionDTO.getAccNoOwner());
+    //             Mono<AccountPayload> receiverPayloadMono = transactionService.getAccountDetailReactive(checkBalanceUrl, transactionDTO.getAccNoReceive());
+                
+    //             return Mono.zip(ownerPayloadMono, receiverPayloadMono);
+
+    //         }).flatMap(payloadTuple -> {
+    //             AccountPayload ownerPayload = payloadTuple.getT1();
+    //             AccountPayload receiverPayload = payloadTuple.getT2();
+
+    //             if (ownerPayload == null || receiverPayload == null) {
+    //                 return Mono.error(new IllegalArgumentException("Invalid account details"));
+    //             }
+    //             if (ownerPayload.getBalance().compareTo(transactionDTO.getAmount()) < 0) {
+    //                 return Mono.error(new IllegalArgumentException("Insufficient funds"));
+    //             }
+
+    //             ownerPayload.setBalance(ownerPayload.getBalance().subtract(transactionDTO.getAmount()));
+    //             receiverPayload.setBalance(receiverPayload.getBalance().add(transactionDTO.getAmount()));
+
+    //             Transaction transaction = new Transaction(
+    //                 transactionDTO.getAccNoOwner(),
+    //                 transactionDTO.getAccNoReceive(),
+    //                 transactionDTO.getAmount(),
+    //                 TransacType.Transaction
+    //             );
+
+    //             Mono<Transaction> savedTransactionMono = transactionReactiveRepository.save(transaction);
+
+    //             return savedTransactionMono
+    //                 .flatMap(savedTx -> 
+    //                     Mono.when(
+    //                         transactionService.updateAccountBalanceReactive("account-balance-update", ownerPayload),
+    //                         transactionService.updateAccountBalanceReactive("account-balance-update", receiverPayload)
+    //                     ).then(Mono.just(savedTx))
+    //                 );
+    //         })
+    //         .doOnSuccess(response -> log.info("Reactive transaction processed successfully: Owner {} to Receiver {}, Amount: {}", transactionDTO.getAccNoOwner(), transactionDTO.getAccNoReceive(), transactionDTO.getAmount()))
+    //         .doOnError(e -> log.error("Error processing reactive transaction: {}", e.getMessage(), e));
+    // }
 }

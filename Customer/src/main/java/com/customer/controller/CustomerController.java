@@ -47,9 +47,16 @@ public class CustomerController {
     }
 
     // Customer Exists by ID
-    @GetMapping("/validate")
+    @GetMapping("/validateById")
     public ResponseEntity<Boolean> validateCustomer(@RequestParam UUID customerId) {
         Boolean isValid = customerService.existsById(customerId);
+        return new ResponseEntity<>(isValid, HttpStatus.OK);
+    }
+
+    // Customer Validate Data
+    @GetMapping("/validateByData")
+    public ResponseEntity<Boolean> validateCustomer(@RequestParam UUID customerId, @RequestParam String email) {
+        Boolean isValid = customerService.validateCustomer(customerId, email);
         return new ResponseEntity<>(isValid, HttpStatus.OK);
     }
 

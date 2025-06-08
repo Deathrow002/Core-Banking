@@ -1,4 +1,4 @@
-package com.authentication.model;
+package com.authentication.models;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -53,17 +53,21 @@ public class UserAuth implements UserDetails {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "is_enabled", nullable = false)
-    private boolean isEnabled;
-
-    @Column(name = "is_account_non_expired", nullable = false)
-    private boolean isAccountNonExpired;
-
+    @Builder.Default
     @Column(name = "is_account_non_locked", nullable = false)
-    private boolean isAccountNonLocked;
+    private boolean accountNonLocked = true;
 
+    @Builder.Default
     @Column(name = "is_credentials_non_expired", nullable = false)
-    private boolean isCredentialsNonExpired;
+    private boolean credentialsNonExpired = true;
+
+    @Builder.Default
+    @Column(name = "is_account_non_expired", nullable = false)
+    private boolean accountNonExpired = true;
+
+    @Builder.Default
+    @Column(name = "is_enabled", nullable = false)
+    private boolean enabled = true;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -72,26 +76,6 @@ public class UserAuth implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;
+        return this.email;
     }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return isAccountNonExpired;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return isAccountNonLocked;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return isCredentialsNonExpired;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return isEnabled;
-    }
-} 
+}

@@ -167,6 +167,39 @@ services:
       retries: 3
       start_period: 40s
 
+  authtication-service:
+    build:
+      context: .
+      dockerfile: Authentication/Dockerfile
+    ports:
+      - "8084:8084"
+    networks:
+      - core-bank-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      customer-service:
+        condition: service_healthy
+    environment:
+      spring.application.name: authentication-service
+      spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
+      spring.datasource.username: lmwn_user
+      spring.datasource.password: 12345678
+      eureka.client.service-url.defaultZone: http://discovery-service:8761/eureka
+      spring.redis.host: redis
+      spring.redis.port: 6379
+    command: ["java", "-jar", "/app/authentication-service.jar"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     ports:

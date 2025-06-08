@@ -6,14 +6,14 @@ WORKDIR /app
 # Copy the parent POM and install it
 COPY ./pom.xml /app/
 
-# Install all dependencies (including Discovery)
+# Install all dependencies (including Authentication)
 RUN mvn clean install -N
 
-# Copy the entire Discovery module (including pom.xml and src/)
-COPY ./Discovery /app/Discovery
+# Copy the entire Authentication module (including pom.xml and src/)
+COPY ./Authentication /app/Authentication
 
-# Build the Account service
-RUN mvn clean package -DskipTests -f Discovery/pom.xml
+# Build the Authentication service
+RUN mvn clean package -DskipTests -f Authentication/pom.xml
 
 # Runtime Stage
 FROM eclipse-temurin:21-jre-jammy
@@ -27,8 +27,8 @@ RUN apt-get update && \
 WORKDIR /app
 
 # Copy the built JAR from the builder stage
-COPY --from=builder /app/Discovery/target/Discovery-1.0-SNAPSHOT.jar discovery-service.jar
+COPY --from=builder /app/Authentication/target/Authentication-1.0-SNAPSHOT.jar authentication-service.jar
 
-EXPOSE 8761
+EXPOSE 8084
 
-ENTRYPOINT ["java", "-jar", "discovery-service.jar"]
+ENTRYPOINT ["java", "-jar", "authentication-service.jar"]

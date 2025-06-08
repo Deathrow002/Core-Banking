@@ -1,4 +1,4 @@
-package com.authentication.model;
+package com.authentication.models;
 
 public enum Role {
     USER,

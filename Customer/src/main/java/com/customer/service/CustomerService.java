@@ -63,6 +63,16 @@ public class CustomerService {
         }
     }
 
+    // Custumer Validation
+    public boolean validateCustomer(UUID customerId, String email) {
+        try{
+            return customerRepository.existsById(customerId) && customerRepository.existsByEmail(email);
+        } catch (Exception e) {
+            log.error("Error validating customer: {}", e.getMessage());
+            throw new RuntimeException("An error occurred while validating the customer.", e);
+        }
+    }
+
     // Check if customer exists by ID
     public boolean existsById(UUID customerId) {
         try {

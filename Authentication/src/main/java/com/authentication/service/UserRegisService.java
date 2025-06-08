@@ -10,9 +10,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.authentication.models.Role;
 import com.authentication.models.UserAuth;
+import com.authentication.models.request.UserRegisPayload;
 import com.authentication.repository.UserAuthRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -23,10 +25,11 @@ public class UserRegisService implements UserDetailsService{
 
     private final Logger log = LoggerFactory.getLogger(UserRegisService.class);
 
-    private final String CUSTOMER_SERVICE_URL = "http://localhost:8083/customers/";
+    private final String CUSTOMER_SERVICE_URL = "http://CUSTOMER-SERVICE/customers/";
 
     private final UserAuthRepository userAuthRepository;
-    private final PasswordEncoder passwordEncoder;
+
+    private final PasswordEncoder encoder;
 
     private final RestTemplate restTemplate;
 
@@ -36,8 +39,10 @@ public class UserRegisService implements UserDetailsService{
             .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 
-    public UserDetails registerUser(UserAuth user) {
+    public UserDetails registerUser(UserRegisPayload user) {
         try {
+            UserAuth userAuth = new UserAuth();
+
             // Check if user already exists
             if (userAuthRepository.findByEmail(user.getEmail()).isPresent()) {
                 log.error("User already exists with email: {}", user.getEmail());
@@ -45,27 +50,29 @@ public class UserRegisService implements UserDetailsService{
             }
 
             // Check if customer exists
-            Boolean customerExists = restTemplate.getForObject(CUSTOMER_SERVICE_URL + "validate/" + user.getCustomerId(), Boolean.class);
+            String url = UriComponentsBuilder
+                .fromUriString(CUSTOMER_SERVICE_URL + "validateByData")
+                .queryParam("customerId", user.getCustomerId())
+                .queryParam("email", user.getEmail())
+                .toUriString();
+
+            Boolean customerExists = restTemplate.getForObject(url, Boolean.class);
             if (customerExists == null || !customerExists) {
                 log.error("Customer not found with id: {}", user.getCustomerId());
                 throw new RuntimeException("Customer not found with id: " + user.getCustomerId());
             }
 
-            
-
-            // Encode password
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            
-            // Set default role and account settings
-            user.setRole(Role.USER);
-            user.setEnabled(true);
-            user.setAccountNonExpired(true);
-            user.setAccountNonLocked(true);
-            user.setCredentialsNonExpired(true);
+            userAuth.setEmail(user.getEmail());
+            userAuth.setPassword(encoder.encode(user.getPassword()));
+            userAuth.setCustomerId(user.getCustomerId());
+            userAuth.setRole(Role.USER);
+            userAuth.setAccountNonExpired(true);
+            userAuth.setAccountNonLocked(true);
+            userAuth.setCredentialsNonExpired(true);
 
             // Save user
-            log.info("Saving user: {}", user);
-            return userAuthRepository.save(user);
+            log.info("Saving user: {}", userAuth);
+            return userAuthRepository.save(userAuth);
         } catch (DataIntegrityViolationException e) {
             throw new RuntimeException("Database error while registering user: " + e.getMessage());
         } catch (RestClientException e) {
