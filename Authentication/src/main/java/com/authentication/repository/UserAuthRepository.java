@@ -11,4 +11,4 @@ import com.authentication.models.UserAuth;
 @Repository
 public interface UserAuthRepository extends JpaRepository<UserAuth, UUID> {
     Optional<UserAuth> findByEmail(String email);
-} 
+}
