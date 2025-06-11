@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import com.authentication.config.JwtConfig;
 import com.authentication.models.UserAuth;
 
 import io.jsonwebtoken.ExpiredJwtException;
