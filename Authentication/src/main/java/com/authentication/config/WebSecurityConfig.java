@@ -43,12 +43,10 @@ public class WebSecurityConfig {
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            .authorizeHttpRequests(auth -> 
-                auth.requestMatchers("/api/v1/auth/**").permitAll()
+            .authorizeHttpRequests(auth -> auth
+                // .requestMatchers("/api/v1/auth/getAllUsers").hasRole("ADMIN") // More specific rule first
+                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register").permitAll() // Allow public access to login and register
                 .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class)

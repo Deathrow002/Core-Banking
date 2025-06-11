@@ -35,7 +35,7 @@ public class JwtUtils {
                 .claim("role", userPrincipal.getRole() != null ? userPrincipal.getRole().name() : null)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtConfig.getExpiration()))
-                .signWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(jwtConfig.getSecretKey().getBytes()), SignatureAlgorithm.HS512)
+                .signWith(key(), SignatureAlgorithm.HS512) // Use the consistent key() method
                 .compact();
     }
 

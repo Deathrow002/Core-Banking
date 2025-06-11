@@ -34,18 +34,30 @@ public class AuthTokenFilter extends OncePerRequestFilter{
         throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
-            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                String username = jwtUtils.getUserNameFromJwtToken(jwt);
+            if (jwt != null) {
+                logger.info("AuthTokenFilter: JWT found in request header.");
+                if (jwtUtils.validateJwtToken(jwt)) {
+                    logger.info("AuthTokenFilter: JWT is valid.");
+                    String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                    logger.info("AuthTokenFilter: Username from JWT: {}", username);
 
-                UserDetails userDetails = userAuth.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    UserDetails userDetails = userAuth.loadUserByUsername(username);
+                    logger.info("AuthTokenFilter: UserDetails loaded for username: {}", userDetails.getUsername());
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null, // Credentials (password) not needed as JWT is already validated
+                                    userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    logger.info("AuthTokenFilter: User '{}' authenticated and set in SecurityContext.", username);
+                } else {
+                    logger.warn("AuthTokenFilter: JWT validation failed.");
+                }
+            } else {
+                logger.info("AuthTokenFilter: No JWT found in request header.");
             }
         } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
             logger.error("Cannot set user authentication: {}", e);
@@ -56,11 +68,15 @@ public class AuthTokenFilter extends OncePerRequestFilter{
 
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
+        logger.debug("AuthTokenFilter: Authorization header: {}", headerAuth);
 
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
-            return headerAuth.substring(7);
+            String token = headerAuth.substring(7);
+            logger.debug("AuthTokenFilter: Extracted JWT: {}", token);
+            return token;
         }
 
+        logger.debug("AuthTokenFilter: Could not parse JWT from header.");
         return null;
     }
 }
