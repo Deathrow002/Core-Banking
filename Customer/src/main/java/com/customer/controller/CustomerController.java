@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -27,6 +28,7 @@ public class CustomerController {
 
     // Create a new customer with addresses
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
         Customer createdCustomer = customerService.createCustomer(customer, customer.getAddresses());
         return new ResponseEntity<>(createdCustomer, HttpStatus.CREATED);
@@ -34,6 +36,7 @@ public class CustomerController {
 
     // Get customer by ID
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ResponseEntity<Customer> getCustomerById(@RequestParam UUID customerId) {
         Customer customer = customerService.getCustomerById(customerId);
         return new ResponseEntity<>(customer, HttpStatus.OK);
@@ -41,6 +44,7 @@ public class CustomerController {
 
     // Get all customers
     @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Customer>> getAllCustomers() {
         List<Customer> customers = customerService.getAllCustomers();
         return new ResponseEntity<>(customers, HttpStatus.OK);
@@ -48,6 +52,7 @@ public class CustomerController {
 
     // Customer Exists by ID
     @GetMapping("/validateById")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ResponseEntity<Boolean> validateCustomer(@RequestParam UUID customerId) {
         Boolean isValid = customerService.existsById(customerId);
         return new ResponseEntity<>(isValid, HttpStatus.OK);
@@ -55,6 +60,7 @@ public class CustomerController {
 
     // Customer Validate Data
     @GetMapping("/validateByData")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ResponseEntity<Boolean> validateCustomer(@RequestParam UUID customerId, @RequestParam String email) {
         Boolean isValid = customerService.validateCustomer(customerId, email);
         return new ResponseEntity<>(isValid, HttpStatus.OK);
@@ -62,6 +68,7 @@ public class CustomerController {
 
     // Update an existing customer
     @PutMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ResponseEntity<Customer> updateCustomer(@RequestParam UUID customerId, @RequestBody Customer customerDetails) {
         Customer updatedCustomer = customerService.updateCustomer(customerId, customerDetails);
         return new ResponseEntity<>(updatedCustomer, HttpStatus.OK);

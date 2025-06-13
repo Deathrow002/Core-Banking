@@ -1,4 +1,4 @@
-package com.authentication.config;
+package com.customer.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,14 +12,14 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.authentication.config.JWT.AuthEntryPointJwt;
-import com.authentication.config.JWT.AuthTokenFilter;
-import com.authentication.service.UserAuthService;
+import com.customer.config.JWT.AuthEntryPointJwt; // Corrected package to uppercase JWT
+import com.customer.config.JWT.AuthTokenFilter;   // Corrected package to uppercase JWT
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class WebSecurityConfig {
 
     @Lazy
-    private final UserAuthService userAuthService;
+    private final UserDetailsService userDetailsService;
 
     private final AuthEntryPointJwt unauthorizedHandler;
 
@@ -46,11 +46,8 @@ public class WebSecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                // .requestMatchers("/api/v1/auth/getAllUsers").hasRole("ADMIN") // More specific rule first
-                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register").permitAll() // Allow public access to login and register
                 .anyRequest().authenticated()
             )
-            .authenticationProvider(authenticationProvider())
             .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
     }
@@ -63,8 +60,8 @@ public class WebSecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userAuthService);
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder()); 
         return authProvider;
     }
 
