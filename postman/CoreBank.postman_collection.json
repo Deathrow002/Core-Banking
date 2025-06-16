@@ -5,6 +5,59 @@
   },
   "item": [
     {
+      "name": "Authentication Service",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/login?email={{email}}&password={{password}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "auth", "login"],
+              "query": [
+                { "key": "email", "value": "{{email}}" },
+                { "key": "password", "value": "{{password}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password\",\n  ...\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/getAllUsers",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "auth", "getAllUsers"]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Customer Service",
       "item": [
         {
@@ -87,6 +140,39 @@
                   "key": "customerId",
                   "value": "{{customerId}}"
                 }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Validate Customer By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8083/customers/validateById?customerId={{customerId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8083",
+              "path": ["customers", "validateById"],
+              "query": [
+                { "key": "customerId", "value": "{{customerId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Validate Customer By Data",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8083/customers/validateByData?customerId={{customerId}}&email={{email}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8083",
+              "path": ["customers", "validateByData"],
+              "query": [
+                { "key": "customerId", "value": "{{customerId}}" },
+                { "key": "email", "value": "{{email}}" }
               ]
             }
           }
@@ -174,12 +260,7 @@
           "name": "Update Account Balance",
           "request": {
             "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"accNo\": \"{{accountNumber}}\",\n  \"balance\": 2000.0\n}"
@@ -316,10 +397,7 @@
               "port": "8082",
               "path": ["transactions", "GetTransByAccNo"],
               "query": [
-                {
-                  "key": "AccNo",
-                  "value": "{{accountNumber}}"
-                }
+                { "key": "AccNo", "value": "{{accountNumber}}" }
               ]
             }
           }
