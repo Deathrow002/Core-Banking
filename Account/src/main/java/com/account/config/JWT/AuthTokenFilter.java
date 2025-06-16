@@ -1,4 +1,4 @@
-package com.customer.config.JWT;
+package com.account.config.JWT;
 
 import java.util.HashMap;
 import java.util.List;

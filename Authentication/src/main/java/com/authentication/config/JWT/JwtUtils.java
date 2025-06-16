@@ -28,10 +28,15 @@ public class JwtUtils {
 
     public String generateJwtToken(Authentication authentication) {
         UserAuth userPrincipal = (UserAuth) authentication.getPrincipal();
+        String role = userPrincipal.getRole() != null ? userPrincipal.getRole().name() : null;
+        // Ensure the role is prefixed with "ROLE_"
+        if (role != null && !role.startsWith("ROLE_")) {
+            role = "ROLE_" + role;
+        }
         return Jwts.builder()
                 .setSubject(userPrincipal.getUsername())
                 .claim("customerId", userPrincipal.getCustomerId() != null ? userPrincipal.getCustomerId().toString() : null)
-                .claim("role", userPrincipal.getRole() != null ? userPrincipal.getRole().name() : null)
+                .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtConfig.getExpiration()))
                 .signWith(key(), SignatureAlgorithm.HS512) // Use the consistent key() method

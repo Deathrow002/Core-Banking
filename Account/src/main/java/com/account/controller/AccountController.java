@@ -24,6 +24,7 @@ import com.account.model.Account;
 import com.account.model.DTO.AccountDTO;
 import com.account.service.AccountService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -92,8 +93,8 @@ public class AccountController {
     }
 
     @PostMapping("/createAccount")
-    public ResponseEntity<?> createAccount(@RequestBody AccountDTO accountDTO) {
-        Account createdAccount = accountService.createAccount(accountDTO);
+    public ResponseEntity<?> createAccount(@RequestBody AccountDTO accountDTO, HttpServletRequest request) {
+        Account createdAccount = accountService.createAccount(accountDTO, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
     }
 
