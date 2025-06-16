@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +40,7 @@ public class AccountController {
 
     @GetMapping("/validateAccount")
     @Cacheable(value = "accountExistsCache", key = "#accNo")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public ResponseEntity<?> checkAccountExists(@RequestParam UUID accNo) {
         try {
             boolean exists = accountService.existsById(accNo);
@@ -56,6 +58,7 @@ public class AccountController {
     }
 
     @GetMapping("/getAccount")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     @Cacheable(value = "accountCache", key = "#accNo")
     public ResponseEntity<?> getAccount(@RequestParam UUID accNo) {
         try {
@@ -69,6 +72,7 @@ public class AccountController {
     }
 
     @GetMapping("/getAccountByCustomerId")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     @Cacheable(value = "accountCache", key = "#customerId")
     public ResponseEntity<?> getAccountByCustomerId(@RequestParam UUID customerId) {
         try {
@@ -83,6 +87,7 @@ public class AccountController {
     }
 
     @GetMapping("/getAllAccounts")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getAllAccounts() {
         try {
             List<Account> accounts = accountService.getAllAccounts();
@@ -93,12 +98,14 @@ public class AccountController {
     }
 
     @PostMapping("/createAccount")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public ResponseEntity<?> createAccount(@RequestBody AccountDTO accountDTO, HttpServletRequest request) {
         Account createdAccount = accountService.createAccount(accountDTO, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
     }
 
     @PutMapping("/updateAccountBalance")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     @CacheEvict(value = {"accountExistsCache", "accountCache"}, key = "#accountDTO.accNo")
     public ResponseEntity<?> updateAccountBalance(@RequestBody AccountDTO accountDTO){
         try{
@@ -110,6 +117,7 @@ public class AccountController {
     }
 
     @DeleteMapping("/deleteAccount")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @CacheEvict(value = {"accountExistsCache", "accountCache"}, key = "#accNo")
     public ResponseEntity<String> deleteAccount(@RequestParam UUID accNo) {
         try {

@@ -1,4 +1,4 @@
-package com.customer.config;
+package com.transaction.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,8 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.customer.config.JWT.AuthEntryPointJwt;
-import com.customer.config.JWT.AuthTokenFilter;
+import com.transaction.config.JWT.AuthEntryPointJwt;
+import com.transaction.config.JWT.AuthTokenFilter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,7 +38,7 @@ public class WebSecurityConfig {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
