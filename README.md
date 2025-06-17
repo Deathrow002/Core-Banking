@@ -101,29 +101,29 @@ To simplify testing and interacting with the Core Bank System, a Postman collect
    - **Authentication Service**:
      - Login
      - Register
-     - Get All Users
+     - Get All Users <br> <sub>**Authorization:** Bearer JWT token (must have `ADMIN` role)</sub>
    - **Customer Service**:
-     - Create Customer
-     - Get Customer by ID
-     - Get All Customers
-     - Update Customer
-     - Validate Customer By ID
-     - Validate Customer By Data
+     - Create Customer <br> <sub>**Authorization:** Bearer JWT token (`ADMIN` or `MANAGER`)</sub>
+     - Get Customer by ID <br> <sub>**Authorization:** Bearer JWT token (`ADMIN` or `MANAGER`)</sub>
+     - Get All Customers <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`)</sub>
+     - Update Customer <br> <sub>**Authorization:** Bearer JWT token (`ADMIN` or `MANAGER`)</sub>
+     - Validate Customer By ID <br> <sub>**Authorization:** Bearer JWT token (`ADMIN` or `MANAGER`)</sub>
+     - Validate Customer By Data <br> <sub>**Authorization:** Bearer JWT token (`ADMIN` or `MANAGER`)</sub>
    - **Account Service**:
-     - Validate Account
-     - Get Account
-     - Get Account By Customer ID
-     - Get All Accounts
-     - Create Account
-     - Update Account Balance
-     - Delete Account
+     - Validate Account <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
+     - Get Account <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
+     - Get Account By Customer ID <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
+     - Get All Accounts <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`)</sub>
+     - Create Account <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
+     - Update Account Balance <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
+     - Delete Account <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
    - **Transaction Service**:
-     - Perform Transaction
-     - Deposit
-     - Withdraw
-     - Get Transactions by Account
+     - Perform Transaction <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
+     - Deposit <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
+     - Withdraw <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
+     - Get Transactions by Account <br> <sub>**Authorization:** Bearer JWT token (`ADMIN` or `MANAGER`)</sub>
 
-> **Note:** Most endpoints require a valid JWT token in the `Authorization` header. Use the Authentication Service's login endpoint to obtain a token.
+> **Note:** For all endpoints except login and register, include a valid JWT token in the `Authorization` header as `Bearer <token>`.
 
 Ensure that the services are running locally or on the specified endpoints before testing.
 
