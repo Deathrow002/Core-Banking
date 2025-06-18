@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,9 +45,16 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserRegisPayload user) {
+    public ResponseEntity<?> register(@RequestBody UserRegisPayload user, @RequestHeader("Authorization") String authorizationHeader) {
         try {
-            UserDetails registeredUser = userRegisService.registerUser(user);
+            // Check if the authorization header is present and starts with "Bearer "
+            String jwtToken = authorizationHeader.replace("Bearer ", "");
+            log.info("Received JWT Token: {}", jwtToken);
+
+            // Use registerUser from UserRegisService
+            UserDetails registeredUser = userRegisService.registerUser(user, jwtToken);
+            log.info("User registered successfully: {}", registeredUser.getUsername());
+
             return ResponseEntity.ok().body(registeredUser);
         } catch (RuntimeException e) {
             log.error("Registration failed: {}", e.getMessage());

@@ -3,6 +3,10 @@ package com.authentication.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -39,7 +43,7 @@ public class UserRegisService implements UserDetailsService{
             .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 
-    public UserDetails registerUser(UserRegisPayload user) {
+    public UserDetails registerUser(UserRegisPayload user, String jwtToken) {
         try {
             UserAuth userAuth = new UserAuth();
 
@@ -56,7 +60,18 @@ public class UserRegisService implements UserDetailsService{
                 .queryParam("email", user.getEmail())
                 .toUriString();
 
-            Boolean customerExists = restTemplate.getForObject(url, Boolean.class);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + jwtToken);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<Boolean> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                Boolean.class
+            );
+
+            Boolean customerExists = response.getBody();
             if (customerExists == null || !customerExists) {
                 log.error("Customer not found with id: {}", user.getCustomerId());
                 throw new RuntimeException("Customer not found with id: " + user.getCustomerId());

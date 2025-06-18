@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,22 +35,25 @@ public class TransactionController {
 
     @PostMapping("/Transaction")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
-    public ResponseEntity<?> transaction(@RequestBody TransactionDTO transactionDTO) {
-        Transaction processedTransaction = transactionProcess.transactionProcess(transactionDTO);
+    public ResponseEntity<?> transaction(@RequestBody TransactionDTO transactionDTO, @RequestHeader("Authorization") String authorizationHeader) {
+        String jwtToken = authorizationHeader.replace("Bearer ", "");
+        Transaction processedTransaction = transactionProcess.transactionProcess(transactionDTO, jwtToken);
         return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
     }
 
     @PostMapping("/Deposit")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
-    public ResponseEntity<?> deposit(@RequestBody TransactionDTO transactionDTO) {
-        Transaction processedTransaction = transactionProcess.depositProcess(transactionDTO);
+    public ResponseEntity<?> deposit(@RequestBody TransactionDTO transactionDTO, @RequestHeader("Authorization") String authorizationHeader) {
+        String jwtToken = authorizationHeader.replace("Bearer ", "");
+        Transaction processedTransaction = transactionProcess.depositProcess(transactionDTO, jwtToken);
         return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
     }
 
     @PostMapping("/Withdraw")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
-    public ResponseEntity<?> withdraw(@RequestBody TransactionDTO transactionDTO) {
-        Transaction processedTransaction = transactionProcess.withdrawProcess(transactionDTO);
+    public ResponseEntity<?> withdraw(@RequestBody TransactionDTO transactionDTO, @RequestHeader("Authorization") String authorizationHeader) {
+        String jwtToken = authorizationHeader.replace("Bearer ", "");
+        Transaction processedTransaction = transactionProcess.withdrawProcess(transactionDTO, jwtToken);
         return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
 
     }

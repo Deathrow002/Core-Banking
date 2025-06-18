@@ -6,6 +6,9 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -37,14 +40,20 @@ public class TransactionService {
         return transactionRepository.getAllTransactionByAccount(AccNo);
     }
 
-    public boolean isAccountValid(String url, UUID accountNumber) {
-        // Prepare the request body
+    public boolean isAccountValid(String url, UUID accountNumber, String jwtToken) {
         String requestUrl = url + "?accNo=" + accountNumber;
 
-        // Make the request
-        ResponseEntity<Boolean> response = restTemplate.getForEntity(requestUrl, Boolean.class);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + jwtToken);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // Check response status and body
+        ResponseEntity<Boolean> response = restTemplate.exchange(
+            requestUrl,
+            HttpMethod.GET,
+            entity,
+            Boolean.class
+        );
+
         if (response.getStatusCode().is2xxSuccessful()) {
             Boolean isValid = response.getBody();
             return Boolean.TRUE.equals(isValid);
@@ -55,24 +64,34 @@ public class TransactionService {
         }
     }
 
-    public AccountPayload getAccountDetail(String url, UUID accountNumber) {
-        // Prepare the request URL
+    public AccountPayload getAccountDetail(String url, UUID accountNumber, String jwtToken) {
         String requestUrl = url + "?accNo=" + accountNumber;
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + jwtToken);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
         // Log raw response as a string for debugging
-        ResponseEntity<String> rawResponse = restTemplate.getForEntity(requestUrl, String.class);
+        ResponseEntity<String> rawResponse = restTemplate.exchange(
+            requestUrl,
+            HttpMethod.GET,
+            entity,
+            String.class
+        );
         log.info("Raw Response: {}", rawResponse.getBody());
 
-        // Check if the response is a boolean
         if ("true".equalsIgnoreCase(rawResponse.getBody()) || "false".equalsIgnoreCase(rawResponse.getBody())) {
             log.warn("Received a boolean response instead of account details for account: {}", accountNumber);
             throw new RestClientException("Received a boolean response instead of account details");
         }
 
-        // Parse response directly to AccountPayload
-        ResponseEntity<AccountPayload> responsePayload = restTemplate.getForEntity(requestUrl, AccountPayload.class);
+        ResponseEntity<AccountPayload> responsePayload = restTemplate.exchange(
+            requestUrl,
+            HttpMethod.GET,
+            entity,
+            AccountPayload.class
+        );
 
-        // Validate the response
         if (responsePayload.getStatusCode().is2xxSuccessful() && responsePayload.getBody() != null) {
             AccountPayload accountPayload = responsePayload.getBody();
             log.info("Successfully retrieved account details for {}: {}", accountNumber, accountPayload);

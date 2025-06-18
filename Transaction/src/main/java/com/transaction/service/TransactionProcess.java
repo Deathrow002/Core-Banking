@@ -28,22 +28,22 @@ public class TransactionProcess {
 
 
     // Helper method to validate an account
-    private boolean isValidAccount(UUID accountNumber) {
-        return !transactionService.isAccountValid(checkAccountUrl, accountNumber);
+    private boolean isValidAccount(UUID accountNumber, String jwtToken) {
+        return !transactionService.isAccountValid(checkAccountUrl, accountNumber , jwtToken);
     }
 
     // Method to process transactions between Owner and Receiver
     @Transactional
-    public Transaction transactionProcess(TransactionDTO transactionDTO) {
+    public Transaction transactionProcess(TransactionDTO transactionDTO, String jwtToken) {
         try{
             // Validate both Owner and Receiver's account in a single function
-            if (isValidAccount(transactionDTO.getAccNoOwner()) || isValidAccount(transactionDTO.getAccNoReceive())) {
+            if (isValidAccount(transactionDTO.getAccNoOwner(), jwtToken) || isValidAccount(transactionDTO.getAccNoReceive(), jwtToken)) {
                 throw new IllegalArgumentException("Invalid account details");
             }
 
             // Retrieve account details for Owner and Receiver
-            AccountPayload ownerPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoOwner());
-            AccountPayload receiverPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoReceive());
+            AccountPayload ownerPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoOwner(), jwtToken);
+            AccountPayload receiverPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoReceive(), jwtToken);
 
             // Check if account details are valid
             if (ownerPayload == null || receiverPayload == null) {
@@ -82,15 +82,15 @@ public class TransactionProcess {
 
     // Method to process deposit transactions
     @Transactional
-    public Transaction depositProcess(TransactionDTO transactionDTO) {
+    public Transaction depositProcess(TransactionDTO transactionDTO, String jwtToken) {
         try {
             // Validate Owner's account
-            if (isValidAccount(transactionDTO.getAccNoOwner())) {
+            if (isValidAccount(transactionDTO.getAccNoOwner(), jwtToken)) {
                 throw new IllegalArgumentException("Invalid account details");  
             }
 
             // Retrieve account details for Owner
-            AccountPayload ownerPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoOwner());
+            AccountPayload ownerPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoOwner(), jwtToken);
 
             // Check if account details are valid
             if (ownerPayload == null) {
@@ -121,15 +121,15 @@ public class TransactionProcess {
 
     // Method to process withdrawal transactions
     @Transactional
-    public Transaction withdrawProcess(TransactionDTO transactionDTO) {
+    public Transaction withdrawProcess(TransactionDTO transactionDTO, String jwtToken) {
         try {
             // Validate Owner's account
-            if (isValidAccount(transactionDTO.getAccNoOwner())) {
+            if (isValidAccount(transactionDTO.getAccNoOwner(), jwtToken)) {
                 throw new IllegalArgumentException("Invalid account details");
             }
 
             // Retrieve account details for Owner
-            AccountPayload ownerPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoOwner());
+            AccountPayload ownerPayload = transactionService.getAccountDetail(checkBalanceUrl, transactionDTO.getAccNoOwner(), jwtToken);
 
             // Check if account details are valid
             if (ownerPayload == null) {
@@ -162,57 +162,4 @@ public class TransactionProcess {
             throw new RuntimeException("Error processing withdrawal transaction: " + e.getMessage());
         }
     }
-
-    // public Mono<Transaction> transactionProcessReactive(TransactionDTO transactionDTO) {
-    //     // Validate both Owner and Receiver's account reactively
-    //     Mono<Boolean> ownerValid = transactionService.isAccountValidReactive(checkAccountUrl, transactionDTO.getAccNoOwner());
-    //     Mono<Boolean> receiverValid = transactionService.isAccountValidReactive(checkAccountUrl, transactionDTO.getAccNoReceive());
-
-    //     return Mono.zip(ownerValid, receiverValid)
-    //         .flatMap(validTuple -> { 
-    //             // Check if either account is invalid
-    //             if (validTuple.getT1() || validTuple.getT2()) {
-    //                 return Mono.error(new IllegalArgumentException("Invalid account details"));
-    //             }
-
-    //             // Retrieve account details for Owner and Receiver reactively
-    //             Mono<AccountPayload> ownerPayloadMono = transactionService.getAccountDetailReactive(checkBalanceUrl, transactionDTO.getAccNoOwner());
-    //             Mono<AccountPayload> receiverPayloadMono = transactionService.getAccountDetailReactive(checkBalanceUrl, transactionDTO.getAccNoReceive());
-                
-    //             return Mono.zip(ownerPayloadMono, receiverPayloadMono);
-
-    //         }).flatMap(payloadTuple -> {
-    //             AccountPayload ownerPayload = payloadTuple.getT1();
-    //             AccountPayload receiverPayload = payloadTuple.getT2();
-
-    //             if (ownerPayload == null || receiverPayload == null) {
-    //                 return Mono.error(new IllegalArgumentException("Invalid account details"));
-    //             }
-    //             if (ownerPayload.getBalance().compareTo(transactionDTO.getAmount()) < 0) {
-    //                 return Mono.error(new IllegalArgumentException("Insufficient funds"));
-    //             }
-
-    //             ownerPayload.setBalance(ownerPayload.getBalance().subtract(transactionDTO.getAmount()));
-    //             receiverPayload.setBalance(receiverPayload.getBalance().add(transactionDTO.getAmount()));
-
-    //             Transaction transaction = new Transaction(
-    //                 transactionDTO.getAccNoOwner(),
-    //                 transactionDTO.getAccNoReceive(),
-    //                 transactionDTO.getAmount(),
-    //                 TransacType.Transaction
-    //             );
-
-    //             Mono<Transaction> savedTransactionMono = transactionReactiveRepository.save(transaction);
-
-    //             return savedTransactionMono
-    //                 .flatMap(savedTx -> 
-    //                     Mono.when(
-    //                         transactionService.updateAccountBalanceReactive("account-balance-update", ownerPayload),
-    //                         transactionService.updateAccountBalanceReactive("account-balance-update", receiverPayload)
-    //                     ).then(Mono.just(savedTx))
-    //                 );
-    //         })
-    //         .doOnSuccess(response -> log.info("Reactive transaction processed successfully: Owner {} to Receiver {}, Amount: {}", transactionDTO.getAccNoOwner(), transactionDTO.getAccNoReceive(), transactionDTO.getAmount()))
-    //         .doOnError(e -> log.error("Error processing reactive transaction: {}", e.getMessage(), e));
-    // }
 }
