@@ -1,4 +1,4 @@
-package com.transaction.config.JWT;
+package com.transaction.config.jwt;
 
 import java.security.Key;
 import java.util.Date;

@@ -8,7 +8,7 @@ import java.util.function.Function;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import com.authentication.config.JWT.JwtConfig;
+import com.authentication.config.jwt.JwtConfig;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

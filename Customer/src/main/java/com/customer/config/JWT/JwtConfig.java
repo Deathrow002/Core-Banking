@@ -1,4 +1,4 @@
-package com.customer.config.JWT;
+package com.customer.config.jwt;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

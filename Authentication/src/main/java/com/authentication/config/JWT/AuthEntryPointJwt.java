@@ -1,4 +1,4 @@
-package com.authentication.config.JWT;
+package com.authentication.config.jwt;
 
 import java.io.IOException;
 

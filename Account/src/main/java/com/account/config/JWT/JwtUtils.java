@@ -1,4 +1,4 @@
-package com.account.config.JWT;
+package com.account.config.jwt;
 
 import java.security.Key;
 import java.util.Date;

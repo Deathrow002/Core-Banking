@@ -1,4 +1,4 @@
-package com.customer.config.JWT;
+package com.customer.config.jwt;
 
 import java.io.IOException;
 import java.util.HashMap;

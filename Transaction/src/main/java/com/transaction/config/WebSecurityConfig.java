@@ -17,8 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.transaction.config.JWT.AuthEntryPointJwt;
-import com.transaction.config.JWT.AuthTokenFilter;
+import com.transaction.config.jwt.AuthEntryPointJwt;
+import com.transaction.config.jwt.AuthTokenFilter;
 
 import lombok.RequiredArgsConstructor;
 

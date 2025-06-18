@@ -1,4 +1,4 @@
-package com.transaction.config.JWT;
+package com.transaction.config.jwt;
 
 import java.io.IOException;
 import java.util.HashMap;
