@@ -43,7 +43,6 @@ services:
 
   grafana:
     image: grafana/grafana:12.0.1
-
     container_name: grafana
     ports:
       - "3000:3000"
@@ -53,6 +52,9 @@ services:
       - core-bank-network
     volumes:
       - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=myuser         # <-- set your desired username
+      - GF_SECURITY_ADMIN_PASSWORD=mypassword # <-- set your desired password
 
   discovery-service:
     build:
@@ -256,3 +258,5 @@ volumes:
     name: grafana_data_volume
   kafka_data:
     name: kafka_data_volume
+  loki_data:
+    name: loki_data_volume
