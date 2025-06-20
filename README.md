@@ -168,7 +168,3 @@ Persistent data is stored in Docker volumes:
 
 - Use `docker-compose logs <service-name>` to view logs for a specific service.
 - Ensure all dependencies are healthy before starting dependent services.
-
-## License
-
-This project is licensed under the MIT License.
