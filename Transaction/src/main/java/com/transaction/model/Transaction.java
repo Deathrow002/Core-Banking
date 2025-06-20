@@ -4,16 +4,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,41 +15,37 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "Transaction")
+@Table("transaction")
 public class Transaction {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "TransacID", nullable = false)
-    private UUID TransacID;
+    @Column("transac_id")
+    private UUID transacID;
 
-    @Column(name = "AccNoOwner", nullable = false)
-    private UUID AccNoOwner;
+    @Column("accnoowner")
+    private UUID accNoOwner;
 
-    @Column(name = "AccNoReceive")
-    private UUID AccNoReceive;
+    @Column("accnoreceive")
+    private UUID accNoReceive;
 
-    @Column(name = "Amount", nullable = false)
-    private BigDecimal Amount;
+    @Column("amount")
+    private BigDecimal amount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "TransacType", nullable = false)
-    private TransacType transacType;
+    @Column("transac_type")
+    private String transacType;
 
-    @Column(name = "TransacAt", nullable = false)
-    @CreationTimestamp
-    private LocalDateTime TransacAt;
+    @Column("transac_at")
+    private LocalDateTime transacAt;
 
-    public Transaction(UUID AccNoOwner, UUID AccNoReceive, BigDecimal Amount, TransacType transacType){
-        this.AccNoOwner = AccNoOwner;
-        this.AccNoReceive = AccNoReceive;
-        this.Amount = Amount;
+    public Transaction(UUID AccNoOwner, UUID AccNoReceive, BigDecimal Amount, String transacType){
+        this.accNoOwner = AccNoOwner;
+        this.accNoReceive = AccNoReceive;
+        this.amount = Amount;
         this.transacType = transacType;
     }
 
-    public Transaction(UUID AccNoOwner, BigDecimal Amount, TransacType transacType){
-        this.AccNoOwner = AccNoOwner;
-        this.Amount = Amount;
+    public Transaction(UUID AccNoOwner, BigDecimal Amount, String transacType){
+        this.accNoOwner = AccNoOwner;
+        this.amount = Amount;
         this.transacType = transacType;
     }
 }

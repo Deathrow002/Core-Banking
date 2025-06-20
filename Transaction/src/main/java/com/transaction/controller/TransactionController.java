@@ -5,7 +5,6 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,8 +20,8 @@ import com.transaction.service.TransactionProcess;
 import com.transaction.service.TransactionService;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
-@Component
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/transactions")
@@ -30,38 +29,36 @@ import lombok.RequiredArgsConstructor;
 public class TransactionController {
 
     private final TransactionService transactionService;
-
     private final TransactionProcess transactionProcess;
 
     @PostMapping("/Transaction")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
-    public ResponseEntity<?> transaction(@RequestBody TransactionDTO transactionDTO, @RequestHeader("Authorization") String authorizationHeader) {
+    public Mono<ResponseEntity<Transaction>> transaction(@RequestBody TransactionDTO transactionDTO, @RequestHeader("Authorization") String authorizationHeader) {
         String jwtToken = authorizationHeader.replace("Bearer ", "");
-        Transaction processedTransaction = transactionProcess.transactionProcess(transactionDTO, jwtToken);
-        return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
+        return transactionProcess.transactionProcess(transactionDTO, jwtToken)
+                .map(tx -> ResponseEntity.status(HttpStatus.OK).body(tx));
     }
 
     @PostMapping("/Deposit")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
-    public ResponseEntity<?> deposit(@RequestBody TransactionDTO transactionDTO, @RequestHeader("Authorization") String authorizationHeader) {
+    public Mono<ResponseEntity<Transaction>> deposit(@RequestBody TransactionDTO transactionDTO, @RequestHeader("Authorization") String authorizationHeader) {
         String jwtToken = authorizationHeader.replace("Bearer ", "");
-        Transaction processedTransaction = transactionProcess.depositProcess(transactionDTO, jwtToken);
-        return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
+        return transactionProcess.depositProcess(transactionDTO, jwtToken)
+                .map(tx -> ResponseEntity.status(HttpStatus.OK).body(tx));
     }
 
     @PostMapping("/Withdraw")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
-    public ResponseEntity<?> withdraw(@RequestBody TransactionDTO transactionDTO, @RequestHeader("Authorization") String authorizationHeader) {
+    public Mono<ResponseEntity<Transaction>> withdraw(@RequestBody TransactionDTO transactionDTO, @RequestHeader("Authorization") String authorizationHeader) {
         String jwtToken = authorizationHeader.replace("Bearer ", "");
-        Transaction processedTransaction = transactionProcess.withdrawProcess(transactionDTO, jwtToken);
-        return ResponseEntity.status(HttpStatus.OK).body(processedTransaction);
-
+        return transactionProcess.withdrawProcess(transactionDTO, jwtToken)
+                .map(tx -> ResponseEntity.status(HttpStatus.OK).body(tx));
     }
 
     @GetMapping("/GetTransByAccNo")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<?> getTransactionsByAccountNo(@RequestParam UUID AccNo){
-        return ResponseEntity.status(HttpStatus.OK).body(transactionService.getAllTransactionByAccount(AccNo));
-
+    public Mono<ResponseEntity<?>> getTransactionsByAccountNo(@RequestParam UUID AccNo){
+        return transactionService.getAllTransactionByAccount(AccNo)
+                .map(list -> ResponseEntity.status(HttpStatus.OK).body(list));
     }
 }

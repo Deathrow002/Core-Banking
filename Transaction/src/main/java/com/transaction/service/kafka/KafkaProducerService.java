@@ -41,16 +41,16 @@ public class KafkaProducerService {
         }
     }
 
-public Mono<Void> sendMessageReactive(String topic, String message) {
-    return Mono.fromFuture(() -> {
-        try {
-            String encrypted = encrypt(message);
-            return kafkaTemplate.send(topic, encrypted).thenApply(result -> result); // returns CompletableFuture
-        } catch (Exception e) {
-            throw new RuntimeException("Encryption failed", e);
-        }
-    }).then();
-}
+    public Mono<Void> sendMessageReactive(String topic, String message) {
+        return Mono.fromFuture(() -> {
+            try {
+                String encrypted = encrypt(message);
+                return kafkaTemplate.send(topic, encrypted).thenApply(result -> result); // returns CompletableFuture
+            } catch (Exception e) {
+                throw new RuntimeException("Encryption failed", e);
+            }
+        }).then();
+    }
 
     private String encrypt(String message) throws Exception {
         SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(), "AES");
