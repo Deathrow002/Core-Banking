@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.customer.exception.CustomerAlreadyExistsException;
 import com.customer.model.Address;
 import com.customer.model.Customer;
+import com.customer.repository.AddressRepository;
 import com.customer.repository.CustomerRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class CustomerService {
     private static final Logger log = LoggerFactory.getLogger(CustomerService.class);
 
     private final CustomerRepository customerRepository;
+    private final AddressRepository addressRepository;
 
     // Create a new customer with addresses
     @Transactional
@@ -37,11 +39,16 @@ public class CustomerService {
                 throw new CustomerAlreadyExistsException("Customer with this national ID already exists");
             }
 
-            // Set addresses to customer and set customer in each address
+            // Check if addresses is null or empty
+            if(addresses == null || addresses.isEmpty()) {
+                throw new IllegalArgumentException("At least one address is required.");
+            }
+
+            // Set customer in each address and add to customer's addresses list
             for (Address address : addresses) {
                 address.setCustomer(customer);
-                customer.getAddresses().add(address);
             }
+            customer.setAddresses(addresses);
 
             // Save the customer (addresses will be saved via cascade)
             Customer savedCustomer = customerRepository.save(customer);
