@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.customer.exception.CustomerAlreadyExistsException;
 import com.customer.model.Address;
 import com.customer.model.Customer;
-import com.customer.repository.AddressRepository;
 import com.customer.repository.CustomerRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ public class CustomerService {
     private static final Logger log = LoggerFactory.getLogger(CustomerService.class);
 
     private final CustomerRepository customerRepository;
-    private final AddressRepository addressRepository;
 
     // Create a new customer with addresses
     @Transactional
