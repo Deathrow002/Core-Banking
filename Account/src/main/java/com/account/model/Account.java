@@ -3,7 +3,14 @@ package com.account.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,17 +29,17 @@ public class Account {
     @Column(name = "customerId", nullable = false)
     private UUID customerId;
 
-    @Column(name = "Balance", nullable = false)
+    @Column(name = "balance", nullable = false)
     @PositiveOrZero
-    private BigDecimal Balance;
+    private BigDecimal balance;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "currency", nullable = false)
-    private CurrencyType Currency;
+    private CurrencyType currency;
 
-    public Account(UUID customerId, BigDecimal Balance, CurrencyType Currency){
+    public Account(UUID customerId, BigDecimal balance, CurrencyType currency){
         this.customerId = customerId;
-        this.Balance = Balance;
-        this.Currency = Currency;
+        this.balance = balance;
+        this.currency = currency;
     }
 }

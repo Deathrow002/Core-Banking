@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import com.account.model.CurrencyType;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,13 +17,13 @@ public class AccountDTO {
 
     private UUID customerId;
 
-    private BigDecimal Balance;
+    private BigDecimal balance;
 
-    private CurrencyType Currency;
+    private CurrencyType currency;
 
-    public AccountDTO(UUID customerId, BigDecimal Balance, CurrencyType Currency){
+    public AccountDTO(UUID customerId, BigDecimal balance, CurrencyType currency){
         this.customerId = customerId;
-        this.Balance = Balance;
-        this.Currency = Currency;
+        this.balance = balance;
+        this.currency = currency;
     }
 }
