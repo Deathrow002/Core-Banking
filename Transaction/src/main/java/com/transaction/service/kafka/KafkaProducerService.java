@@ -5,6 +5,9 @@ import java.util.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,22 +37,35 @@ public class KafkaProducerService {
             log.debug("Encrypted message: {}", encryptedMessage);
 
             // Send the encrypted message to Kafka
-            // kafkaTemplate.send(topic, encryptedMessage);
-            log.info("Message successfully sent to topic {}", topic);
+            kafkaTemplate.send(topic, encryptedMessage)
+                .thenAccept(result -> log.info("Message successfully sent to topic {} with offset {}", 
+                    topic, result.getRecordMetadata().offset()))
+                .exceptionally(ex -> {
+                    log.error("Failed to send message to topic {}: {}", topic, ex.getMessage());
+                    return null;
+                });
         } catch (Exception e) {
             log.error("Error encrypting and sending message: {}", e.getMessage(), e);
         }
     }
 
-    public Mono<Void> sendMessageReactive(String topic, String message) {
-        return Mono.fromFuture(() -> {
-            try {
-                String encrypted = encrypt(message);
-                return kafkaTemplate.send(topic, encrypted).thenApply(result -> result); // returns CompletableFuture
-            } catch (Exception e) {
-                throw new RuntimeException("Encryption failed", e);
-            }
-        }).then();
+    public Mono<Void> sendMessageReactive(String topic, String message, String jwtToken) {
+        try {
+            String encrypted = encrypt(message);
+
+            // Create ProducerRecord with header
+            ProducerRecord<String, String> record = new ProducerRecord<>(topic, encrypted);
+            Header authHeader = new RecordHeader("Authorization", jwtToken.getBytes());
+            record.headers().add(authHeader);
+
+            return Mono.create(sink ->
+                kafkaTemplate.send(record)
+                    .thenAccept(result -> sink.success())
+                    .exceptionally(ex -> { sink.error(ex); return null; })
+            );
+        } catch (Exception e) {
+            return Mono.error(new RuntimeException("Encryption failed", e));
+        }
     }
 
     private String encrypt(String message) throws Exception {

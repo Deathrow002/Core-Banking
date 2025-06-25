@@ -67,19 +67,20 @@ public class TransactionService {
                 });
     }
 
-    public Mono<Void> updateAccountBalance(String topic, AccountPayload accountPayload) {
+    public Mono<Void> updateAccountBalance(String topic, AccountPayload accountPayload, String jwtToken) {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonPayload;
         try {
             jsonPayload = objectMapper.writeValueAsString(accountPayload);
+            log.info("Serialized AccountPayload for account: {} - Payload: {}", accountPayload.getAccountId(), jsonPayload);
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize AccountPayload for account: {}", accountPayload.getAccountId(), e);
             return Mono.error(e);
         }
-        // If your Kafka producer is reactive, return its Mono. Otherwise, wrap in Mono.fromRunnable:
-        return Mono.fromRunnable(() -> {
-            kafkaProducerService.sendMessage(topic, jsonPayload);
-            log.info("Successfully sent account balance update for account: {}", accountPayload.getAccountId());
-        });
+        
+        // Use the reactive Kafka producer and return its Mono
+        return kafkaProducerService.sendMessageReactive(topic, jsonPayload, jwtToken)
+            .doOnSuccess(v -> log.info("Successfully sent account balance update for account: {}", accountPayload.getAccountId()))
+            .doOnError(e -> log.error("Failed to send account balance update for account: {}: {}", accountPayload.getAccountId(), e.getMessage()));
     }
 }

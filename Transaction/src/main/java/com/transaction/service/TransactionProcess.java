@@ -71,8 +71,8 @@ public class TransactionProcess {
             return transactionRepository.save(transaction)
                 .flatMap(savedTx -> 
                     Mono.when(
-                        transactionService.updateAccountBalance("account-balance-update", ownerPayload),
-                        transactionService.updateAccountBalance("account-balance-update", receiverPayload)
+                        transactionService.updateAccountBalance("account-balance-update", ownerPayload, jwtToken),
+                        transactionService.updateAccountBalance("account-balance-update", receiverPayload, jwtToken)
                     ).thenReturn(savedTx)
                 );
         }).doOnSuccess(tx -> {
@@ -105,7 +105,7 @@ public class TransactionProcess {
                 );
                 return transactionRepository.save(transaction)
                         .flatMap(savedTx ->
-                                transactionService.updateAccountBalance("account-balance-update", ownerPayload)
+                                transactionService.updateAccountBalance("account-balance-update", ownerPayload, jwtToken)
                                         .thenReturn(savedTx)
                         );
             })
@@ -143,7 +143,7 @@ public class TransactionProcess {
                 );
                 return transactionRepository.save(transaction)
                         .flatMap(savedTx ->
-                                transactionService.updateAccountBalance("account-balance-update", ownerPayload)
+                                transactionService.updateAccountBalance("account-balance-update", ownerPayload, jwtToken)
                                         .thenReturn(savedTx)
                         );
             })

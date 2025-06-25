@@ -1,10 +1,12 @@
 package com.account.service.kafka;
 
 import java.util.Base64;
+import java.util.UUID;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,9 +14,11 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
+import com.account.config.kafka.JwtKafkaMessageConverter;
 import com.account.config.kafka.KafkaResponseHandler;
 import com.account.model.DTO.AccountDTO;
 import com.account.service.AccountService;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +32,8 @@ public class KafkaConsumerService {
     private final AccountService accountService;
 
     private final KafkaResponseHandler kafkaResponseHandler;
+    
+    private final JwtKafkaMessageConverter jwtMessageConverter;
 
     @Value("${encryption.secret-key}")
     private String secretKey;
@@ -104,21 +110,103 @@ public class KafkaConsumerService {
     }
 
     @KafkaListener(topics = "account-balance-update", groupId = "account-service-group")
-    public void consumeAccountBalanceUpdate(String message) {
+    public void consumeAccountBalanceUpdate(ConsumerRecord<String, String> record) {
         try {
+            String message = record.value();
             log.info("Received account balance update from Kafka: {}", message);
+
+            // Extract and validate JWT information from Kafka headers
+            JwtKafkaMessageConverter.JwtInfo jwtInfo = jwtMessageConverter.extractJwtInfo(record.headers());
+            log.info("JWT Info: {}", jwtInfo);
+            
+            if (!jwtInfo.isValid()) {
+                log.error("Invalid or missing JWT token in account balance update message: {}", jwtInfo.getError());
+                // You can choose to either throw an exception or handle gracefully
+                // For now, we'll log the error but continue processing
+                log.warn("Processing account balance update without valid JWT authentication");
+            } else {
+                log.info("Successfully authenticated request from user: {} with role: {} for customer: {}", 
+                        jwtInfo.getUsername(), jwtInfo.getRole(), jwtInfo.getCustomerId());
+            }
 
             // Decrypt the message
             String decryptedMessage = decrypt(message);
             log.debug("Decrypted message: {}", decryptedMessage);
 
-            // Deserialize the JSON string into an AccountDTO object
+            // Deserialize the JSON string - First try AccountPayload from Transaction service
             ObjectMapper objectMapper = new ObjectMapper();
-            AccountDTO accountDTO = objectMapper.readValue(decryptedMessage, AccountDTO.class);
+            
+            // Parse as generic JSON to handle field name differences
+            JsonNode jsonNode = objectMapper.readTree(decryptedMessage);
+            
+            AccountDTO accountDTO = new AccountDTO();
+            
+            // Handle accountId field
+            if (jsonNode.has("accountId")) {
+                accountDTO.setAccountId(UUID.fromString(jsonNode.get("accountId").asText()));
+            }
+            
+            // Handle customerId field
+            if (jsonNode.has("customerId")) {
+                accountDTO.setCustomerId(UUID.fromString(jsonNode.get("customerId").asText()));
+            }
+            
+            // Handle balance field (could be 'balance' or 'Balance')
+            if (jsonNode.has("balance")) {
+                accountDTO.setBalance(jsonNode.get("balance").decimalValue());
+            } else if (jsonNode.has("Balance")) {
+                accountDTO.setBalance(jsonNode.get("Balance").decimalValue());
+            }
+            
+            // Handle currency field (could be 'currency' or 'Currency', and could be String or enum)
+            if (jsonNode.has("currency")) {
+                String currencyValue = jsonNode.get("currency").asText();
+                try {
+                    // Try to parse as CurrencyType enum
+                    accountDTO.setCurrency(com.account.model.CurrencyType.valueOf(currencyValue.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    log.warn("Unknown currency type: {}, defaulting to USD", currencyValue);
+                    accountDTO.setCurrency(com.account.model.CurrencyType.USD);
+                }
+            } else if (jsonNode.has("Currency")) {
+                String currencyValue = jsonNode.get("Currency").asText();
+                try {
+                    accountDTO.setCurrency(com.account.model.CurrencyType.valueOf(currencyValue.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    log.warn("Unknown currency type: {}, defaulting to USD", currencyValue);
+                    accountDTO.setCurrency(com.account.model.CurrencyType.USD);
+                }
+            }
+            
+            log.info("Mapped AccountDTO: {}", accountDTO);
 
-            // Process the account balance update
+            // Additional security check: verify that the JWT customer matches the account owner OR user is admin
+            if (jwtInfo.isValid() && jwtInfo.getCustomerId() != null && accountDTO.getCustomerId() != null) {
+                String jwtCustomerId = jwtInfo.getCustomerId();
+                String accountCustomerId = accountDTO.getCustomerId().toString();
+                String userRole = jwtInfo.getRole();
+                
+                // Check if user is admin
+                boolean isAdmin = userRole != null && userRole.contains("ADMIN");
+                
+                if (!jwtCustomerId.equals(accountCustomerId) && !isAdmin) {
+                    log.error("Security violation: JWT customer ID {} does not match account customer ID {} and user is not admin. Role: {}", 
+                             jwtCustomerId, accountCustomerId, userRole);
+                    throw new SecurityException("Customer ID mismatch - unauthorized access attempt");
+                }
+                
+                if (isAdmin && !jwtCustomerId.equals(accountCustomerId)) {
+                    log.info("Admin user {} is updating balance for account {} owned by customer {}", 
+                            jwtInfo.getUsername(), accountDTO.getAccountId(), accountCustomerId);
+                } else {
+                    log.info("Customer ownership validation passed for customer: {}", jwtCustomerId);
+                }
+            }
+
+            // Process the account balance update with security context
             accountService.updateAccountBalance(accountDTO);
-            log.info("Successfully processed account balance update for account: {}", accountDTO.getAccountId());
+            log.info("Successfully processed account balance update for account: {} by user: {}", 
+                    accountDTO.getAccountId(), jwtInfo.isValid() ? jwtInfo.getUsername() : "unauthenticated");
         } catch (Exception e) {
             log.error("Error processing account balance update: {}", e.getMessage(), e);
         }
