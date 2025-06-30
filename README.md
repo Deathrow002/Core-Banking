@@ -354,7 +354,7 @@ kubectl scale deployment <service-name> --replicas=1 -n core-bank
 
 ## 🎯 Production Readiness
 
-This Core Bank System is **production-ready** with the following enterprise features:
+This Core Bank System with the following features:
 
 ### ✅ High Availability
 - Multi-replica deployments with HPA
