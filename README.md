@@ -170,42 +170,52 @@ kubectl port-forward svc/discovery-service 8761:8761 -n core-bank
 
 ## 📋 API Testing with Postman
 
-To simplify testing and interacting with the Core Bank System, a Postman collection is provided. Follow these steps to use it:
+The system includes comprehensive Postman collections for testing both Docker Compose and Kubernetes deployments:
 
-1. Download the Postman collection file: [Core Bank Postman Collection](./postman/CoreBank.postman_collection.json)
-2. Import the collection into Postman:
-   - Open Postman.
-   - Click on "Import" in the top-left corner.
-   - Select the downloaded `.json` file.
-3. Use the pre-configured requests to test the services:
-   - **Authentication Service**:
-     - Login
-     - Register
-     - Get All Users <br> <sub>**Authorization:** Bearer JWT token (must have `ADMIN` role)</sub>
-   - **Customer Service**:
-     - Create Customer <br> <sub>**Authorization:** Bearer JWT token (`ADMIN` or `MANAGER`)</sub>
-     - Get Customer by ID <br> <sub>**Authorization:** Bearer JWT token (`ADMIN` or `MANAGER`)</sub>
-     - Get All Customers <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`)</sub>
-     - Update Customer <br> <sub>**Authorization:** Bearer JWT token (`ADMIN` or `MANAGER`)</sub>
-     - Validate Customer By ID <br> <sub>**Authorization:** Bearer JWT token (`ADMIN` or `MANAGER`)</sub>
-     - Validate Customer By Data <br> <sub>**Authorization:** Bearer JWT token (`ADMIN` or `MANAGER`)</sub>
-   - **Account Service**:
-     - Validate Account <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
-     - Get Account <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
-     - Get Account By Customer ID <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
-     - Get All Accounts <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`)</sub>
-     - Create Account <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
-     - Update Account Balance <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
-     - Delete Account <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
-   - **Transaction Service**:
-     - Perform Transaction <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
-     - Deposit <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
-     - Withdraw <br> <sub>**Authorization:** Bearer JWT token (`ADMIN`, `MANAGER`, or `USER`)</sub>
-     - Get Transactions by Account <br> <sub>**Authorization:** Bearer JWT token (`ADMIN` or `MANAGER`)</sub>
+### Collections Available
+- **[CoreBank-Docker-Compose.postman_collection.json](./postman/CoreBank-Docker-Compose.postman_collection.json)**: For localhost testing (Docker Compose)
+- **[CoreBank-Kubernetes.postman_collection.json](./postman/CoreBank-Kubernetes.postman_collection.json)**: For Ingress-based testing (Kubernetes)
 
-> **Note:** For all endpoints except login and register, include a valid JWT token in the `Authorization` header as `Bearer <token>`.
+### Environment Files
+- **Docker Compose**: 
+  - `Docker-Compose-Admin-Core-Banking.postman_environment.json`
+  - `Docker-Compose-Client-Core-Banking.postman_environment.json`
+- **Kubernetes**: 
+  - `Kubernetes-Admin-Core-Banking.postman_environment.json`
+  - `Kubernetes-Client-Core-Banking.postman_environment.json`
 
-Ensure that the services are running locally or on the specified endpoints before testing.
+### Quick Setup
+1. **Import Collection**: Choose the appropriate collection for your deployment
+2. **Import Environment**: Select admin or client environment file
+3. **Configure Hosts** (Kubernetes only): Add entries to `/etc/hosts`:
+   ```bash
+   # Replace <INGRESS_IP> with your ingress controller IP
+   <INGRESS_IP> account.core-bank.local
+   <INGRESS_IP> customer.core-bank.local
+   <INGRESS_IP> transaction.core-bank.local
+   <INGRESS_IP> auth.core-bank.local
+   <INGRESS_IP> discovery.core-bank.local
+   ```
+4. **Test**: Run the "Complete Workflow" folder for end-to-end testing
+
+### Available Endpoints
+- **🔐 Authentication Service**: Login, token validation, health checks
+- **👤 Customer Service**: CRUD operations for customer management
+- **🏦 Account Service**: Account creation, balance checks, status updates
+- **💰 Transaction Service**: Deposits, withdrawals, transfers, transaction history
+- **🔍 Discovery Service**: Service registry status, Eureka dashboard
+
+### Authentication
+- **Admin**: `admin@example.com` / `SecureAdminP@ssw0rd!`
+- **Client**: `john.doe@example.com` / `123456`
+
+### Automated Features
+- **Token Management**: JWT tokens automatically saved and used
+- **Variable Handling**: Customer IDs and account numbers auto-populated
+- **Health Checks**: All services include health monitoring endpoints
+- **Complete Workflows**: End-to-end testing scenarios included
+
+For detailed instructions, see [Postman Collections README](./postman/README.md).
 
 ## 🔧 Configuration & Environment
 

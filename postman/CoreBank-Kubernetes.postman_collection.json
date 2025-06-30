@@ -1,0 +1,853 @@
+{
+  "info": {
+    "name": "Core Bank - Kubernetes",
+    "description": "Core Bank API collection for Kubernetes deployment (Ingress-based endpoints)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://core-bank.local",
+      "type": "string"
+    },
+    {
+      "key": "accountServiceUrl",
+      "value": "http://account.core-bank.local",
+      "type": "string"
+    },
+    {
+      "key": "customerServiceUrl",
+      "value": "http://customer.core-bank.local",
+      "type": "string"
+    },
+    {
+      "key": "transactionServiceUrl",
+      "value": "http://transaction.core-bank.local",
+      "type": "string"
+    },
+    {
+      "key": "authServiceUrl",
+      "value": "http://auth.core-bank.local",
+      "type": "string"
+    },
+    {
+      "key": "discoveryServiceUrl",
+      "value": "http://discovery.core-bank.local",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "accountNumber",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "john.doe@example.com",
+      "type": "string"
+    },
+    {
+      "key": "phoneNumber",
+      "value": "1234567890",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication Service",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.token) {",
+                  "        pm.collectionVariables.set('authToken', response.token);",
+                  "        console.log('Auth token saved:', response.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"SecureAdminP@ssw0rd!\"\n}"
+            },
+            "url": "{{authServiceUrl}}/auth/login"
+          },
+          "response": []
+        },
+        {
+          "name": "Client Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.token) {",
+                  "        pm.collectionVariables.set('authToken', response.token);",
+                  "        console.log('Auth token saved:', response.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": "{{authServiceUrl}}/auth/login"
+          },
+          "response": []
+        },
+        {
+          "name": "Validate Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{authServiceUrl}}/auth/validate"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{authServiceUrl}}/actuator/health"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👤 Customer Service",
+      "item": [
+        {
+          "name": "Create Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.customerId) {",
+                  "        pm.collectionVariables.set('customerId', response.customerId);",
+                  "        console.log('Customer ID saved:', response.customerId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"{{email}}\",\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"nationalId\": \"123456789\",\n  \"dateOfBirth\": \"1990-01-01\",\n  \"status\": \"Active\",\n  \"addresses\": [\n    {\n      \"address\": \"123 Main St\",\n      \"subDistrict\": \"Downtown\",\n      \"district\": \"Central\",\n      \"city\": \"Springfield\",\n      \"country\": \"USA\",\n      \"zipCode\": \"62701\",\n      \"addressType\": \"Present\"\n    }\n  ]\n}"
+            },
+            "url": "{{customerServiceUrl}}/customers"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{customerServiceUrl}}/customers?customerId={{customerId}}",
+              "host": ["{{customerServiceUrl}}"],
+              "path": ["customers"],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{customerId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Customers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{customerServiceUrl}}/customers/all"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Customer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"email\": \"{{email}}\",\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"nationalId\": \"123456789\",\n  \"dateOfBirth\": \"1990-01-01\",\n  \"status\": \"Active\"\n}"
+            },
+            "url": "{{customerServiceUrl}}/customers"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Customer",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{customerServiceUrl}}/customers?customerId={{customerId}}",
+              "host": ["{{customerServiceUrl}}"],
+              "path": ["customers"],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{customerId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{customerServiceUrl}}/actuator/health"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏦 Account Service",
+      "item": [
+        {
+          "name": "Create Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.accountNumber) {",
+                  "        pm.collectionVariables.set('accountNumber', response.accountNumber);",
+                  "        console.log('Account Number saved:', response.accountNumber);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"accountType\": \"SAVINGS\",\n  \"initialDeposit\": 1000.00,\n  \"currency\": \"USD\"\n}"
+            },
+            "url": "{{accountServiceUrl}}/accounts"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Account by Number",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{accountServiceUrl}}/accounts?accountNumber={{accountNumber}}",
+              "host": ["{{accountServiceUrl}}"],
+              "path": ["accounts"],
+              "query": [
+                {
+                  "key": "accountNumber",
+                  "value": "{{accountNumber}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Accounts by Customer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{accountServiceUrl}}/accounts/customer?customerId={{customerId}}",
+              "host": ["{{accountServiceUrl}}"],
+              "path": ["accounts", "customer"],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{customerId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Account Balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{accountServiceUrl}}/accounts/balance?accountNumber={{accountNumber}}",
+              "host": ["{{accountServiceUrl}}"],
+              "path": ["accounts", "balance"],
+              "query": [
+                {
+                  "key": "accountNumber",
+                  "value": "{{accountNumber}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Account Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": \"{{accountNumber}}\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": "{{accountServiceUrl}}/accounts/status"
+          },
+          "response": []
+        },
+        {
+          "name": "Close Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{accountServiceUrl}}/accounts?accountNumber={{accountNumber}}",
+              "host": ["{{accountServiceUrl}}"],
+              "path": ["accounts"],
+              "query": [
+                {
+                  "key": "accountNumber",
+                  "value": "{{accountNumber}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{accountServiceUrl}}/actuator/health"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "💰 Transaction Service",
+      "item": [
+        {
+          "name": "Create Transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromAccountNumber\": \"{{accountNumber}}\",\n  \"toAccountNumber\": \"1234567890\",\n  \"amount\": 100.00,\n  \"currency\": \"USD\",\n  \"transactionType\": \"TRANSFER\",\n  \"description\": \"Test transfer via Kubernetes\"\n}"
+            },
+            "url": "{{transactionServiceUrl}}/transactions"
+          },
+          "response": []
+        },
+        {
+          "name": "Deposit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": \"{{accountNumber}}\",\n  \"amount\": 500.00,\n  \"currency\": \"USD\",\n  \"transactionType\": \"DEPOSIT\",\n  \"description\": \"Deposit via Kubernetes\"\n}"
+            },
+            "url": "{{transactionServiceUrl}}/transactions/deposit"
+          },
+          "response": []
+        },
+        {
+          "name": "Withdraw",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": \"{{accountNumber}}\",\n  \"amount\": 50.00,\n  \"currency\": \"USD\",\n  \"transactionType\": \"WITHDRAWAL\",\n  \"description\": \"Withdrawal via Kubernetes\"\n}"
+            },
+            "url": "{{transactionServiceUrl}}/transactions/withdraw"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transaction by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{transactionServiceUrl}}/transactions?transactionId=txn123",
+              "host": ["{{transactionServiceUrl}}"],
+              "path": ["transactions"],
+              "query": [
+                {
+                  "key": "transactionId",
+                  "value": "txn123"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Account Transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{transactionServiceUrl}}/transactions/account?accountNumber={{accountNumber}}",
+              "host": ["{{transactionServiceUrl}}"],
+              "path": ["transactions", "account"],
+              "query": [
+                {
+                  "key": "accountNumber",
+                  "value": "{{accountNumber}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transaction History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{transactionServiceUrl}}/transactions/history?accountNumber={{accountNumber}}&limit=10",
+              "host": ["{{transactionServiceUrl}}"],
+              "path": ["transactions", "history"],
+              "query": [
+                {
+                  "key": "accountNumber",
+                  "value": "{{accountNumber}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{transactionServiceUrl}}/actuator/health"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔍 Discovery Service",
+      "item": [
+        {
+          "name": "Eureka Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{discoveryServiceUrl}}/"
+          },
+          "response": []
+        },
+        {
+          "name": "Service Registry Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{discoveryServiceUrl}}/eureka/apps"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{discoveryServiceUrl}}/actuator/health"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔄 Complete Workflow (Kubernetes)",
+      "item": [
+        {
+          "name": "1. Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.token) {",
+                  "        pm.collectionVariables.set('authToken', response.token);",
+                  "        console.log('✅ Admin authenticated successfully');",
+                  "    }",
+                  "} else {",
+                  "    console.log('❌ Admin authentication failed');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"SecureAdminP@ssw0rd!\"\n}"
+            },
+            "url": "{{authServiceUrl}}/auth/login"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Create Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.customerId) {",
+                  "        pm.collectionVariables.set('customerId', response.customerId);",
+                  "        console.log('✅ Customer created:', response.customerId);",
+                  "    }",
+                  "} else {",
+                  "    console.log('❌ Customer creation failed');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"{{email}}\",\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"nationalId\": \"123456789\",\n  \"dateOfBirth\": \"1990-01-01\",\n  \"status\": \"Active\",\n  \"addresses\": [\n    {\n      \"address\": \"123 Main St\",\n      \"subDistrict\": \"Downtown\",\n      \"district\": \"Central\",\n      \"city\": \"Springfield\",\n      \"country\": \"USA\",\n      \"zipCode\": \"62701\",\n      \"addressType\": \"Present\"\n    }\n  ]\n}"
+            },
+            "url": "{{customerServiceUrl}}/customers"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Create Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.accountNumber) {",
+                  "        pm.collectionVariables.set('accountNumber', response.accountNumber);",
+                  "        console.log('✅ Account created:', response.accountNumber);",
+                  "    }",
+                  "} else {",
+                  "    console.log('❌ Account creation failed');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"accountType\": \"SAVINGS\",\n  \"initialDeposit\": 1000.00,\n  \"currency\": \"USD\"\n}"
+            },
+            "url": "{{accountServiceUrl}}/accounts"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Make Deposit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Deposit completed successfully');",
+                  "} else {",
+                  "    console.log('❌ Deposit failed');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": \"{{accountNumber}}\",\n  \"amount\": 500.00,\n  \"currency\": \"USD\",\n  \"transactionType\": \"DEPOSIT\",\n  \"description\": \"Initial deposit via Kubernetes\"\n}"
+            },
+            "url": "{{transactionServiceUrl}}/transactions/deposit"
+          },
+          "response": []
+        },
+        {
+          "name": "5. Check Balance",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('✅ Current balance:', response.balance || 'N/A');",
+                  "} else {",
+                  "    console.log('❌ Balance check failed');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{accountServiceUrl}}/accounts/balance?accountNumber={{accountNumber}}",
+              "host": ["{{accountServiceUrl}}"],
+              "path": ["accounts", "balance"],
+              "query": [
+                {
+                  "key": "accountNumber",
+                  "value": "{{accountNumber}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

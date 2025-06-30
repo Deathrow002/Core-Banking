@@ -1,0 +1,654 @@
+{
+  "info": {
+    "name": "Core Bank - Docker Compose",
+    "description": "Core Bank API collection for Docker Compose deployment (localhost endpoints)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "accountNumber",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "john.doe@example.com",
+      "type": "string"
+    },
+    {
+      "key": "phoneNumber",
+      "value": "1234567890",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication Service",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.token) {",
+                  "        pm.collectionVariables.set('authToken', response.token);",
+                  "        console.log('Auth token saved:', response.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:8084/api/v1/auth/login?email=admin@example.com&password=SecureAdminP@ssw0rd!",
+              "host": ["{{baseUrl}}"],
+              "port": "8084",
+              "path": ["api", "v1", "auth", "login"],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "admin@example.com"
+                },
+                {
+                  "key": "password",
+                  "value": "SecureAdminP@ssw0rd!"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"customerId\": \"{{customerId}}\",\n    \"email\": \"{{email}}\",\n    \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8084/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "port": "8084",
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8084/api/v1/auth/getAllUsers",
+              "host": ["{{baseUrl}}"],
+              "port": "8084",
+              "path": ["api", "v1", "auth", "getAllUsers"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Customer Service",
+      "item": [
+        {
+          "name": "Create Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.customerId) {",
+                  "        pm.collectionVariables.set('customerId', response.customerId);",
+                  "        console.log('Customer ID saved:', response.customerId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phoneNumber\": \"1234567890\",\n  \"nationalId\": \"123456789\",\n  \"dateOfBirth\": \"1990-01-01\",\n  \"status\": \"Active\",\n  \"addresses\": [\n    {\n      \"address\": \"123 Main St\",\n      \"subDistrict\": \"Downtown\",\n      \"district\": \"Central\",\n      \"city\": \"Springfield\",\n      \"country\": \"USA\",\n      \"zipCode\": \"62701\",\n      \"addressType\": \"Present\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8083/customers",
+              "host": ["{{baseUrl}}"],
+              "port": "8083",
+              "path": ["customers"]
+            }
+          }
+        },
+        {
+          "name": "Get Customer by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8083/customers?customerId={{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "port": "8083",
+              "path": ["customers"],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{customerId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Customers",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8083/customers/all",
+              "host": ["{{baseUrl}}"],
+              "port": "8083",
+              "path": ["customers", "all"]
+            }
+          }
+        },
+        {
+          "name": "Validate Customer by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8083/customers/validate?customerId={{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "port": "8083",
+              "path": ["customers", "validate"],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{customerId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Customer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"phoneNumber\": \"0987654321\",\n  \"nationalId\": \"987654321\",\n  \"dateOfBirth\": \"1992-02-02\",\n  \"status\": \"Active\",\n  \"addresses\": [\n    {\n      \"address\": \"456 Elm St\",\n      \"subDistrict\": \"Uptown\",\n      \"district\": \"North\",\n      \"city\": \"Springfield\",\n      \"country\": \"USA\",\n      \"zipCode\": \"62702\",\n      \"addressType\": \"Present\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8083/customers?customerId={{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "port": "8083",
+              "path": ["customers"],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{customerId}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💰 Account Service",
+      "item": [
+        {
+          "name": "Create Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.accNo) {",
+                  "        pm.collectionVariables.set('accountNumber', response.accNo);",
+                  "        console.log('Account number saved:', response.accNo);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"balance\": 1000.0,\n  \"currency\": \"THB\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8081/accounts/createAccount",
+              "host": ["{{baseUrl}}"],
+              "port": "8081",
+              "path": ["accounts", "createAccount"]
+            }
+          }
+        },
+        {
+          "name": "Get Account",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8081/accounts/getAccount?accNo={{accountNumber}}",
+              "host": ["{{baseUrl}}"],
+              "port": "8081",
+              "path": ["accounts", "getAccount"],
+              "query": [
+                {
+                  "key": "accNo",
+                  "value": "{{accountNumber}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Account By Customer ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8081/accounts/getAccountByCustomerId?customerId={{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "port": "8081",
+              "path": ["accounts", "getAccountByCustomerId"],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{customerId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Accounts",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8081/accounts/getAllAccounts",
+              "host": ["{{baseUrl}}"],
+              "port": "8081",
+              "path": ["accounts", "getAllAccounts"]
+            }
+          }
+        },
+        {
+          "name": "Validate Account",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8081/accounts/validateAccount?customerId={{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "port": "8081",
+              "path": ["accounts", "validateAccount"],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{customerId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Account Balance",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accNo\": \"{{accountNumber}}\",\n  \"balance\": 2000.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8081/accounts/updateAccountBalance",
+              "host": ["{{baseUrl}}"],
+              "port": "8081",
+              "path": ["accounts", "updateAccountBalance"]
+            }
+          }
+        },
+        {
+          "name": "Delete Account",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8081/accounts/deleteAccount?accNo={{accountNumber}}",
+              "host": ["{{baseUrl}}"],
+              "port": "8081",
+              "path": ["accounts", "deleteAccount"],
+              "query": [
+                {
+                  "key": "accNo",
+                  "value": "{{accountNumber}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💳 Transaction Service",
+      "item": [
+        {
+          "name": "Deposit",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accNoOwner\": \"{{accountNumber}}\",\n  \"amount\": 1000.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8082/transactions/Deposit",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["transactions", "Deposit"]
+            }
+          }
+        },
+        {
+          "name": "Withdraw",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accNoOwner\": \"{{accountNumber}}\",\n  \"amount\": 100.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8082/transactions/Withdraw",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["transactions", "Withdraw"]
+            }
+          }
+        },
+        {
+          "name": "Transfer Transaction",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accNoOwner\": \"{{accountNumber}}\",\n  \"accNoReceive\": \"RECEIVER_ACCOUNT_NUMBER\",\n  \"amount\": 500.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8082/transactions/Transaction",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["transactions", "Transaction"]
+            }
+          }
+        },
+        {
+          "name": "Get Transactions by Account",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8082/transactions/GetTransByAccNo?AccNo={{accountNumber}}",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["transactions", "GetTransByAccNo"],
+              "query": [
+                {
+                  "key": "AccNo",
+                  "value": "{{accountNumber}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Monitoring & Health",
+      "item": [
+        {
+          "name": "Discovery Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8761/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "port": "8761",
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Eureka Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8761/",
+              "host": ["{{baseUrl}}"],
+              "port": "8761",
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Prometheus Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:9090/metrics",
+              "host": ["{{baseUrl}}"],
+              "port": "9090",
+              "path": ["metrics"]
+            }
+          }
+        },
+        {
+          "name": "Grafana Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:3000/",
+              "host": ["{{baseUrl}}"],
+              "port": "3000",
+              "path": [""]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
