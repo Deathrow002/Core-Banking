@@ -1,0 +1,156 @@
+---
+# Network Policy for Core Bank Services - Security and Traffic Management
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: core-bank-network-policy
+  namespace: core-bank
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow ingress from NGINX Ingress Controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+  # Allow inter-service communication within core-bank namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: core-bank
+  # Allow monitoring (Prometheus)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8081  # account-service
+    - protocol: TCP
+      port: 8082  # transaction-service
+    - protocol: TCP
+      port: 8083  # customer-service
+    - protocol: TCP
+      port: 8084  # authentication-service
+  egress:
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow database connections
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow Redis connections
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow Kafka connections
+  - to:
+    - podSelector:
+        matchLabels:
+          app: kafka
+    ports:
+    - protocol: TCP
+      port: 9092
+  # Allow Eureka discovery
+  - to:
+    - podSelector:
+        matchLabels:
+          app: discovery-service
+    ports:
+    - protocol: TCP
+      port: 8761
+  # Allow inter-service communication
+  - to:
+    - podSelector:
+        matchLabels:
+          app: account-service
+    ports:
+    - protocol: TCP
+      port: 8081
+  - to:
+    - podSelector:
+        matchLabels:
+          app: transaction-service
+    ports:
+    - protocol: TCP
+      port: 8082
+  - to:
+    - podSelector:
+        matchLabels:
+          app: customer-service
+    ports:
+    - protocol: TCP
+      port: 8083
+  - to:
+    - podSelector:
+        matchLabels:
+          app: authentication-service
+    ports:
+    - protocol: TCP
+      port: 8084
+
+---
+# Pod Disruption Budget for Account Service
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: account-service-pdb
+  namespace: core-bank
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: account-service
+
+---
+# Pod Disruption Budget for Transaction Service
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: transaction-service-pdb
+  namespace: core-bank
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: transaction-service
+
+---
+# Pod Disruption Budget for Customer Service
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: customer-service-pdb
+  namespace: core-bank
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: customer-service
+
+---
+# Pod Disruption Budget for Authentication Service
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: authentication-service-pdb
+  namespace: core-bank
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: authentication-service

@@ -15,14 +15,85 @@ spec:
     spec:
       containers:
       - name: kafka
-        image: bitnami/kafka:latest
+        image: confluentinc/cp-kafka:7.5.0
         ports:
         - containerPort: 9092
-        env:
-        - name: KAFKA_CFG_ZOOKEEPER_CONNECT
-          value: zookeeper:2181
-        - name: ALLOW_PLAINTEXT_LISTENER
-          value: "yes"
+        - containerPort: 9093
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        command:
+        - bash
+        - -c
+        - |
+          # Create KRaft properties file
+          cat > /tmp/kraft.properties << EOF
+          process.roles=controller,broker
+          node.id=1
+          controller.quorum.voters=1@localhost:9093
+          listeners=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+          listener.security.protocol.map=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+          inter.broker.listener.name=PLAINTEXT
+          controller.listener.names=CONTROLLER
+          advertised.listeners=PLAINTEXT://kafka:9092
+          log.dirs=/var/lib/kafka/data
+          auto.create.topics.enable=true
+          offsets.topic.replication.factor=1
+          log.retention.hours=168
+          group.initial.rebalance.delay.ms=0
+          EOF
+          
+          # Format storage if needed
+          if [ ! -f "/var/lib/kafka/data/meta.properties" ]; then
+            /usr/bin/kafka-storage format -t WHUYTAUFRdyM63Rj0YoKJw== -c /tmp/kraft.properties
+          fi
+          
+          # Start Kafka
+          /usr/bin/kafka-server-start /tmp/kraft.properties
+        livenessProbe:
+          exec:
+            command:
+            - kafka-broker-api-versions
+            - --bootstrap-server
+            - localhost:9092
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
+        readinessProbe:
+          exec:
+            command:
+            - kafka-broker-api-versions
+            - --bootstrap-server
+            - localhost:9092
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
+        volumeMounts:
+        - name: kafka-data
+          mountPath: /var/lib/kafka/data
+      volumes:
+      - name: kafka-data
+        persistentVolumeClaim:
+          claimName: kafka-pvc
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-pvc
+  namespace: core-bank
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
 
 ---
 apiVersion: v1
@@ -31,8 +102,15 @@ metadata:
   name: kafka
   namespace: core-bank
 spec:
+  type: ClusterIP
   ports:
-  - port: 9092
+  - name: plaintext
+    port: 9092
     targetPort: 9092
+    protocol: TCP
+  - name: controller
+    port: 9093
+    targetPort: 9093
+    protocol: TCP
   selector:
     app: kafka

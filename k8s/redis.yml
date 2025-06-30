@@ -15,15 +15,55 @@ spec:
     spec:
       containers:
       - name: redis
-        image: redis:alpine
+        image: redis:8.0.2
         ports:
         - containerPort: 6379
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -h
+            - localhost
+            - -p
+            - "6379"
+            - ping
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -h
+            - localhost
+            - -p
+            - "6379"
+            - ping
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
         volumeMounts:
         - name: redis-data
           mountPath: /data
       volumes:
       - name: redis-data
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: redis-pvc
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: core-bank
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
 
 ---
 apiVersion: v1
@@ -32,8 +72,10 @@ metadata:
   name: redis
   namespace: core-bank
 spec:
+  type: ClusterIP
   ports:
   - port: 6379
     targetPort: 6379
+    protocol: TCP
   selector:
     app: redis

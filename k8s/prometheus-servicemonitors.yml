@@ -1,0 +1,105 @@
+# yaml-language-server: $schema=
+# Service Monitors for Prometheus Operator
+# These resources require the Prometheus Operator to be installed in the cluster
+# Install with: kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml
+#
+# NOTE: ServiceMonitor is a Custom Resource Definition (CRD) from Prometheus Operator
+# VS Code may show validation errors for these resources - this is expected behavior
+# The resources are valid and will work correctly when Prometheus Operator is installed
+#
+# To manage these resources, use: ./servicemonitor.sh
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: account-service-monitor
+  namespace: core-bank
+  labels:
+    app: account-service
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: account-service
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: transaction-service-monitor
+  namespace: core-bank
+  labels:
+    app: transaction-service
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: transaction-service
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: customer-service-monitor
+  namespace: core-bank
+  labels:
+    app: customer-service
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: customer-service
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: authentication-service-monitor
+  namespace: core-bank
+  labels:
+    app: authentication-service
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: authentication-service
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: discovery-service-monitor
+  namespace: core-bank
+  labels:
+    app: discovery-service
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: discovery-service
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s

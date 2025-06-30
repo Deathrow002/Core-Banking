@@ -3,8 +3,11 @@ kind: Deployment
 metadata:
   name: transaction-service
   namespace: core-bank
+  labels:
+    app: transaction-service
+    version: v1
 spec:
-  replicas: 1
+  replicas: 1  # Scale to 1 replicas for load balancing
   selector:
     matchLabels:
       app: transaction-service
@@ -12,12 +15,64 @@ spec:
     metadata:
       labels:
         app: transaction-service
+        version: v1
     spec:
       containers:
       - name: transaction-service
         image: transaction-service:latest
+        imagePullPolicy: Never
         ports:
-        - containerPort: 8081
+        - containerPort: 8082
+        env:
+        - name: SPRING_APPLICATION_NAME
+          value: "transaction-service"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://postgres:5432/lmwn_db"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "lmwn_user"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "12345678"
+        - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+          value: "http://discovery-service:8761/eureka"
+        - name: SPRING_REDIS_HOST
+          value: "redis"
+        - name: SPRING_REDIS_PORT
+          value: "6379"
+        - name: ENCRYPTION_SECRET_KEY
+          value: "1234567890123456"
+        # Fix bean definition conflict
+        - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+          value: "true"
+        # Enable load balancing
+        - name: EUREKA_INSTANCE_INSTANCE_ID
+          value: "${spring.application.name}:${spring.cloud.client.hostname}:${random.value}"
+        - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+          value: "true"
+        - name: SPRING_CLOUD_LOADBALANCER_RIBBON_ENABLED
+          value: "false"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "100m"  # Reduced from 250m to allow scheduling
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          initialDelaySeconds: 40
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
 
 ---
 apiVersion: v1
@@ -25,9 +80,59 @@ kind: Service
 metadata:
   name: transaction-service
   namespace: core-bank
+  labels:
+    app: transaction-service
 spec:
+  type: ClusterIP
+  sessionAffinity: None  # Round-robin load balancing
   ports:
-  - port: 8081
-    targetPort: 8081
+  - port: 8082
+    targetPort: 8082
+    protocol: TCP
+    name: http
   selector:
     app: transaction-service
+
+---
+# Horizontal Pod Autoscaler for transaction-service
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: transaction-service-hpa
+  namespace: core-bank
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: transaction-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 2
+        periodSeconds: 60

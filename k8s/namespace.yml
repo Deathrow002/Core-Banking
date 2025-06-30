@@ -1,0 +1,32 @@
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: core-bank
+
+---
+# Core Bank Master Deployment
+# This file coordinates the deployment of all services matching the docker-compose.yml configuration
+
+# Note: Services should be deployed in this order due to dependencies:
+# 1. Infrastructure services (postgres, redis, kafka)
+# 2. Discovery service
+# 3. Application services (account, customer, transaction, authentication)
+# 4. Monitoring services (prometheus, grafana)
+
+# Use the following commands to deploy:
+# kubectl apply -f namespace.yml
+# kubectl apply -f postgres.yml
+# kubectl apply -f redis.yml
+# kubectl apply -f kafka.yml
+# kubectl apply -f discovery-service.yml
+# kubectl apply -f account-service.yml
+# kubectl apply -f customer-service.yml
+# kubectl apply -f transaction-service.yml
+# kubectl apply -f authentication-service.yml
+# kubectl apply -f prometheus.yml
+# kubectl apply -f grafana.yml
+
+# Or deploy all at once (may have dependency issues):
+# kubectl apply -f .
