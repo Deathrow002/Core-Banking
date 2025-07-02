@@ -48,12 +48,14 @@ This directory contains Postman collections and environments for testing the Cor
 1. **Setup Ingress**: Ensure NGINX Ingress Controller is installed and configured
 2. **Configure /etc/hosts**: Add entries for Ingress domains:
    ```bash
-   # Add to /etc/hosts (replace <INGRESS_IP> with your ingress controller IP)
-   <INGRESS_IP> account.core-bank.local
-   <INGRESS_IP> customer.core-bank.local
-   <INGRESS_IP> transaction.core-bank.local
-   <INGRESS_IP> auth.core-bank.local
-   <INGRESS_IP> discovery.core-bank.local
+   # Add to /etc/hosts (replace with 127.0.0.1 for local Kubernetes)
+   127.0.0.1 account.core-bank.local
+   127.0.0.1 customer.core-bank.local
+   127.0.0.1 transaction.core-bank.local
+   127.0.0.1 auth.core-bank.local
+   127.0.0.1 discovery.core-bank.local
+   127.0.0.1 grafana.core-bank.local
+   127.0.0.1 prometheus.core-bank.local
    ```
 3. **Import Collection**: `CoreBank-Kubernetes.postman_collection.json`
 4. **Import Environment**:
@@ -62,6 +64,8 @@ This directory contains Postman collections and environments for testing the Cor
 5. **Select Environment**: Choose the imported environment in Postman
 6. **Deploy Services**: Ensure Kubernetes services are deployed and healthy
 7. **Test**: Run the "Complete Workflow" folder for end-to-end testing
+
+**Note**: The Kubernetes collection has been updated to use the correct authentication endpoint format (query parameters instead of JSON body).
 
 ## 🔧 Service Endpoints
 
@@ -75,17 +79,24 @@ This directory contains Postman collections and environments for testing the Cor
 | Authentication Service | 8084 | http://localhost:8084/actuator/health |
 
 ### Kubernetes (Ingress)
-| Service | Domain | Health Check |
-|---------|--------|-------------|
-| Discovery Service | discovery.core-bank.local | http://discovery.core-bank.local/actuator/health |
-| Account Service | account.core-bank.local | http://account.core-bank.local/actuator/health |
-| Transaction Service | transaction.core-bank.local | http://transaction.core-bank.local/actuator/health |
-| Customer Service | customer.core-bank.local | http://customer.core-bank.local/actuator/health |
-| Authentication Service | auth.core-bank.local | http://auth.core-bank.local/actuator/health |
+| Service | Domain | Health Check | Authentication Endpoint |
+|---------|--------|-------------|------------------------|
+| Discovery Service | discovery.core-bank.local | http://discovery.core-bank.local/actuator/health | N/A |
+| Account Service | account.core-bank.local | http://account.core-bank.local/actuator/health | Bearer Token Required |
+| Transaction Service | transaction.core-bank.local | http://transaction.core-bank.local/actuator/health | Bearer Token Required |
+| Customer Service | customer.core-bank.local | http://customer.core-bank.local/actuator/health | Bearer Token Required |
+| Authentication Service | auth.core-bank.local | http://auth.core-bank.local/actuator/health* | http://auth.core-bank.local/api/v1/auth/login |
+
+*Note: Authentication service health endpoint may return 401 due to security configuration. Use TCP probe for health checks.
 
 ## 🔐 Authentication
 
-Both collections include admin and client authentication:
+Both collections include admin and client authentication with proper endpoint configuration:
+
+### Authentication Method
+- **Docker Compose**: Uses query parameters for login endpoints
+- **Kubernetes**: Uses query parameters for login endpoints (recently updated)
+- **Endpoint**: `/api/v1/auth/login?email=<email>&password=<password>`
 
 ### Admin Credentials
 - **Email**: admin@example.com
@@ -94,6 +105,11 @@ Both collections include admin and client authentication:
 ### Client Credentials
 - **Email**: john.doe@example.com
 - **Password**: 123456
+
+### Authentication Endpoints
+- **Login**: `POST /api/v1/auth/login` (with query parameters)
+- **Register**: `POST /api/v1/auth/register` (with JSON body)
+- **Validate Token**: `GET /api/v1/auth/validate` (with Bearer token)
 
 ## 📋 Testing Workflow
 
@@ -143,6 +159,8 @@ The collections use variables for dynamic testing:
    - Verify credentials in environment variables
    - Check if authentication service is healthy
    - Ensure token is being saved correctly (check Tests tab)
+   - **Kubernetes**: Use query parameters for login: `?email=<email>&password=<password>`
+   - **Docker Compose**: Use query parameters for login: `?email=<email>&password=<password>`
 
 3. **Ingress Issues (Kubernetes)**
    - Verify /etc/hosts entries
@@ -178,10 +196,21 @@ For Kubernetes deployments, additional monitoring endpoints are available:
 
 ## 📝 Notes
 
-- Collections include automatic token management
+- Collections include automatic token management with JWT Bearer authentication
 - Variables are shared across requests for seamless workflows
-- Health check endpoints don't require authentication
+- Health check endpoints don't require authentication (except auth service which may return 401)
 - Service URLs are environment-specific for easy switching between deployments
 - All collections support both admin and client user types
+- **Authentication endpoints use query parameters**, not JSON body
+- Kubernetes collection updated (July 2025) to fix authentication endpoint format
+- Register endpoint uses JSON body, login endpoint uses query parameters
+
+## 🔄 Recent Updates (July 2025)
+
+- ✅ Fixed Kubernetes authentication endpoints to use query parameters
+- ✅ Updated /etc/hosts configuration with 127.0.0.1 for local development
+- ✅ Added Register User endpoint to Kubernetes collection
+- ✅ Corrected authentication service endpoint paths to `/api/v1/auth/*`
+- ✅ Enhanced troubleshooting section with authentication-specific guidance
 
 For more information about the Core Bank system architecture and deployment, see the main README.md file in the project root.
