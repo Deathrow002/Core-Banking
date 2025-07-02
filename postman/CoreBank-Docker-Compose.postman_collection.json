@@ -48,12 +48,28 @@
               "listen": "test",
               "script": {
                 "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
                   "if (pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
-                  "    if (response.token) {",
-                  "        pm.collectionVariables.set('authToken', response.token);",
-                  "        console.log('Auth token saved:', response.token);",
+                  "    try {",
+                  "        const response = pm.response.json();",
+                  "        if (response.token) {",
+                  "            pm.environment.set('authToken', response.token);",
+                  "            console.log('Auth token saved:', response.token);",
+                  "            pm.test('Token received and saved', function () {",
+                  "                pm.expect(response.token).to.be.a('string');",
+                  "            });",
+                  "        } else {",
+                  "            console.error('No token in response:', response);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.error('Error parsing response:', e.message);",
                   "    }",
+                  "} else {",
+                  "    console.error('Login failed with status:', pm.response.code);",
+                  "    console.error('Response body:', pm.response.text());",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -87,6 +103,67 @@
           }
         },
         {
+          "name": "Client Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "console.log('Response status:', pm.response.code);",
+                  "console.log('Response body:', pm.response.text());",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    try {",
+                  "        const response = pm.response.json();",
+                  "        console.log('Parsed response:', response);",
+                  "        ",
+                  "        if (response.token) {",
+                  "            pm.environment.set('authToken', response.token);",
+                  "            console.log('Auth token saved to environment:', response.token);",
+                  "            pm.test('Token received and saved', function () {",
+                  "                pm.expect(response.token).to.be.a('string');",
+                  "            });",
+                  "        } else {",
+                  "            console.error('No token found in response');",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.error('Error parsing response:', e.message);",
+                  "    }",
+                  "} else {",
+                  "    console.error('Login failed with status:', pm.response.code);",
+                  "    console.error('Response body:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8084/api/v1/auth/login?email={{email}}&password=123456",
+              "host": ["{{baseUrl}}"],
+              "port": "8084",
+              "path": ["api", "v1", "auth", "login"],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "{{email}}"
+                },
+                {
+                  "key": "password",
+                  "value": "123456"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Register User",
           "request": {
             "method": "POST",
@@ -105,6 +182,37 @@
               "host": ["{{baseUrl}}"],
               "port": "8084",
               "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Validate Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:8084/api/v1/auth/validate",
+              "host": ["{{baseUrl}}"],
+              "port": "8084",
+              "path": ["api", "v1", "auth", "validate"]
+            }
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8084/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "port": "8084",
+              "path": ["actuator", "health"]
             }
           }
         },
@@ -139,12 +247,30 @@
               "listen": "test",
               "script": {
                 "exec": [
+                  "pm.test('Status code is 200 or 201', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
                   "if (pm.response.code === 201 || pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
-                  "    if (response.customerId) {",
-                  "        pm.collectionVariables.set('customerId', response.customerId);",
-                  "        console.log('Customer ID saved:', response.customerId);",
+                  "    try {",
+                  "        const response = pm.response.json();",
+                  "        console.log('Create Customer Response:', response);",
+                  "        ",
+                  "        if (response.customerId) {",
+                  "            pm.collectionVariables.set('customerId', response.customerId);",
+                  "            console.log('Customer ID saved:', response.customerId);",
+                  "            pm.test('Customer ID received and saved', function () {",
+                  "                pm.expect(response.customerId).to.be.a('string');",
+                  "            });",
+                  "        } else {",
+                  "            console.error('No customer ID in response:', response);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.error('Error parsing response:', e.message);",
                   "    }",
+                  "} else {",
+                  "    console.error('Customer creation failed with status:', pm.response.code);",
+                  "    console.error('Response body:', pm.response.text());",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -292,12 +418,37 @@
               "listen": "test",
               "script": {
                 "exec": [
+                  "pm.test('Status code is 200 or 201', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
                   "if (pm.response.code === 201 || pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
-                  "    if (response.accNo) {",
-                  "        pm.collectionVariables.set('accountNumber', response.accNo);",
-                  "        console.log('Account number saved:', response.accNo);",
+                  "    try {",
+                  "        const response = pm.response.json();",
+                  "        console.log('Create Account Response:', response);",
+                  "        ",
+                  "        // Save accountId as accountNumber for consistency",
+                  "        if (response.accountId) {",
+                  "            pm.collectionVariables.set('accountNumber', response.accountId);",
+                  "            console.log('Account ID saved as accountNumber:', response.accountId);",
+                  "            pm.test('Account ID received and saved', function () {",
+                  "                pm.expect(response.accountId).to.be.a('string');",
+                  "            });",
+                  "        } else if (response.accNo) {",
+                  "            pm.collectionVariables.set('accountNumber', response.accNo);",
+                  "            console.log('Account number saved:', response.accNo);",
+                  "            pm.test('Account number received and saved', function () {",
+                  "                pm.expect(response.accNo).to.be.a('string');",
+                  "            });",
+                  "        } else {",
+                  "            console.error('No account ID or account number in response:', response);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.error('Error parsing response:', e.message);",
                   "    }",
+                  "} else {",
+                  "    console.error('Account creation failed with status:', pm.response.code);",
+                  "    console.error('Response body:', pm.response.text());",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -400,6 +551,30 @@
           }
         },
         {
+          "name": "Get Account Balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:8081/accounts/balance?accountNumber={{accountNumber}}",
+              "host": ["{{baseUrl}}"],
+              "port": "8081",
+              "path": ["accounts", "balance"],
+              "query": [
+                {
+                  "key": "accountNumber",
+                  "value": "{{accountNumber}}"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Validate Account",
           "request": {
             "auth": {
@@ -474,6 +649,19 @@
                   "value": "{{accountNumber}}"
                 }
               ]
+            }
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8081/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "port": "8081",
+              "path": ["actuator", "health"]
             }
           }
         }
@@ -590,6 +778,19 @@
               ]
             }
           }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8082/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["actuator", "health"]
+            }
+          }
         }
       ]
     },
@@ -645,6 +846,269 @@
               "host": ["{{baseUrl}}"],
               "port": "3000",
               "path": [""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔄 Complete Workflow (Docker Compose)",
+      "item": [
+        {
+          "name": "1. Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    try {",
+                  "        const response = pm.response.json();",
+                  "        if (response.token) {",
+                  "            pm.environment.set('authToken', response.token);",
+                  "            console.log('✅ Admin authenticated successfully');",
+                  "        } else {",
+                  "            console.error('❌ No token in response');",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.error('❌ Error parsing response:', e.message);",
+                  "    }",
+                  "} else {",
+                  "    console.error('❌ Admin authentication failed');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8084/api/v1/auth/login?email=admin@example.com&password=SecureAdminP@ssw0rd!",
+              "host": ["{{baseUrl}}"],
+              "port": "8084",
+              "path": ["api", "v1", "auth", "login"],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "admin@example.com"
+                },
+                {
+                  "key": "password",
+                  "value": "SecureAdminP@ssw0rd!"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Create Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 201', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    try {",
+                  "        const response = pm.response.json();",
+                  "        if (response.customerId) {",
+                  "            pm.collectionVariables.set('customerId', response.customerId);",
+                  "            console.log('✅ Customer created:', response.customerId);",
+                  "        } else {",
+                  "            console.error('❌ No customer ID in response');",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.error('❌ Error parsing response:', e.message);",
+                  "    }",
+                  "} else {",
+                  "    console.error('❌ Customer creation failed');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"{{email}}\",\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"nationalId\": \"123456789\",\n  \"dateOfBirth\": \"1990-01-01\",\n  \"status\": \"Active\",\n  \"addresses\": [\n    {\n      \"address\": \"123 Main St\",\n      \"subDistrict\": \"Downtown\",\n      \"district\": \"Central\",\n      \"city\": \"Springfield\",\n      \"country\": \"USA\",\n      \"zipCode\": \"62701\",\n      \"addressType\": \"Present\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8083/customers",
+              "host": ["{{baseUrl}}"],
+              "port": "8083",
+              "path": ["customers"]
+            }
+          }
+        },
+        {
+          "name": "3. Create Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 201', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    try {",
+                  "        const response = pm.response.json();",
+                  "        if (response.accountId) {",
+                  "            pm.collectionVariables.set('accountNumber', response.accountId);",
+                  "            console.log('✅ Account created:', response.accountId);",
+                  "        } else if (response.accNo) {",
+                  "            pm.collectionVariables.set('accountNumber', response.accNo);",
+                  "            console.log('✅ Account created:', response.accNo);",
+                  "        } else {",
+                  "            console.error('❌ No account ID in response');",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.error('❌ Error parsing response:', e.message);",
+                  "    }",
+                  "} else {",
+                  "    console.error('❌ Account creation failed');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"balance\": 1000.0,\n  \"currency\": \"THB\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8081/accounts/createAccount",
+              "host": ["{{baseUrl}}"],
+              "port": "8081",
+              "path": ["accounts", "createAccount"]
+            }
+          }
+        },
+        {
+          "name": "4. Make Deposit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Deposit completed successfully');",
+                  "} else {",
+                  "    console.error('❌ Deposit failed');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accNoOwner\": \"{{accountNumber}}\",\n  \"amount\": 500.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8082/transactions/Deposit",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["transactions", "Deposit"]
+            }
+          }
+        },
+        {
+          "name": "5. Check Balance",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    try {",
+                  "        const response = pm.response.json();",
+                  "        console.log('✅ Current balance:', response.balance || 'N/A');",
+                  "    } catch (e) {",
+                  "        console.error('❌ Error parsing balance response:', e.message);",
+                  "    }",
+                  "} else {",
+                  "    console.error('❌ Balance check failed');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:8081/accounts/balance?accountNumber={{accountNumber}}",
+              "host": ["{{baseUrl}}"],
+              "port": "8081",
+              "path": ["accounts", "balance"],
+              "query": [
+                {
+                  "key": "accountNumber",
+                  "value": "{{accountNumber}}"
+                }
+              ]
             }
           }
         }

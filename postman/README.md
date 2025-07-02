@@ -79,13 +79,13 @@ This directory contains Postman collections and environments for testing the Cor
 | Authentication Service | 8084 | http://localhost:8084/actuator/health |
 
 ### Kubernetes (Ingress)
-| Service | Domain | Health Check | Authentication Endpoint |
-|---------|--------|-------------|------------------------|
-| Discovery Service | discovery.core-bank.local | http://discovery.core-bank.local/actuator/health | N/A |
-| Account Service | account.core-bank.local | http://account.core-bank.local/actuator/health | Bearer Token Required |
-| Transaction Service | transaction.core-bank.local | http://transaction.core-bank.local/actuator/health | Bearer Token Required |
-| Customer Service | customer.core-bank.local | http://customer.core-bank.local/actuator/health | Bearer Token Required |
-| Authentication Service | auth.core-bank.local | http://auth.core-bank.local/actuator/health* | http://auth.core-bank.local/api/v1/auth/login |
+| Service | Domain | Health Check | Key Endpoints |
+|---------|--------|-------------|---------------|
+| Discovery Service | discovery.core-bank.local | http://discovery.core-bank.local/actuator/health | Dashboard: `/`, Registry: `/eureka/apps` |
+| Account Service | account.core-bank.local | http://account.core-bank.local/actuator/health | Create: `/accounts/createAccount`, Get: `/accounts/getAccount`, All: `/accounts/getAllAccounts` |
+| Transaction Service | transaction.core-bank.local | http://transaction.core-bank.local/actuator/health | Deposit: `/transactions/deposit`, Withdraw: `/transactions/withdraw`, Transfer: `/transactions/Transaction` |
+| Customer Service | customer.core-bank.local | http://customer.core-bank.local/actuator/health | CRUD: `/customers`, All: `/customers/all` |
+| Authentication Service | auth.core-bank.local | http://auth.core-bank.local/actuator/health* | Login: `/api/v1/auth/login`, Register: `/api/v1/auth/register`, Validate: `/api/v1/auth/validate` |
 
 *Note: Authentication service health endpoint may return 401 due to security configuration. Use TCP probe for health checks.
 
@@ -125,20 +125,38 @@ The collections include a "Complete Workflow" folder that demonstrates the full 
 ### Individual Service Testing
 Each service has its own folder with specific operations:
 
-- **🔐 Authentication Service**: Login, token validation, health checks
-- **👤 Customer Service**: CRUD operations for customer management
-- **🏦 Account Service**: Account creation, balance checks, status updates
-- **💰 Transaction Service**: Deposits, withdrawals, transfers, transaction history
-- **🔍 Discovery Service**: Service registry status, Eureka dashboard
+- **🔐 Authentication Service**: 
+  - Admin Login, Client Login
+  - User Registration (JSON body)
+  - Token validation and health checks
+  - Enhanced debugging with detailed console logging
+- **👤 Customer Service**: 
+  - CRUD operations for customer management
+  - Get all customers, customer by ID
+  - Update and delete customer records
+- **🏦 Account Service**: 
+  - Account creation (`/accounts/createAccount` with AccountDTO)
+  - Get account by ID (`/accounts/getAccount?accNo={uuid}`)
+  - Get all accounts (`/accounts/getAllAccounts` - Admin only)
+  - Get accounts by customer ID
+  - Balance checks, status updates
+- **💰 Transaction Service**: 
+  - Deposits (`/transactions/deposit`)
+  - Withdrawals (`/transactions/withdraw`) 
+  - Transfers (`/transactions/Transaction`)
+  - Transaction history by account
+- **🔍 Discovery Service**: 
+  - Service registry status
+  - Eureka dashboard access
 
 ## 🔄 Variables and Automation
 
 The collections use variables for dynamic testing:
 
 ### Collection Variables
-- `authToken`: Automatically set after successful login
+- `authToken`: Automatically set after successful login (saved to **environment** variables)
 - `customerId`: Automatically set after customer creation
-- `accountNumber`: Automatically set after account creation
+- `accountNumber`: Automatically set after account creation (uses `accountId` from response)
 - `email`: Default customer email
 - `phoneNumber`: Default customer phone number
 
@@ -146,6 +164,13 @@ The collections use variables for dynamic testing:
 - Service URLs (different for Docker Compose vs Kubernetes)
 - Base URLs and ports
 - Default credentials
+- `authToken`: JWT token storage for API authentication
+
+### Key Variable Updates (Kubernetes Collection)
+- Authentication token now properly saved to environment variables instead of collection variables
+- Account creation returns `accountId` (UUID) which is saved as `accountNumber` variable
+- Enhanced error handling and console logging for debugging
+- Account endpoints updated to use correct service paths (`/accounts/createAccount`, `/accounts/getAccount`, etc.)
 
 ## 🛠️ Troubleshooting
 
@@ -158,9 +183,16 @@ The collections use variables for dynamic testing:
 2. **Authentication Failures**
    - Verify credentials in environment variables
    - Check if authentication service is healthy
-   - Ensure token is being saved correctly (check Tests tab)
+   - Ensure token is being saved correctly to **environment variables** (check Postman Console for logs)
    - **Kubernetes**: Use query parameters for login: `?email=<email>&password=<password>`
    - **Docker Compose**: Use query parameters for login: `?email=<email>&password=<password>`
+   - Check Postman Console (View → Show Postman Console) for detailed authentication debugging
+
+3. **Account Service Issues**
+   - Verify correct endpoints: `/accounts/createAccount` for creation, `/accounts/getAccount?accNo={uuid}` for retrieval
+   - Ensure request body matches AccountDTO format: `{"customerId": "uuid", "balance": number, "currency": "USD|THB|SGD|JPY|CNY|GBP|EUR"}`
+   - Check that `accountId` (UUID) is being extracted correctly from responses
+   - Admin role required for `/accounts/getAllAccounts` endpoint
 
 3. **Ingress Issues (Kubernetes)**
    - Verify /etc/hosts entries
@@ -171,6 +203,11 @@ The collections use variables for dynamic testing:
    - Check Eureka dashboard at discovery service endpoint
    - Verify all services are registered
    - Check service logs for connection issues
+
+5. **Transaction Service Issues**
+   - Verify correct endpoints: `/transactions/deposit`, `/transactions/withdraw`, `/transactions/Transaction`
+   - Ensure request body format matches service expectations
+   - Check account ID format (UUID) in transaction requests
 
 ### Health Check Debugging
 
@@ -190,9 +227,13 @@ For Kubernetes deployments, additional monitoring endpoints are available:
 
 1. **Environment Selection**: Always select the correct environment before testing
 2. **Sequential Testing**: Run authentication first, then customer/account creation
-3. **Variable Management**: Check that variables are being set correctly in the Tests tab
+3. **Variable Management**: Check that variables are being set correctly in the Tests tab and Postman Console
 4. **Health Checks**: Verify service health before running business operations
 5. **Error Handling**: Check response status and error messages for troubleshooting
+6. **Console Debugging**: Use Postman Console (View → Show Postman Console) to see detailed logs
+7. **Account Management**: Remember that account operations use UUID-based `accountId`, not sequential account numbers
+8. **Admin Permissions**: Use Admin login for operations requiring elevated privileges (e.g., Get All Accounts)
+9. **Service-Specific Endpoints**: Use correct service-specific paths rather than generic REST endpoints
 
 ## 📝 Notes
 
@@ -207,6 +248,15 @@ For Kubernetes deployments, additional monitoring endpoints are available:
 
 ## 🔄 Recent Updates (July 2025)
 
+- ✅ **Fixed Authentication Token Storage**: Changed from collection variables to environment variables for proper token persistence
+- ✅ **Corrected Account Service Endpoints**: Updated to use actual controller paths (`/accounts/createAccount`, `/accounts/getAccount?accNo={uuid}`)
+- ✅ **Added Get All Accounts Endpoint**: New admin-only endpoint for retrieving all accounts in the system
+- ✅ **Enhanced Authentication Debugging**: Added comprehensive console logging for login troubleshooting
+- ✅ **Updated Account Data Model**: Account creation now uses `accountId` (UUID) instead of sequential account numbers
+- ✅ **Fixed Request/Response Mapping**: Updated test scripts to extract `accountId` from account creation responses
+- ✅ **Verified Transaction Service Integration**: Updated transaction endpoints to work with UUID-based account IDs
+- ✅ **Enhanced Error Handling**: Added try-catch blocks and detailed error messages in test scripts
+- ✅ **Updated Service Documentation**: Comprehensive endpoint documentation with correct paths and parameters
 - ✅ Fixed Kubernetes authentication endpoints to use query parameters
 - ✅ Updated /etc/hosts configuration with 127.0.0.1 for local development
 - ✅ Added Register User endpoint to Kubernetes collection
