@@ -56,6 +56,9 @@ public class TransactionProcess {
             if (ownerPayload.getBalance().compareTo(transactionDTO.getAmount()) < 0) {
                 return Mono.error(new IllegalArgumentException("Insufficient funds"));
             }
+            if(!ownerPayload.getCurrency().equals(receiverPayload.getCurrency())) {
+                return Mono.error(new IllegalArgumentException("Currency mismatch between accounts"));
+            }
 
             ownerPayload.setBalance(ownerPayload.getBalance().subtract(transactionDTO.getAmount()));
             receiverPayload.setBalance(receiverPayload.getBalance().add(transactionDTO.getAmount()));
