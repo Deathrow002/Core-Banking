@@ -74,20 +74,32 @@ The Core Bank System operates as a **cloud-native microservices architecture** w
 
 ### Quick Start Options
 
-#### Option 1: Docker Compose (Development)
+#### Option 1: Automated Docker Deployment (Recommended)
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd core-bank
 
-# Start all services
+# One-command deployment with monitoring
+./deploy.sh
+
+# Or deploy without dashboards
+./deploy.sh --skip-dashboards
+
+# Setup Grafana dashboards only
+./setup-grafana.sh
+```
+
+#### Option 2: Manual Docker Compose (Development)
+```bash
+# Start all services manually
 docker-compose up -d
 
 # Check service health
 docker-compose ps
 ```
 
-#### Option 2: Kubernetes (Production)
+#### Option 3: Kubernetes (Production)
 ```bash
 # Deploy to Kubernetes with optimized configuration
 ./k8s/deploy.sh
@@ -96,6 +108,9 @@ docker-compose ps
 kubectl get pods -n core-bank
 kubectl get services -n core-bank
 ```
+
+### 📋 Deployment Guide
+📚 **See detailed instructions**: [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md)
 
 ## 🎯 Service Endpoints
 
@@ -385,3 +400,195 @@ This Core Bank System with the following features:
 - Kubernetes orchestration
 - Infrastructure as Code
 - Automated health checks
+
+## 📊 Monitoring & Observability with Grafana
+
+The Core Bank System includes comprehensive monitoring and observability with **Prometheus** and **Grafana** integration. This provides real-time insights into system performance, business metrics, and operational health.
+
+### 🚀 Quick Setup
+
+#### Option 1: Automated Setup (Recommended)
+```bash
+# 1. Start the system with monitoring stack
+docker-compose up -d
+
+# 2. Wait for services to be ready (2-3 minutes)
+docker-compose ps
+
+# 3. Run the automated dashboard setup
+cd monitoring/grafana
+./setup-dashboards.sh
+```
+
+#### Option 2: Manual Setup
+1. **Access Grafana**: http://localhost:3000
+2. **Login**: Username: `myuser`, Password: `mypassword`
+3. **Add Prometheus Data Source**:
+   - URL: `http://prometheus:9090`
+   - Access: `Server (default)`
+4. **Import Dashboards**: Use the JSON files in `monitoring/grafana/dashboards/`
+
+### 📈 Available Dashboards
+
+#### 1. **Core Bank System - Microservices Overview**
+**Location**: `monitoring/grafana/dashboards/core-bank-overview.json`
+
+**Key Metrics**:
+- ✅ **Service Health Status** - Real-time UP/DOWN status for all microservices
+- 📊 **HTTP Request Rate** - Requests per second across all services
+- ⏱️ **Response Time (95th percentile)** - Performance monitoring
+- 🧠 **JVM Memory Usage** - Memory consumption by service
+- 🗑️ **Garbage Collection Rate** - JVM GC performance
+- 🔗 **Database Connection Pool** - HikariCP connection monitoring
+- ❌ **Error Rate (4xx/5xx)** - HTTP error tracking
+
+#### 2. **Core Bank System - Service Details**
+**Location**: `monitoring/grafana/dashboards/service-details.json`
+
+**Features**:
+- 🎯 **Service-specific drill-down** with dynamic service selection
+- 📊 **Detailed HTTP metrics** by status code and endpoint
+- 📈 **Response time distribution** (50th, 95th, 99th percentiles)
+- 🧠 **JVM memory breakdown** (heap, non-heap, max values)
+- 🧵 **Thread pool monitoring** (live, daemon, peak threads)
+- 🔗 **Database connection details** (active, idle, pending, max)
+
+#### 3. **Core Bank System - Business Metrics**
+**Location**: `monitoring/grafana/dashboards/business-metrics.json`
+
+**Business KPIs**:
+- 🏦 **Account Operations Rate** - Account creation, lookup, balance checks
+- 💰 **Transaction Rate** - Deposits, withdrawals, transfers
+- 👥 **Customer Operations Rate** - Customer management activities
+- 🔐 **Authentication Rate** - Login and auth operations
+- 📊 **Operations by Type** - Breakdown of business operations
+- ⚠️ **Error Rates by Service** - Business-critical error monitoring
+
+### 🛠️ Configuration Details
+
+#### Prometheus Configuration
+**File**: `monitoring/prometheus/prometheus.yml`
+
+**Monitored Services**:
+```yaml
+- Discovery Service (Port 8761)    # Service registry metrics
+- Account Service (Port 8081)      # Account operations metrics  
+- Transaction Service (Port 8082)  # Transaction processing metrics
+- Customer Service (Port 8083)     # Customer management metrics
+- Authentication Service (Port 8084) # Authentication metrics
+```
+
+**Metrics Endpoints**: `/actuator/prometheus` (Spring Boot Actuator)
+**Scrape Interval**: 15 seconds
+
+#### Grafana Provisioning
+**Data Source**: `monitoring/grafana/provisioning/datasources/prometheus.yml`
+**Dashboards**: `monitoring/grafana/provisioning/dashboards/dashboards.yml`
+
+### 📋 Key Metrics Explained
+
+#### System Health Metrics
+- **`up`** - Service availability (1=UP, 0=DOWN)
+- **`http_server_requests_seconds_count`** - HTTP request count
+- **`http_server_requests_seconds_bucket`** - Response time histograms
+- **`jvm_memory_used_bytes`** / **`jvm_memory_max_bytes`** - JVM memory usage
+- **`jvm_threads_live_threads`** - Active thread count
+- **`hikaricp_connections_*`** - Database connection pool metrics
+
+#### Business Metrics
+- **Account Operations**: Creation, lookup, balance checks, updates
+- **Transaction Operations**: Deposits, withdrawals, transfers, history
+- **Customer Operations**: Registration, profile updates, validation
+- **Authentication Operations**: Login, token validation, user management
+
+### 🔧 Customization
+
+#### Adding Custom Metrics
+1. **In Spring Boot Services**:
+   ```java
+   @Autowired
+   private MeterRegistry meterRegistry;
+   
+   // Custom counter
+   Counter.builder("bank.transactions.total")
+       .tag("type", "deposit")
+       .register(meterRegistry)
+       .increment();
+   
+   // Custom timer
+   Timer.Sample sample = Timer.start(meterRegistry);
+   // ... business logic ...
+   sample.stop(Timer.builder("bank.operation.duration")
+       .tag("operation", "account.creation")
+       .register(meterRegistry));
+   ```
+
+2. **Add to Dashboard**: Create new panels using PromQL queries
+
+#### Custom Alerts (Prometheus Alertmanager)
+```yaml
+# Example alert rule
+groups:
+  - name: core-bank-alerts
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+```
+
+### 🚨 Troubleshooting
+
+#### Common Issues
+
+1. **No Data in Dashboards**
+   ```bash
+   # Check Prometheus targets
+   curl http://localhost:9090/api/v1/targets
+   
+   # Verify service metrics endpoints
+   curl http://localhost:8081/actuator/prometheus
+   ```
+
+2. **Services Not Discovered**
+   - Verify `/actuator/prometheus` endpoints are accessible
+   - Check Docker network connectivity
+   - Confirm services have Spring Boot Actuator dependency
+
+3. **Dashboard Import Failed**
+   - Ensure Prometheus data source exists
+   - Check dashboard JSON syntax
+   - Verify Grafana API access (username/password)
+
+4. **YAML Validation Errors in VS Code**
+   ```
+   ❌ Property datasources is not allowed.
+   ❌ Property apiVersion is not allowed.
+   ```
+   
+   **Issue**: VS Code applies Kubernetes schema to Grafana provisioning files
+   
+   **Solutions**:
+   - ✅ **Use JSON format**: `monitoring/grafana/provisioning/datasources/prometheus.json` (already created)
+   - ✅ **Ignore warnings**: Files work correctly despite validation errors
+   - ✅ **See detailed fix**: `monitoring/YAML_VALIDATION_FIX.md`
+   
+   **Status**: ✅ Both JSON and YAML versions work correctly
+
+### 📊 Accessing Dashboards
+
+1. **Open Grafana**: http://localhost:3000
+2. **Login**: Username: `myuser`, Password: `mypassword`
+3. **Navigate**: Dashboards → Browse → Core Bank System folder
+4. **Monitor**: Real-time metrics and business KPIs
+
+### 🎯 Best Practices
+
+- **Monitor continuously** during development and production
+- **Set up alerts** for critical business metrics
+- **Use business metrics** to understand user behavior
+- **Correlate metrics** across services for troubleshooting
+- **Regular dashboard reviews** to identify optimization opportunities

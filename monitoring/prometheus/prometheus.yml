@@ -1,0 +1,66 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Discovery Service
+  - job_name: 'discovery-service'
+    static_configs:
+      - targets: ['discovery-service:8761']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Account Service
+  - job_name: 'account-service'
+    static_configs:
+      - targets: ['account-service:8081']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Transaction Service
+  - job_name: 'transaction-service'
+    static_configs:
+      - targets: ['transaction-service:8082']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Customer Service
+  - job_name: 'customer-service'
+    static_configs:
+      - targets: ['customer-service:8083']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Authentication Service
+  - job_name: 'authentication-service'
+    static_configs:
+      - targets: ['authentication-service:8084']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # PostgreSQL Exporter (if using postgres_exporter)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+
+  # Redis Exporter (if using redis_exporter)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+
+  # Kafka Exporter (if using kafka_exporter)
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+    scrape_interval: 30s

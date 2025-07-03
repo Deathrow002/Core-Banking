@@ -1,0 +1,20 @@
+# Grafana datasource configuration for Prometheus
+# Note: If YAML validation fails, this file contains the correct Grafana format
+# The "datasources" property is valid for Grafana provisioning (not Kubernetes)
+# This file is intended for Grafana's provisioning system, not direct Kubernetes deployment.
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    version: 1
+    jsonData:
+      timeInterval: 15s
+      queryTimeout: 60s
+      httpMethod: POST
+
+# Alternative: Use JSON format instead
+# See prometheus.json for JSON equivalent
