@@ -99,18 +99,33 @@ docker-compose up -d
 docker-compose ps
 ```
 
-#### Option 3: Kubernetes (Production)
+#### Option 3: Kubernetes with Grafana (Production)
+```bash
+# Deploy to Kubernetes with monitoring and dashboards
+cd k8s
+./deploy-with-grafana.sh
+
+# Or with custom options
+./deploy-with-grafana.sh --port-forward
+./deploy-with-grafana.sh --namespace my-banking-system
+
+# Setup dashboards only
+./setup-k8s-grafana-dashboards.sh
+```
+
+#### Option 4: Standard Kubernetes (Production)
 ```bash
 # Deploy to Kubernetes with optimized configuration
-./k8s/deploy.sh
+cd k8s
+./deploy.sh
 
 # Check deployment status
 kubectl get pods -n core-bank
 kubectl get services -n core-bank
 ```
 
-### 📋 Deployment Guide
-📚 **See detailed instructions**: [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md)
+### 📋 Complete Deployment Guide
+📚 **See all options**: [`./deployment-guide.sh`](deployment-guide.sh) or run `./deployment-guide.sh`
 
 ## 🎯 Service Endpoints
 
