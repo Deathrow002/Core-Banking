@@ -394,7 +394,7 @@
 							"mode": "raw",
 							"raw": "{\n  \"accNoOwner\": \"c724c748-e4aa-46b3-b866-d865e792eec0\",\n  \"accNoReceive\": \"b58022ce-c613-4ec0-af41-08ac12ddd4f8\",\n  \"amount\": 500.0\n}"
 						},
-						"url": "http://localhost:8082/transactions/Transaction"
+						"url": "http://localhost:8082/transactions/transaction"
 					},
 					"response": []
 				},
@@ -412,7 +412,7 @@
 							"mode": "raw",
 							"raw": "{\n  \"accNoOwner\": \"c724c748-e4aa-46b3-b866-d865e792eec0\",\n  \"amount\": 1000.0\n}"
 						},
-						"url": "http://localhost:8082/transactions/Deposit"
+						"url": "http://localhost:8082/transactions/deposit"
 					},
 					"response": []
 				},
@@ -430,7 +430,7 @@
 							"mode": "raw",
 							"raw": "{\n  \"accNoOwner\": \"12345678\",\n  \"amount\": 100.0\n}"
 						},
-						"url": "http://localhost:8082/transactions/Withdraw"
+						"url": "http://localhost:8082/transactions/withdraw"
 					},
 					"response": []
 				},

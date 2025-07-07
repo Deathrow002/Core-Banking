@@ -691,10 +691,10 @@
               "raw": "{\n  \"accNoOwner\": \"{{accountNumber}}\",\n  \"amount\": 1000.0\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}:8082/transactions/Deposit",
+              "raw": "{{baseUrl}}:8082/transactions/deposit",
               "host": ["{{baseUrl}}"],
               "port": "8082",
-              "path": ["transactions", "Deposit"]
+              "path": ["transactions", "deposit"]
             }
           }
         },
@@ -719,10 +719,10 @@
               "raw": "{\n  \"accNoOwner\": \"{{accountNumber}}\",\n  \"amount\": 100.0\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}:8082/transactions/Withdraw",
+              "raw": "{{baseUrl}}:8082/transactions/withdraw",
               "host": ["{{baseUrl}}"],
               "port": "8082",
-              "path": ["transactions", "Withdraw"]
+              "path": ["transactions", "withdraw"]
             }
           }
         },
@@ -747,10 +747,10 @@
               "raw": "{\n  \"accNoOwner\": \"{{accountNumber}}\",\n  \"accNoReceive\": \"RECEIVER_ACCOUNT_NUMBER\",\n  \"amount\": 500.0\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}:8082/transactions/Transaction",
+              "raw": "{{baseUrl}}:8082/transactions/transaction",
               "host": ["{{baseUrl}}"],
               "port": "8082",
-              "path": ["transactions", "Transaction"]
+              "path": ["transactions", "transaction"]
             }
           }
         },
@@ -1057,10 +1057,10 @@
               "raw": "{\n  \"accNoOwner\": \"{{accountNumber}}\",\n  \"amount\": 500.0\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}:8082/transactions/Deposit",
+              "raw": "{{baseUrl}}:8082/transactions/deposit",
               "host": ["{{baseUrl}}"],
               "port": "8082",
-              "path": ["transactions", "Deposit"]
+              "path": ["transactions", "deposit"]
             }
           }
         },

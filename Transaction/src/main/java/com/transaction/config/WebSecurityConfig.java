@@ -27,6 +27,7 @@ public class WebSecurityConfig {
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers("/actuator/**").permitAll()
+                .pathMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .anyExchange().authenticated()
             )
             .addFilterAt(authTokenWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
