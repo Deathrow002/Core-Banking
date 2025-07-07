@@ -80,11 +80,11 @@ cd k8s
 kubectl apply -f namespace.yml
 kubectl apply -f postgres.yml
 kubectl apply -f redis.yml
-kubectl apply -f zookeeper.yml
+
 kubectl apply -f kafka.yml
 
 # 2. Deploy monitoring
-kubectl apply -f prometheus.yml
+kubectl apply -f prometheus-config-minimal.yml
 kubectl apply -f grafana.yml
 
 # 3. Deploy core services
@@ -95,7 +95,7 @@ kubectl apply -f customer-service.yml
 kubectl apply -f transaction-service.yml
 
 # 4. Setup dashboards
-./setup-k8s-grafana-dashboards.sh
+./smart-dashboard-import.sh
 ```
 
 ### Option 4: Use Existing K8s Deploy Script
@@ -104,7 +104,7 @@ kubectl apply -f transaction-service.yml
 ./deploy.sh
 
 # Then setup Grafana dashboards separately
-./setup-k8s-grafana-dashboards.sh
+./smart-dashboard-import.sh
 ```
 
 ## 🌐 Accessing Services
@@ -164,7 +164,7 @@ The `deploy-with-grafana.sh` script automatically:
 ### Manual Dashboard Setup
 If automatic setup fails, run:
 ```bash
-./setup-k8s-grafana-dashboards.sh
+./smart-dashboard-import.sh
 ```
 
 ### Manual Dashboard Import (via UI)
@@ -320,7 +320,7 @@ kubectl get configmap -n core-bank
 kubectl describe configmap grafana-datasources -n core-bank
 
 # Re-setup dashboards
-./setup-k8s-grafana-dashboards.sh
+./smart-dashboard-import.sh
 ```
 
 #### 4. Resource Issues

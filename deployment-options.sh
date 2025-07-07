@@ -56,11 +56,11 @@ main() {
     
     print_option "4. 📈 Dashboard Setup Only" \
                  "Setup Grafana dashboards on existing deployment"
-    print_command "./setup-grafana.sh"
+    print_command "./k8s/scripts/setup-grafana.sh"
     
     print_option "5. 🔐 Custom Grafana Credentials" \
                  "Setup dashboards with custom username/password"
-    print_command "./setup-grafana.sh --username admin --password secret"
+    print_command "./k8s/scripts/setup-grafana.sh --username admin --password secret"
     
     print_section "🐳 Manual Docker Compose"
     echo ""
@@ -71,7 +71,7 @@ main() {
     print_command "docker-compose up -d prometheus grafana       # Monitoring"
     print_command "docker-compose up -d discovery-service        # Service Discovery"
     print_command "docker-compose up -d authentication-service account-service customer-service transaction-service"
-    print_command "./setup-grafana.sh                            # Dashboard setup"
+    print_command "./k8s/scripts/setup-grafana.sh                            # Dashboard setup"
     
     print_option "7. 🚪 Basic Docker Compose" \
                  "Simple Docker Compose deployment without automation"
@@ -82,7 +82,7 @@ main() {
     
     print_option "8. 🌐 Kubernetes Production" \
                  "Production deployment with Kubernetes (requires kubectl)"
-    print_command "./k8s/deploy.sh"
+    print_command "./k8s/scripts/deploy.sh"
     
     print_section "📚 Documentation & Help"
     echo ""
@@ -94,8 +94,8 @@ main() {
     print_option "❓ Script Help" \
                  "Get help for specific deployment scripts"
     print_command "./deploy.sh --help"
-    print_command "./setup-grafana.sh --help"
-    print_command "./k8s/deploy.sh --help"
+    print_command "./k8s/scripts/setup-grafana.sh --help"
+    print_command "./k8s/scripts/deploy.sh --help"
     
     print_section "🌐 Service URLs (After Deployment)"
     echo ""

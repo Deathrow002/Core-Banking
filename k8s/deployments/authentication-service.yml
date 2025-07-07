@@ -38,13 +38,15 @@ spec:
           value: "redis"
         - name: SPRING_REDIS_PORT
           value: "6379"
-        # Disable security for actuator endpoints
+        # Disable security for actuator endpoints and expose prometheus
         - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
-          value: "health,info"
+          value: "health,info,prometheus,metrics"
         - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
           value: "always"
         - name: MANAGEMENT_SECURITY_ENABLED
           value: "false"
+        - name: MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED
+          value: "true"
         # Enable load balancing
         - name: EUREKA_INSTANCE_INSTANCE_ID
           value: "${spring.application.name}:${spring.cloud.client.hostname}:${random.value}"

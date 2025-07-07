@@ -31,7 +31,7 @@ public class TransactionController {
     private final TransactionService transactionService;
     private final TransactionProcess transactionProcess;
 
-    @PostMapping("/Transaction")
+    @PostMapping("/transaction")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public Mono<ResponseEntity<Transaction>> transaction(@RequestBody TransactionDTO transactionDTO, @RequestHeader("Authorization") String authorizationHeader) {
         String jwtToken = authorizationHeader.replace("Bearer ", "");
@@ -39,7 +39,7 @@ public class TransactionController {
                 .map(tx -> ResponseEntity.status(HttpStatus.OK).body(tx));
     }
 
-    @PostMapping("/Deposit")
+    @PostMapping("/deposit")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public Mono<ResponseEntity<Transaction>> deposit(@RequestBody TransactionDTO transactionDTO, @RequestHeader("Authorization") String authorizationHeader) {
         String jwtToken = authorizationHeader.replace("Bearer ", "");
@@ -47,7 +47,7 @@ public class TransactionController {
                 .map(tx -> ResponseEntity.status(HttpStatus.OK).body(tx));
     }
 
-    @PostMapping("/Withdraw")
+    @PostMapping("/withdraw")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public Mono<ResponseEntity<Transaction>> withdraw(@RequestBody TransactionDTO transactionDTO, @RequestHeader("Authorization") String authorizationHeader) {
         String jwtToken = authorizationHeader.replace("Bearer ", "");

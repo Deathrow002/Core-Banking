@@ -48,6 +48,7 @@ public class WebSecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // .requestMatchers("/api/v1/auth/getAllUsers").hasRole("ADMIN") // More specific rule first
                 .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register").permitAll() // Allow public access to login and register
+                .requestMatchers("/actuator/health", "/actuator/prometheus", "/actuator/info").permitAll() // Allow public access to actuator endpoints
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

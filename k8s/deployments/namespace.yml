@@ -25,7 +25,7 @@ metadata:
 # kubectl apply -f customer-service.yml
 # kubectl apply -f transaction-service.yml
 # kubectl apply -f authentication-service.yml
-# kubectl apply -f prometheus.yml
+# kubectl apply -f prometheus-config-minimal.yml
 # kubectl apply -f grafana.yml
 
 # Or deploy all at once (may have dependency issues):

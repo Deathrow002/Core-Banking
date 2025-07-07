@@ -87,7 +87,7 @@ cd core-bank
 ./deploy.sh --skip-dashboards
 
 # Setup Grafana dashboards only
-./setup-grafana.sh
+./k8s/scripts/setup-grafana.sh
 ```
 
 #### Option 2: Manual Docker Compose (Development)

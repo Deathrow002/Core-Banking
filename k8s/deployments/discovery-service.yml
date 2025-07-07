@@ -28,6 +28,15 @@ spec:
           value: "false"
         - name: EUREKA_INSTANCE_HOSTNAME
           value: "discovery-service"
+        # Enable actuator endpoints for monitoring
+        - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+          value: "health,info,prometheus,metrics"
+        - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+          value: "always"
+        - name: MANAGEMENT_SECURITY_ENABLED
+          value: "false"
+        - name: MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED
+          value: "true"
         resources:
           requests:
             memory: "512Mi"

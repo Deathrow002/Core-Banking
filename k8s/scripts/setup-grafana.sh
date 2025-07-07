@@ -135,10 +135,16 @@ import_dashboard() {
     print_info "Importing dashboard: $dashboard_name..."
     
     # Read dashboard JSON
-    local dashboard_json=$(cat "$dashboard_file")
+    local dashboard_content=$(cat "$dashboard_file")
     
-    # Create import payload
-    local import_payload="{\"dashboard\": $dashboard_json, \"overwrite\": true, \"inputs\": []}"
+    # Check if the JSON already has a dashboard wrapper
+    if echo "$dashboard_content" | jq -e '.dashboard' >/dev/null 2>&1; then
+        # JSON already has dashboard wrapper, just add overwrite flag
+        local import_payload=$(echo "$dashboard_content" | jq '. + {"overwrite": true}')
+    else
+        # Create import payload with dashboard wrapper
+        local import_payload="{\"dashboard\": $dashboard_content, \"overwrite\": true, \"inputs\": []}"
+    fi
     
     # Import dashboard
     local result=$(curl -s -X POST \
@@ -167,9 +173,9 @@ setup_dashboards() {
     print_step "Importing Grafana dashboards..."
     
     local dashboard_files=(
-        "monitoring/grafana/dashboards/core-bank-overview.json"
-        "monitoring/grafana/dashboards/service-details.json"
-        "monitoring/grafana/dashboards/business-metrics.json"
+        "../../monitoring/grafana/dashboards/core-bank-overview.json"
+        "../../monitoring/grafana/dashboards/service-details.json"
+        "../../monitoring/grafana/dashboards/business-metrics.json"
     )
     
     local imported_count=0
@@ -240,7 +246,7 @@ display_dashboard_info() {
     echo ""
     
     echo -e "${GREEN}🧪 Generate Test Data:${NC}"
-    echo -e "  • Use Postman collection: ${BLUE}postman/CoreBank-Docker-Compose.postman_collection.json${NC}"
+    echo -e "  • Use Postman collection: ${BLUE}../../postman/CoreBank-Docker-Compose.postman_collection.json${NC}"
     echo -e "  • Or run manual API calls: ${BLUE}curl http://localhost:8081/actuator/health${NC}"
     echo ""
 }

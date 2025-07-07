@@ -54,7 +54,7 @@ main() {
     
     print_option "4. 📊 Docker Dashboard Setup Only" \
                  "Setup Grafana dashboards on existing Docker deployment"
-    print_command "./setup-grafana.sh"
+    print_command "./k8s/scripts/setup-grafana.sh"
     
     print_option "5. 📋 Manual Docker Compose" \
                  "Traditional Docker Compose deployment"
@@ -65,7 +65,7 @@ main() {
     
     print_option "6. 🚀 Complete K8s Deployment (Recommended for Production)" \
                  "Full Kubernetes deployment with monitoring and dashboards"
-    print_command "cd k8s && ./deploy-with-grafana.sh"
+    print_command "cd k8s/scripts && ./deploy-with-grafana.sh"
     
     print_option "7. ⚙️ K8s with Custom Options" \
                  "Kubernetes deployment with specific configurations"
@@ -182,7 +182,7 @@ main() {
     print_option "Get Help" \
                  "Show help for specific deployment scripts"
     print_command "./deploy.sh --help"
-    print_command "./setup-grafana.sh --help"
+    print_command "./k8s/scripts/setup-grafana.sh --help"
     print_command "cd k8s && ./deploy-with-grafana.sh --help"
     print_command "cd k8s && ./deploy.sh --help"
     
@@ -198,8 +198,8 @@ main() {
     echo -e "   ${BLUE}cd k8s && ./deploy-with-grafana.sh${NC}"
     echo ""
     echo -e "${GREEN}Dashboard Only Setup:${NC}"
-    echo -e "   ${BLUE}./setup-grafana.sh                    # Docker${NC}"
-    echo -e "   ${BLUE}cd k8s && ./setup-k8s-grafana-dashboards.sh  # Kubernetes${NC}"
+    echo -e "   ${BLUE}./k8s/scripts/setup-grafana.sh                    # Docker${NC}"
+    echo -e "   ${BLUE}cd k8s && ./smart-dashboard-import.sh     # Kubernetes${NC}"
     echo ""
     
     echo -e "${GREEN}🎉 Ready to deploy your Core Bank System! Choose an option above and get started! 🚀${NC}"

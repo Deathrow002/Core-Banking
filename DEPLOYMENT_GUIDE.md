@@ -34,13 +34,13 @@ If you already have the system running and just want to set up Grafana dashboard
 
 ```bash
 # Setup Grafana dashboards only
-./setup-grafana.sh
+./k8s/scripts/setup-grafana.sh
 
 # With custom credentials
-./setup-grafana.sh --username admin --password secret
+./k8s/scripts/setup-grafana.sh --username admin --password secret
 
 # With custom Grafana URL
-./setup-grafana.sh --grafana-url http://my-grafana:3000
+./k8s/scripts/setup-grafana.sh --grafana-url http://my-grafana:3000
 ```
 
 ## 🔧 Manual Deployment Steps
@@ -72,7 +72,7 @@ docker-compose up -d authentication-service account-service customer-service tra
 
 ### 5. Setup Grafana Dashboards
 ```bash
-./setup-grafana.sh
+./k8s/scripts/setup-grafana.sh
 ```
 
 ## 🌐 Access URLs
@@ -191,7 +191,7 @@ docker system prune  # Clean up if needed
 #### 3. Grafana Dashboard Issues
 ```bash
 # Re-run dashboard setup
-./setup-grafana.sh
+./k8s/scripts/setup-grafana.sh
 
 # Check Grafana logs
 docker-compose logs grafana
