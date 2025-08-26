@@ -1,4 +1,4 @@
-package com.account.config.jwt;
+package com.account.config.JWT;
 
 import java.security.Key;
 import java.util.Date;
@@ -6,6 +6,7 @@ import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
+    @Autowired
     private final JwtConfig jwtConfig;
 
     private Key key() {

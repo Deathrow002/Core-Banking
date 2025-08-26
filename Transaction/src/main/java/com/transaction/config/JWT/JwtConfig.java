@@ -1,4 +1,4 @@
-package com.transaction.config.jwt;
+package com.transaction.config.JWT;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

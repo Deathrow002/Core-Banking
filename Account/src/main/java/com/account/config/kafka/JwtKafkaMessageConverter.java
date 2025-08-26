@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.account.config.jwt.JwtUtils;
+import com.account.config.JWT.JwtUtils;
 
 import lombok.RequiredArgsConstructor;
 

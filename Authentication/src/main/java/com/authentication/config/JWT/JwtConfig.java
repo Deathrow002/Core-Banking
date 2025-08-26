@@ -1,4 +1,4 @@
-package com.authentication.config.jwt;
+package com.authentication.config.JWT;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

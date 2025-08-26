@@ -6,7 +6,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import com.authentication.config.jwt.JwtUtils;
+import com.authentication.config.JWT.JwtUtils;
 import com.authentication.models.response.JwtResponse;
 
 import lombok.RequiredArgsConstructor;

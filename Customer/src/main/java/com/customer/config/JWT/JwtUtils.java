@@ -1,4 +1,4 @@
-package com.customer.config.jwt;
+package com.customer.config.JWT;
 
 import java.security.Key;
 import java.util.Date;

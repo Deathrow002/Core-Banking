@@ -1,4 +1,4 @@
-package com.transaction.config.jwt;
+package com.transaction.config.JWT;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;

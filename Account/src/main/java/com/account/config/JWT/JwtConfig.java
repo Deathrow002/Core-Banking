@@ -1,4 +1,4 @@
-package com.account.config.jwt;
+package com.account.config.JWT;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

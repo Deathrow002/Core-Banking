@@ -13,8 +13,8 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.account.config.jwt.JwtUtils;
 import com.account.config.kafka.JwtKafkaMessageConverter;
+import com.account.config.JWT.JwtUtils;
 
 @ExtendWith(MockitoExtension.class)
 class JwtKafkaMessageConverterTest {

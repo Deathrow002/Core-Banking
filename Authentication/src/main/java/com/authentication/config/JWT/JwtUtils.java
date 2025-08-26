@@ -1,4 +1,4 @@
-package com.authentication.config.jwt;
+package com.authentication.config.JWT;
 
 import java.security.Key;
 import java.util.Date;
