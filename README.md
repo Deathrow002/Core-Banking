@@ -172,7 +172,7 @@ The system includes production-ready load balancing and auto-scaling:
 - Round-robin load balancing
 - Health-based routing
 - Session affinity support
-- Circuit breaker patterns
+- Circuit breaker patterns (Resilience4j @CircuitBreaker annotation in service classes for remote calls)
 
 ### Resource Optimization
 - **CPU Requests**: Optimized for scheduling (50m-100m per service)
@@ -199,6 +199,40 @@ kubectl port-forward svc/discovery-service 8761:8761 -n core-bank
 ```
 
 ## 📋 API Testing with Postman
+
+## 🧪 API Testing with Postman
+
+The project includes ready-to-use Postman collections and environment files for testing all core banking APIs in both Docker Compose and Kubernetes environments.
+
+### How to Use
+
+1. **Open Postman** (download from https://www.postman.com/downloads/ if needed).
+2. **Import the Collection**:
+   - Go to `File > Import` and select one of the following:
+     - `postman/CoreBank-Docker-Compose.postman_collection.json` (for local Docker Compose)
+     - `postman/CoreBank-Kubernetes.postman_collection.json` (for Kubernetes/Ingress)
+3. **Import the Environment**:
+   - Go to `File > Import` and select the matching environment file:
+     - For Docker Compose: `Docker-Compose-Admin-Core-Banking.postman_environment.json` or `Docker-Compose-Client-Core-Banking.postman_environment.json`
+     - For Kubernetes: `Kubernetes-Admin-Core-Banking.postman_environment.json` or `Kubernetes-Client-Core-Banking.postman_environment.json`
+4. **Select the Environment** in the top-right dropdown in Postman.
+5. **(Kubernetes only)**: Add the service hostnames to your `/etc/hosts` file as described in the environment file or README.
+6. **Run Requests**:
+   - Use the folders in the collection for workflows like authentication, account management, transactions, and customer operations.
+   - Use the "Complete Workflow" folder for end-to-end tests.
+
+### Tips
+- Environment variables (tokens, IDs) are auto-populated by test scripts.
+- Use the "Pre-request Script" and "Tests" tabs in Postman for automation and validation.
+- See `postman/README.md` for advanced usage and troubleshooting.
+
+### Example Endpoints Covered
+- Authentication: Login, token validation
+- Account: Create, get, update, delete, check balance
+- Customer: Register, update, validate
+- Transaction: Deposit, withdraw, transfer, history
+
+For more details, see the `postman/README.md` file in the repository.
 
 The system includes comprehensive Postman collections for testing both Docker Compose and Kubernetes deployments:
 
@@ -264,9 +298,35 @@ spring.cloud.loadbalancer.health-check.initial-delay=10s
 spring.cloud.loadbalancer.health-check.interval=25s
 
 # Circuit Breaker for Resilience
-resilience4j.circuitbreaker.instances.default.slidingWindowSize=10
-resilience4j.circuitbreaker.instances.default.failureRateThreshold=50
-resilience4j.circuitbreaker.instances.default.waitDurationInOpenState=5s
+resilience4j.circuitbreaker.instances.accountServiceCB.slidingWindowSize=10
+resilience4j.circuitbreaker.instances.accountServiceCB.failureRateThreshold=50
+resilience4j.circuitbreaker.instances.accountServiceCB.waitDurationInOpenState=5s
+resilience4j.circuitbreaker.instances.customerServiceCB.slidingWindowSize=10
+resilience4j.circuitbreaker.instances.customerServiceCB.failureRateThreshold=50
+resilience4j.circuitbreaker.instances.customerServiceCB.waitDurationInOpenState=5s
+resilience4j.circuitbreaker.instances.transactionServiceCB.slidingWindowSize=10
+resilience4j.circuitbreaker.instances.transactionServiceCB.failureRateThreshold=50
+resilience4j.circuitbreaker.instances.transactionServiceCB.waitDurationInOpenState=5s
+### Circuit Breaker Integration
+
+The system uses Resilience4j Circuit Breaker to protect remote service calls in each microservice. To use circuit breakers:
+
+1. Annotate any service method that calls an external endpoint with `@CircuitBreaker` and provide a fallback method. Example:
+   ```java
+   import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+
+   @CircuitBreaker(name = "accountServiceCB", fallbackMethod = "fallbackMethod")
+   public boolean validateCustomer(UUID customerId, String jwtToken) {
+      // ...remote call logic...
+   }
+
+   public boolean fallbackMethod(UUID customerId, String jwtToken, Throwable t) {
+      // Fallback logic, e.g., log and return false
+      return false;
+   }
+   ```
+2. Circuit breaker configuration is set in `loadbalancer.properties` or `application.properties` as shown above.
+3. No extra endpoint is needed for circuit breaker functionality; it is handled at the method level.
 
 # Eureka Configuration for Load Balancing
 eureka.instance.lease-renewal-interval-in-seconds=30

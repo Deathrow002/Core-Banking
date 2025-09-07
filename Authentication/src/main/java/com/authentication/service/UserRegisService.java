@@ -21,6 +21,7 @@ import com.authentication.models.UserAuth;
 import com.authentication.models.request.UserRegisPayload;
 import com.authentication.repository.UserAuthRepository;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -43,6 +44,7 @@ public class UserRegisService implements UserDetailsService{
             .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 
+    @CircuitBreaker(name = "customerService", fallbackMethod = "customerServiceFallback")
     public UserDetails registerUser(UserRegisPayload user, String jwtToken) {
         try {
             UserAuth userAuth = new UserAuth();
@@ -95,5 +97,10 @@ public class UserRegisService implements UserDetailsService{
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid data provided: " + e.getMessage());
         }
+    }
+
+    public Boolean customerServiceFallback(UserRegisPayload user, String jwtToken, Throwable t) {
+        log.error("Fallback triggered for registerUser: Customer service unavailable. customerId={}, error={}", user.getCustomerId(), t.getMessage());
+        return false;
     }
 }

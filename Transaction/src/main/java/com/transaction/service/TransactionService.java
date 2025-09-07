@@ -16,6 +16,7 @@ import com.transaction.model.Transaction;
 import com.transaction.repository.TransactionRepository;
 import com.transaction.service.kafka.KafkaProducerService;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -39,6 +40,7 @@ public class TransactionService {
         return transactionRepository.findAllByAccNoOwner(AccNo).collectList();
     }
 
+    @CircuitBreaker(name = "accountService", fallbackMethod = "accountServiceFallback")
     public Mono<Boolean> isAccountValid(UUID accountNumber, String jwtToken) {
         String requestUrl = checkAccountUrl + "?accNo=" + accountNumber;
         return webClientBuilder.build().get()
@@ -53,6 +55,7 @@ public class TransactionService {
                 });
     }
 
+    @CircuitBreaker(name = "accountService", fallbackMethod = "accountServiceFallback")
     public Mono<AccountPayload> getAccountDetail(UUID accountNumber, String jwtToken) {
         String requestUrl = checkBalanceUrl + "?accNo=" + accountNumber;
         return webClientBuilder.build().get()
@@ -65,6 +68,11 @@ public class TransactionService {
                     log.warn("Error retrieving account details for {}: {}", accountNumber, e.getMessage());
                     return Mono.empty();
                 });
+    }
+
+    public Mono<Boolean> accountServiceFallback(UUID accountNumber, String jwtToken, Throwable t) {
+        log.error("Fallback triggered for isAccountValid: Account service unavailable. accountNumber={}, error={}", accountNumber, t.getMessage());
+        return Mono.just(false);
     }
 
     public Mono<Void> updateAccountBalance(String topic, AccountPayload accountPayload, String jwtToken) {

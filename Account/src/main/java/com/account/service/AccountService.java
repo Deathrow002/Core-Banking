@@ -21,6 +21,7 @@ import com.account.model.Account;
 import com.account.model.DTO.AccountDTO;
 import com.account.repository.AccountRepository;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -118,6 +119,7 @@ public class AccountService {
     }
 
     //Check if Customer Exists
+    @CircuitBreaker(name = "customerService", fallbackMethod = "customerServiceFallback")
     public boolean validateCustomer(UUID customerId,@RequestHeader("Authorization") String jwtToken) {
         try {
             String requestUrl = checkCustomerUrl + "?customerId=" + customerId;
@@ -148,5 +150,10 @@ public class AccountService {
             log.error("IllegalArgumentException while validating customer {}: {}", customerId, e.getMessage());
             return false;
         }
+    }
+
+    public boolean customerServiceFallback(UUID customerId, String jwtToken, Throwable t) {
+        log.error("Fallback triggered for validateCustomer: Customer service unavailable. customerId={}, error={}", customerId, t.getMessage());
+        return false;
     }
 }
