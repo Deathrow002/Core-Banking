@@ -41,26 +41,26 @@ main() {
     
     print_option "1. 🎯 One-Command Full Deployment (Recommended)" \
                  "Deploys everything including services, monitoring, and Grafana dashboards"
-    print_command "./deploy.sh"
+    print_command "./k8s/scripts/linux/deploy.sh"
     
     print_option "2. ⚡ Fast Deployment (Skip Cleanup)" \
                  "Faster deployment for development, skips container cleanup"
-    print_command "./deploy.sh --skip-cleanup"
+    print_command "./k8s/scripts/linux/deploy.sh --skip-cleanup"
     
     print_option "3. 🔧 Services Only (No Dashboards)" \
                  "Deploy services and monitoring, but skip Grafana dashboard setup"
-    print_command "./deploy.sh --skip-dashboards"
+    print_command "./k8s/scripts/linux/deploy.sh --skip-dashboards"
     
     print_section "📊 Grafana Dashboard Setup"
     echo ""
     
     print_option "4. 📈 Dashboard Setup Only" \
                  "Setup Grafana dashboards on existing deployment"
-    print_command "./k8s/scripts/setup-grafana.sh"
+    print_command "./k8s/scripts/linux/setup-grafana.sh"
     
     print_option "5. 🔐 Custom Grafana Credentials" \
                  "Setup dashboards with custom username/password"
-    print_command "./k8s/scripts/setup-grafana.sh --username admin --password secret"
+    print_command "./k8s/scripts/linux/setup-grafana.sh --username admin --password secret"
     
     print_section "🐳 Manual Docker Compose"
     echo ""
@@ -71,7 +71,7 @@ main() {
     print_command "docker-compose up -d prometheus grafana       # Monitoring"
     print_command "docker-compose up -d discovery-service        # Service Discovery"
     print_command "docker-compose up -d authentication-service account-service customer-service transaction-service"
-    print_command "./k8s/scripts/setup-grafana.sh                            # Dashboard setup"
+    print_command "./k8s/scripts/linux/setup-grafana.sh                            # Dashboard setup"
     
     print_option "7. 🚪 Basic Docker Compose" \
                  "Simple Docker Compose deployment without automation"
@@ -82,7 +82,7 @@ main() {
     
     print_option "8. 🌐 Kubernetes Production" \
                  "Production deployment with Kubernetes (requires kubectl)"
-    print_command "./k8s/scripts/deploy.sh"
+    print_command "./k8s/scripts/linux/deploy.sh"
     
     print_section "📚 Documentation & Help"
     echo ""
@@ -93,9 +93,9 @@ main() {
     
     print_option "❓ Script Help" \
                  "Get help for specific deployment scripts"
-    print_command "./deploy.sh --help"
-    print_command "./k8s/scripts/setup-grafana.sh --help"
-    print_command "./k8s/scripts/deploy.sh --help"
+    print_command "./k8s/scripts/linux/deploy.sh --help"
+    print_command "./k8s/scripts/linux/setup-grafana.sh --help"
+    print_command "./k8s/scripts/linux/deploy.sh --help"
     
     print_section "🌐 Service URLs (After Deployment)"
     echo ""
@@ -139,6 +139,12 @@ main() {
     print_option "🛑 Stop Services" \
                  "Stop all services"
     print_command "docker-compose down"
+    
+    print_section "💻 OS-Specific Script Locations"
+    echo ""
+    echo -e "${GREEN}Linux/macOS users:${NC} Use scripts from ${BLUE}k8s/scripts/linux/${NC} (e.g., ./k8s/scripts/linux/deploy.sh)"
+    echo -e "${GREEN}Windows users:${NC}   Use scripts from ${BLUE}k8s/scripts/windows/${NC} (e.g., ./k8s/scripts/windows/deploy.ps1)"
+    echo ""
     
     echo ""
     echo -e "${GREEN}🎉 Ready to deploy? Choose an option above and get started!${NC}"

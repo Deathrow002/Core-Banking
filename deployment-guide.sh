@@ -42,19 +42,23 @@ main() {
     
     print_option "1. 🎯 Complete Docker Deployment (Recommended for Development)" \
                  "One-command deployment with all services and Grafana dashboards"
-    print_command "./deploy.sh"
+    print_command "./k8s/scripts/linux/deploy.sh    # Linux/macOS"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy.ps1    # Windows"
     
     print_option "2. ⚡ Fast Docker Deployment" \
                  "Skip cleanup for faster development cycles"
-    print_command "./deploy.sh --skip-cleanup"
+    print_command "./k8s/scripts/linux/deploy.sh --skip-cleanup"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy.ps1 --skip-cleanup"
     
     print_option "3. 🔧 Docker Services Only" \
                  "Deploy services without Grafana dashboard setup"
-    print_command "./deploy.sh --skip-dashboards"
+    print_command "./k8s/scripts/linux/deploy.sh --skip-dashboards"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy.ps1 --skip-dashboards"
     
     print_option "4. 📊 Docker Dashboard Setup Only" \
                  "Setup Grafana dashboards on existing Docker deployment"
-    print_command "./k8s/scripts/setup-grafana.sh"
+    print_command "./k8s/scripts/linux/setup-grafana.sh"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/setup-grafana.ps1"
     
     print_option "5. 📋 Manual Docker Compose" \
                  "Traditional Docker Compose deployment"
@@ -65,46 +69,59 @@ main() {
     
     print_option "6. 🚀 Complete K8s Deployment (Recommended for Production)" \
                  "Full Kubernetes deployment with monitoring and dashboards"
-    print_command "cd k8s/scripts && ./deploy-with-grafana.sh"
+    print_command "./k8s/scripts/linux/deploy-with-grafana.sh"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy-with-grafana.ps1"
     
     print_option "7. ⚙️ K8s with Custom Options" \
                  "Kubernetes deployment with specific configurations"
-    print_command "cd k8s && ./deploy-with-grafana.sh --port-forward"
-    print_command "cd k8s && ./deploy-with-grafana.sh --namespace my-bank"
-    print_command "cd k8s && ./deploy-with-grafana.sh --skip-dashboards"
+    print_command "./k8s/scripts/linux/deploy-with-grafana.sh --port-forward"
+    print_command "./k8s/scripts/linux/deploy-with-grafana.sh --namespace my-bank"
+    print_command "./k8s/scripts/linux/deploy-with-grafana.sh --skip-dashboards"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy-with-grafana.ps1 --port-forward"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy-with-grafana.ps1 --namespace my-bank"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy-with-grafana.ps1 --skip-dashboards"
     
     print_option "8. 📊 K8s Dashboard Setup Only" \
                  "Setup Grafana dashboards on existing K8s deployment"
-    print_command "cd k8s && ./setup-k8s-grafana-dashboards.sh"
+    print_command "./k8s/scripts/linux/setup-grafana.sh"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/setup-grafana.ps1"
     
     print_option "9. 🔧 Standard K8s Deployment" \
                  "Use existing K8s script (without Grafana automation)"
-    print_command "cd k8s && ./deploy.sh"
+    print_command "./k8s/scripts/linux/deploy.sh"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy.ps1"
     
     print_option "10. 📋 Manual K8s Deployment" \
                   "Step-by-step Kubernetes deployment"
-    print_command "cd k8s && kubectl apply -f namespace.yml"
-    print_command "kubectl apply -f postgres.yml redis.yml kafka.yml"
-    print_command "kubectl apply -f prometheus.yml grafana.yml"
-    print_command "kubectl apply -f *-service.yml"
+    print_command "cd k8s/deployments"
+    print_command "kubectl apply -f namespace.yml"
+    print_command "kubectl apply -f postgres.yml"
+    print_command "kubectl apply -f redis.yml"
+    print_command "kubectl apply -f kafka.yml"
+    print_command "kubectl apply -f prometheus.yml"
+    print_command "kubectl apply -f grafana.yml"
+    print_command "kubectl apply -f account-service.yml customer-service.yml authentication-service.yml discovery-service.yml transaction-service.yml"
     
     print_section "🎭 Environment-Specific Recommendations"
     echo ""
     
     echo -e "${MAGENTA}🖥️  Local Development:${NC}"
-    echo -e "   • Use Docker Compose: ${BLUE}./deploy.sh${NC}"
-    echo -e "   • Faster iteration: ${BLUE}./deploy.sh --skip-cleanup${NC}"
+    echo -e "   • Use Docker Compose (Linux/macOS): ${BLUE}./k8s/scripts/linux/deploy.sh${NC}"
+    echo -e "   • Use Docker Compose (Windows): ${BLUE}powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy.ps1${NC}"
+    echo -e "   • Faster iteration: ${BLUE}./k8s/scripts/linux/deploy.sh --skip-cleanup${NC}"
     echo -e "   • Resource requirements: 8GB RAM, Docker Desktop"
     echo ""
     
     echo -e "${MAGENTA}🧪 Testing Environment:${NC}"
-    echo -e "   • Use Kubernetes: ${BLUE}cd k8s && ./deploy-with-grafana.sh${NC}"
+    echo -e "   • Use Kubernetes (Linux/macOS): ${BLUE}./k8s/scripts/linux/deploy-with-grafana.sh${NC}"
+    echo -e "   • Use Kubernetes (Windows): ${BLUE}powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy-with-grafana.ps1${NC}"
     echo -e "   • Easy scaling: ${BLUE}kubectl scale deployment account-service --replicas=3${NC}"
     echo -e "   • Resource requirements: minikube, kind, or cloud cluster"
     echo ""
     
     echo -e "${MAGENTA}🏭 Production Environment:${NC}"
-    echo -e "   • Use Kubernetes with persistence: ${BLUE}cd k8s && ./deploy-with-grafana.sh${NC}"
+    echo -e "   • Use Kubernetes with persistence (Linux/macOS): ${BLUE}./k8s/scripts/linux/deploy-with-grafana.sh${NC}"
+    echo -e "   • Use Kubernetes with persistence (Windows): ${BLUE}powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy-with-grafana.ps1${NC}"
     echo -e "   • Setup ingress, TLS, and persistent storage"
     echo -e "   • Configure monitoring alerts and backup strategies"
     echo ""
@@ -181,10 +198,12 @@ main() {
     
     print_option "Get Help" \
                  "Show help for specific deployment scripts"
-    print_command "./deploy.sh --help"
-    print_command "./k8s/scripts/setup-grafana.sh --help"
-    print_command "cd k8s && ./deploy-with-grafana.sh --help"
-    print_command "cd k8s && ./deploy.sh --help"
+    print_command "./k8s/scripts/linux/deploy.sh --help"
+    print_command "./k8s/scripts/linux/setup-grafana.sh --help"
+    print_command "./k8s/scripts/linux/deploy-with-grafana.sh --help"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy.ps1 --help"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/setup-grafana.ps1 --help"
+    print_command "powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy-with-grafana.ps1 --help"
     
     print_section "🚀 Quick Start Commands"
     echo ""
@@ -192,18 +211,31 @@ main() {
     echo -e "${YELLOW}Choose your deployment method:${NC}"
     echo ""
     echo -e "${GREEN}For Local Development (Docker):${NC}"
-    echo -e "   ${BLUE}./deploy.sh${NC}"
+    echo -e "   ${BLUE}./k8s/scripts/linux/deploy.sh${NC}"
+    echo -e "   ${BLUE}powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy.ps1${NC}"
     echo ""
     echo -e "${GREEN}For Production (Kubernetes):${NC}"
-    echo -e "   ${BLUE}cd k8s && ./deploy-with-grafana.sh${NC}"
+    echo -e "   ${BLUE}./k8s/scripts/linux/deploy-with-grafana.sh${NC}"
+    echo -e "   ${BLUE}powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/deploy-with-grafana.ps1${NC}"
     echo ""
     echo -e "${GREEN}Dashboard Only Setup:${NC}"
-    echo -e "   ${BLUE}./k8s/scripts/setup-grafana.sh                    # Docker${NC}"
-    echo -e "   ${BLUE}cd k8s && ./smart-dashboard-import.sh     # Kubernetes${NC}"
+    echo -e "   ${BLUE}./k8s/scripts/linux/setup-grafana.sh                    # Docker/Linux${NC}"
+    echo -e "   ${BLUE}./k8s/scripts/linux/smart-dashboard-import.sh          # Kubernetes/Linux${NC}"
+    echo -e "   ${BLUE}powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/setup-grafana.ps1          # Docker/Windows${NC}"
+    echo -e "   ${BLUE}powershell -ExecutionPolicy Bypass -File k8s/scripts/windows/smart-dashboard-import.ps1  # Kubernetes/Windows${NC}"
     echo ""
     
     echo -e "${GREEN}🎉 Ready to deploy your Core Bank System! Choose an option above and get started! 🚀${NC}"
     echo ""
+    
+    print_section "💻 OS-Specific Script Locations"
+    echo ""
+    echo -e "${GREEN}Linux/macOS users:${NC} Use scripts from ${BLUE}k8s/scripts/linux/${NC} (e.g., ./k8s/scripts/linux/deploy.sh)"
+    echo -e "${GREEN}Windows users:${NC}   Use scripts from ${BLUE}k8s/scripts/windows/${NC} (e.g., ./k8s/scripts/windows/deploy.ps1)"
+    echo ""
+    echo -e "${YELLOW}Auto-detect suggestion:${NC} This script can guess your OS with:"
+    echo -e "   ${BLUE}if [[ \"$OSTYPE\" == \"msys\" || \"$OSTYPE\" == \"win32\" ]]; then echo 'Use PowerShell scripts'; else echo 'Use bash scripts'; fi${NC}"
+    echo -e "Windows PowerShell users may need: ${BLUE}Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass${NC}"
 }
 
 main "$@"

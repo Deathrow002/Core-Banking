@@ -75,6 +75,7 @@ The Core Bank System operates as a **cloud-native microservices architecture** w
 ### Quick Start Options
 
 #### Option 1: Automated Docker Deployment (Recommended)
+Linux / macOS:
 ```bash
 # Clone the repository
 git clone <repository-url>
@@ -89,6 +90,21 @@ cd core-bank
 # Setup Grafana dashboards only
 ./k8s/scripts/setup-grafana.sh
 ```
+Windows (PowerShell):
+```powershell
+# Clone the repository
+git clone <repository-url>
+cd core-bank
+
+# One-command deployment with monitoring
+./deployment-guide.ps1 -Docker
+
+# (Alt) Show all deployment options
+./deployment-guide.ps1
+
+# Setup Grafana dashboards only
+./monitoring/grafana/setup-dashboards.ps1   # if Windows variant exists
+```
 
 #### Option 2: Manual Docker Compose (Development)
 ```bash
@@ -100,6 +116,7 @@ docker-compose ps
 ```
 
 #### Option 3: Kubernetes with Grafana (Production)
+Linux / macOS:
 ```bash
 # Deploy to Kubernetes with monitoring and dashboards
 cd k8s
@@ -112,8 +129,23 @@ cd k8s
 # Setup dashboards only
 ./setup-k8s-grafana-dashboards.sh
 ```
+Windows (PowerShell):
+```powershell
+cd k8s/scripts/windows
+# Deploy with monitoring + dashboards
+./deploy-with-grafana.ps1
+
+# Custom options (examples)
+./deploy-with-grafana.ps1 -PortForward
+./deploy-with-grafana.ps1 -Namespace my-banking-system
+./deploy-with-grafana.ps1 -SkipDashboards
+
+# Setup (dashboards only)
+./setup-grafana.ps1
+```
 
 #### Option 4: Standard Kubernetes (Production)
+Linux / macOS:
 ```bash
 # Deploy to Kubernetes with optimized configuration
 cd k8s
@@ -122,6 +154,18 @@ cd k8s
 # Check deployment status
 kubectl get pods -n core-bank
 kubectl get services -n core-bank
+```
+Windows (PowerShell):
+```powershell
+cd k8s/scripts/windows
+./deploy.ps1
+
+# Check deployment status
+kubectl get pods -n core-bank
+kubectl get services -n core-bank
+
+# (Optional) Status helper
+./k8s-status.ps1
 ```
 
 ### 📋 Complete Deployment Guide
