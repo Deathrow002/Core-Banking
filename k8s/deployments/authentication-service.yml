@@ -20,7 +20,7 @@ spec:
       containers:
       - name: authentication-service
         image: authentication-service:latest
-        imagePullPolicy: Never
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8084
         env:

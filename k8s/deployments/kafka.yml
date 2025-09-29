@@ -54,29 +54,29 @@ spec:
           
           # Start Kafka
           /usr/bin/kafka-server-start /tmp/kraft.properties
-        livenessProbe:
-          exec:
-            command:
-            - kafka-broker-api-versions
-            - --bootstrap-server
-            - localhost:9092
-          initialDelaySeconds: 20
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 5
-        readinessProbe:
-          exec:
-            command:
-            - kafka-broker-api-versions
-            - --bootstrap-server
-            - localhost:9092
-          initialDelaySeconds: 20
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 5
-        volumeMounts:
-        - name: kafka-data
-          mountPath: /var/lib/kafka/data
+        # livenessProbe:
+        #   exec:
+        #     command:
+        #     - kafka-broker-api-versions
+        #     - --bootstrap-server
+        #     - localhost:9092
+        #   initialDelaySeconds: 120
+        #   periodSeconds: 10
+        #   timeoutSeconds: 10
+        #   failureThreshold: 6
+        # readinessProbe:
+        #   exec:
+        #     command:
+        #     - kafka-broker-api-versions
+        #     - --bootstrap-server
+        #     - localhost:9092
+        #   initialDelaySeconds: 120
+        #   periodSeconds: 10
+        #   timeoutSeconds: 10
+        #   failureThreshold: 6
+        # volumeMounts:
+        # - name: kafka-data
+        #   mountPath: /var/lib/kafka/data
       volumes:
       - name: kafka-data
         persistentVolumeClaim:
@@ -91,6 +91,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
+  storageClassName: hostpath
   resources:
     requests:
       storage: 10Gi

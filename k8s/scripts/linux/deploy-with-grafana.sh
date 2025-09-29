@@ -1,12 +1,16 @@
 #!/bin/bash
 
 # Core Bank System - Kubernetes Deployment with Grafana Dashboard Setup
-# This script deploys the entire core banking    # Deploy Kafka (KRaft mode - no Zookeeper dependency)
-    print_info "Deploying Kafka..."
-    kubectl apply -f ../deployments/kafka.yml
-    wait_for_service "kafka" "$NAMESPACE" 120o Kubernetes with monitoring
+# This script deploys the entire core banking system to Kubernetes with monitoring
 
 set -e
+
+# -----------------------------
+# Add this block here
+# -----------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MONITORING_DIR="$(realpath "$SCRIPT_DIR/../../monitoring")"
+DEPLOY_DIR="$(realpath "$SCRIPT_DIR/../../deployments")"
 
 # Colors for output
 RED='\033[0;31m'
@@ -52,23 +56,37 @@ print_warning() {
     echo -e "${YELLOW}⚠️  $1${NC}"
 }
 
-# Ensure we're in the correct directory
+# Ensure deployment manifests exist
 ensure_correct_directory() {
-    # Check if we're in the k8s directory or need to change to it
-    if [ ! -f "../deployments/namespace.yml" ]; then
-        if [ -f "k8s/../deployments/namespace.yml" ]; then
-            print_info "Changing to k8s directory..."
-            cd k8s
-        elif [ -f "../k8s/../deployments/namespace.yml" ]; then
-            print_info "Changing to k8s directory..."
-            cd ../k8s
-        else
-            print_error "Cannot find Kubernetes manifests (../deployments/namespace.yml)"
-            print_info "Please run this script from the core-bank root directory or k8s directory"
-            exit 1
-        fi
+    # SCRIPT_DIR and DEPLOY_DIR are already defined at the top
+    if [ ! -f "$DEPLOY_DIR/namespace.yml" ] || [ ! -f "$DEPLOY_DIR/postgres.yml" ]; then
+        print_error "Cannot find Kubernetes manifests in $DEPLOY_DIR"
+        print_info "Please make sure the deployments folder exists and contains namespace.yml, postgres.yml, etc."
+        exit 1
     fi
-    print_info "Running from directory: $(pwd)"
+
+    if [ ! -d "$MONITORING_DIR" ]; then
+        print_warning "Monitoring directory $MONITORING_DIR not found. Monitoring deployment may fail."
+    fi
+
+    print_info "Deployment manifests verified in $DEPLOY_DIR"
+    print_info "Monitoring manifests verified in $MONITORING_DIR"
+}
+
+
+print_windows_docker_wsl_troubleshooting() {
+    echo ""
+    echo -e "${YELLOW}Windows Docker Desktop Kubernetes + WSL Troubleshooting:${NC}"
+    echo "  1. Ensure Docker Desktop is running and Kubernetes is enabled (Settings > Kubernetes)."
+    echo "  2. Enable WSL integration for your distro (Settings > Resources > WSL Integration)."
+    echo "  3. Use the Windows kubeconfig in WSL:"
+    echo "     export KUBECONFIG=/mnt/c/Users/<YourUser>/.kube/config"
+    echo "  4. Confirm your context: kubectl config current-context"
+    echo "  5. Test: kubectl get nodes"
+    echo "  6. If you see 'Unable to connect to the server', restart Docker Desktop and WSL."
+    echo "  7. Check for VPN/firewall issues blocking localhost ports."
+    echo "  8. For more info: https://docs.docker.com/desktop/wsl/"
+    echo ""
 }
 
 # Check prerequisites
@@ -98,6 +116,7 @@ check_prerequisites() {
         echo "  - Docker Desktop: Enable Kubernetes"
         echo "  - minikube: minikube start"
         echo "  - kind: kind create cluster"
+        print_windows_docker_wsl_troubleshooting
         echo ""
         exit 1
     fi
@@ -119,26 +138,27 @@ deploy_infrastructure() {
     
     # Create namespace
     print_info "Creating namespace: $NAMESPACE"
-    kubectl apply -f ../deployments/namespace.yml
+    kubectl apply -f "$DEPLOY_DIR/namespace.yml"
     
     # Deploy PostgreSQL
     print_info "Deploying PostgreSQL..."
-    kubectl apply -f ../deployments/postgres.yml
+    kubectl apply -f "$DEPLOY_DIR/postgres.yml"
     wait_for_service "postgres" "$NAMESPACE" 90
     
     # Deploy Redis
     print_info "Deploying Redis..."
-    kubectl apply -f ../deployments/redis.yml
+    kubectl apply -f "$DEPLOY_DIR/redis.yml"
     wait_for_service "redis" "$NAMESPACE" 60
     
     # Deploy Kafka (KRaft mode - no Zookeeper dependency)
     print_info "Deploying Kafka (KRaft mode)..."
-    kubectl apply -f ../deployments/kafka.yml
+    kubectl apply -f "$DEPLOY_DIR/kafka.yml"
     wait_for_service "kafka" "$NAMESPACE" 120
     
     print_success "Infrastructure services deployed"
     echo ""
 }
+
 
 # Deploy monitoring stack
 deploy_monitoring() {
@@ -147,7 +167,7 @@ deploy_monitoring() {
     # Deploy Prometheus
     print_info "Deploying Prometheus..."
     # Apply only the minimal working config to avoid conflicts
-    kubectl apply -f ../monitoring/prometheus-config-minimal.yml
+    kubectl apply -f "$MONITORING_DIR/prometheus-config-minimal.yml"
     # Apply Prometheus deployment without the conflicting ConfigMap
     kubectl apply -f - << 'EOF'
 apiVersion: apps/v1
@@ -211,7 +231,7 @@ EOF
     
     # Deploy Grafana
     print_info "Deploying Grafana..."
-    kubectl apply -f ../monitoring/grafana.yml
+    kubectl apply -f "$MONITORING_DIR/grafana.yml"
     wait_for_service "grafana" "$NAMESPACE" 90
     
     print_success "Monitoring services deployed"
@@ -224,27 +244,27 @@ deploy_core_services() {
     
     # Deploy Discovery Service
     print_info "Deploying Discovery Service..."
-    kubectl apply -f ../deployments/discovery-service.yml
+    kubectl apply -f "$DEPLOY_DIR/discovery-service.yml"
     wait_for_service "discovery-service" "$NAMESPACE" 120
     
     # Deploy Authentication Service
     print_info "Deploying Authentication Service..."
-    kubectl apply -f ../deployments/authentication-service.yml
+    kubectl apply -f "$DEPLOY_DIR/authentication-service.yml"
     wait_for_service "authentication-service" "$NAMESPACE" 90
     
     # Deploy Account Service
     print_info "Deploying Account Service..."
-    kubectl apply -f ../deployments/account-service.yml
+    kubectl apply -f "$DEPLOY_DIR/account-service.yml"
     wait_for_service "account-service" "$NAMESPACE" 90
     
     # Deploy Customer Service
     print_info "Deploying Customer Service..."
-    kubectl apply -f ../deployments/customer-service.yml
+    kubectl apply -f "$DEPLOY_DIR/customer-service.yml"
     wait_for_service "customer-service" "$NAMESPACE" 90
     
     # Deploy Transaction Service
     print_info "Deploying Transaction Service..."
-    kubectl apply -f ../deployments/transaction-service.yml
+    kubectl apply -f "$DEPLOY_DIR/transaction-service.yml"
     wait_for_service "transaction-service" "$NAMESPACE" 90
     
     print_success "Core banking services deployed"

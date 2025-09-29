@@ -20,7 +20,7 @@ spec:
       containers:
       - name: account-service
         image: account-service:latest
-        imagePullPolicy: Never
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8081
         env:

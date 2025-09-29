@@ -1,25 +1,27 @@
-# PowerShell Cleanup Script for Core Bank Kubernetes Services
+# PowerShell Cleanup Script for Core Bank Kubernetes Services (ASCII safe)
+param()
 
-Write-Host "🧹 Cleaning up Core Bank services from Kubernetes..."
-Write-Host "================================================="
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
 
+function Say($msg,[string]$color='White'){ Write-Host $msg -ForegroundColor $color }
 function Delete-Resource {
     param(
-        [string]$ResourceType,
-        [string]$ResourceName,
-        [string]$Namespace = "core-bank"
+        [Parameter(Mandatory)][string]$ResourceType,
+        [Parameter(Mandatory)][string]$ResourceName,
+        [string]$Namespace = 'core-bank'
     )
-    $exists = kubectl get $ResourceType $ResourceName -n $Namespace 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "🗑️  Deleting $ResourceType/$ResourceName..."
-        kubectl delete $ResourceType $ResourceName -n $Namespace
+    # Use delete with --ignore-not-found to avoid error noise
+    $out = kubectl delete $ResourceType $ResourceName -n $Namespace --ignore-not-found --wait=false 2>$null
+    if ($out) {
+        Say "Deleting $ResourceType/$ResourceName" Yellow
     } else {
-        Write-Host "ℹ️   $ResourceType/$ResourceName not found, skipping..."
+        Say "Skip (not found): $ResourceType/$ResourceName" DarkGray
     }
 }
 
-# Delete application services first
-Write-Host "🏦 Deleting application services..."
+Say 'Cleaning up Core Bank Kubernetes resources' Cyan
+Say '--- Application Services ---' Cyan
 Delete-Resource deployment authentication-service
 Delete-Resource service authentication-service
 Delete-Resource deployment transaction-service
@@ -29,24 +31,21 @@ Delete-Resource service customer-service
 Delete-Resource deployment account-service
 Delete-Resource service account-service
 
-# Delete infrastructure services
-Write-Host "🏗️  Deleting infrastructure services..."
+Say '--- Infrastructure ---' Cyan
 Delete-Resource deployment kafka
 Delete-Resource service kafka
 Delete-Resource pvc kafka-pvc
 Delete-Resource deployment discovery-service
 Delete-Resource service discovery-service
 
-# Delete monitoring services
-Write-Host "📊 Deleting monitoring services..."
+Say '--- Monitoring ---' Cyan
 Delete-Resource deployment grafana
 Delete-Resource service grafana
 Delete-Resource pvc grafana-pvc
 Delete-Resource deployment prometheus
 Delete-Resource service prometheus
 
-# Delete data services
-Write-Host "🗃️  Deleting data services..."
+Say '--- Data Stores ---' Cyan
 Delete-Resource deployment redis
 Delete-Resource service redis
 Delete-Resource pvc redis-pvc
@@ -54,25 +53,36 @@ Delete-Resource deployment postgres
 Delete-Resource service postgres
 Delete-Resource pvc postgres-pvc
 
-# Delete namespace (this will clean up any remaining resources)
-Write-Host "📦 Deleting namespace..."
-$ns = kubectl get namespace core-bank 2>$null
+Say '--- Namespace ---' Cyan
+$null = kubectl get namespace core-bank --ignore-not-found -o name 2>$null
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "🗑️  Deleting namespace core-bank..."
-    kubectl delete namespace core-bank
+    Say 'Deleting namespace core-bank' Yellow
+    kubectl delete namespace core-bank | Out-Null
 } else {
-    Write-Host "ℹ️   Namespace core-bank not found, skipping..."
+    Say 'Namespace core-bank not found (already removed)' DarkGray
 }
 
-Write-Host ""
-Write-Host "✅ Cleanup completed!"
-Write-Host ""
-Write-Host "🔍 Remaining resources (should be empty):"
-kubectl get all -n core-bank 2>$null
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "   (namespace not found - cleanup successful)"
+Say ''
+Say 'Remaining resources check:' Cyan
+$nsCheck = kubectl get namespace core-bank --ignore-not-found -o name 2>$null
+if (-not $nsCheck) {
+    Say 'Namespace removed - cleanup complete' Green
+} else {
+    $res = kubectl get all -n core-bank --no-headers 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Say 'Namespace in terminating state or inaccessible; will finalize shortly.' DarkGray
+    } elseif (-not $res) {
+        Say 'No workload resources remain (namespace still present).' Green
+    } else {
+        Say 'Residual resources:' Yellow
+        kubectl get all -n core-bank
+    }
 }
-Write-Host ""
-Write-Host "💡 To verify complete cleanup, you can also run:"
-Write-Host "   kubectl get pv | findstr core-bank"
-Write-Host "   kubectl get pvc --all-namespaces | findstr core-bank"
+
+Say ''
+Say 'Optional manual checks:' Cyan
+Say '  kubectl get pv   | findstr core-bank' DarkGray
+Say '  kubectl get pvc --all-namespaces | findstr core-bank' DarkGray
+
+Say ''
+Say 'Cleanup finished.' Green
