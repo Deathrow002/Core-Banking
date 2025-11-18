@@ -50,9 +50,6 @@ public class TransactionProcess {
             log.info("Owner Payload: {}", ownerPayload);
             log.info("Receiver Payload: {}", receiverPayload);
 
-            if (ownerPayload == null || receiverPayload == null) {
-                return Mono.error(new IllegalArgumentException("Invalid account details"));
-            }
             if (ownerPayload.getBalance().compareTo(transactionDTO.getAmount()) < 0) {
                 return Mono.error(new IllegalArgumentException("Insufficient funds"));
             }

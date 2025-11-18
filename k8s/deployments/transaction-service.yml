@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: transaction-service
-        image: transaction-service:latest
+        image: core-banking-transaction-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8082

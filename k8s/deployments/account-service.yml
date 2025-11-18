@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: account-service
-        image: account-service:latest
+        image: core-banking-account-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8081

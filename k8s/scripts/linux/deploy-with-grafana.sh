@@ -274,71 +274,66 @@ deploy_core_services() {
 # Wait for service to be ready
 wait_for_service() {
     local service_name=$1
-    local namespace=${2:-$NAMESPACE}
+    local namespace=${2:-core-bank}
     local timeout=${3:-180}
-    
-    print_info "Waiting for $service_name to be ready..."
-    
-    # First, wait for the deployment to be available (less strict)
-    kubectl wait --for=condition=available deployment/$service_name -n $namespace --timeout=60s >/dev/null 2>&1
-    
-    # Then check if pods are actually running (more lenient check)
-    local pod_count=$(kubectl get pods -l app=$service_name -n $namespace --no-headers 2>/dev/null | wc -l)
-    if [ "$pod_count" -eq 0 ]; then
-        print_warning "No pods found for $service_name, waiting for pods to be created..."
-        sleep 10
+
+    print_info "⏳ Waiting for $service_name to be ready in namespace '$namespace'..."
+
+    # 1️⃣ Wait for the deployment (optional but safe)
+    if kubectl get deployment "$service_name" -n "$namespace" >/dev/null 2>&1; then
+        if ! kubectl wait --for=condition=available deployment/"$service_name" -n "$namespace" --timeout=60s >/dev/null 2>&1; then
+            print_warning "⚠️ $service_name deployment not marked 'available' yet — continuing to check pods..."
+        fi
+    else
+        print_warning "⚠️ No deployment found for $service_name in namespace $namespace (skipping direct wait)"
     fi
-    
-    # Check pod status instead of strict ready condition
-    local max_attempts=12  # 2 minutes total (12 * 10s)
+
+    # 2️⃣ Wait for pods to be running
+    local max_attempts=$((timeout / 10)) # e.g., 180s = 18 attempts
     local attempt=0
-    
+
     while [ $attempt -lt $max_attempts ]; do
-        local running_pods=$(kubectl get pods -l app=$service_name -n $namespace --no-headers 2>/dev/null | grep -c "Running" || echo "0")
-        local total_pods=$(kubectl get pods -l app=$service_name -n $namespace --no-headers 2>/dev/null | wc -l || echo "0")
-        
-        if [ "$running_pods" -gt 0 ] && [ "$total_pods" -gt 0 ]; then
-            print_success "$service_name is running ($running_pods/$total_pods pods)"
+        local pod_list
+        pod_list=$(kubectl get pods -l app="$service_name" -n "$namespace" --no-headers 2>/dev/null)
+
+        local total_pods=$(echo "$pod_list" | grep -c ".*" || echo "0")
+        local running_pods=$(echo "$pod_list" | grep -c "Running" || echo "0")
+
+        if [ "$total_pods" -gt 0 ] && [ "$running_pods" -eq "$total_pods" ]; then
+            print_success "✅ $service_name is fully running ($running_pods/$total_pods pods)"
             return 0
         fi
-        
-        # Show current status
-        if [ $((attempt % 3)) -eq 0 ]; then  # Every 30 seconds
-            local pod_status=$(kubectl get pods -l app=$service_name -n $namespace --no-headers 2>/dev/null | awk '{print $3}' | sort | uniq -c | xargs)
-            print_info "$service_name status: $pod_status"
+
+        if [ $((attempt % 3)) -eq 0 ]; then  # every 30s
+            local pod_status=$(echo "$pod_list" | awk '{print $3}' | sort | uniq -c | xargs)
+            print_info "🔍 $service_name pod status: ${pod_status:-no pods yet}"
         fi
-        
+
         attempt=$((attempt + 1))
         sleep 10
     done
-    
-    # Final check - if any pods are running, consider it a success
-    local final_running=$(kubectl get pods -l app=$service_name -n $namespace --no-headers 2>/dev/null | grep -c "Running" || echo "0")
+
+    # 3️⃣ Final check
+    local final_running=$(kubectl get pods -l app="$service_name" -n "$namespace" --no-headers 2>/dev/null | grep -c "Running" || echo "0")
     if [ "$final_running" -gt 0 ]; then
-        print_warning "$service_name is running but may still be starting up completely"
-        print_info "Continuing deployment - you can check service health later"
+        print_warning "⚠️ $service_name is partially running ($final_running pods up)"
+        print_info "Continuing deployment — check manually later."
         return 0
     fi
-    
-    # If we get here, there's likely a real problem
-    print_error "$service_name failed to start properly"
+
+    # 4️⃣ Failure summary
+    print_error "❌ $service_name failed to become ready after ${timeout}s"
+    kubectl get pods -l app="$service_name" -n "$namespace"
     echo ""
-    print_warning "Debugging information:"
-    kubectl get pods -l app=$service_name -n $namespace
+    print_info "Recent pod details:"
+    kubectl describe pods -l app="$service_name" -n "$namespace" | tail -20
     echo ""
-    print_info "Recent events:"
-    kubectl get events -n $namespace --sort-by=.metadata.creationTimestamp | tail -5
-    echo ""
-    print_warning "You can:"
-    echo "  1. Check logs: kubectl logs -l app=$service_name -n $namespace"
-    echo "  2. Continue anyway: the service might start later"
-    echo "  3. Abort and investigate"
-    echo ""
-    
-    # Auto-continue for automated deployments, but show warning
-    print_warning "Continuing deployment - please check $service_name status manually later"
-    return 0
+    print_info "💡 Try:"
+    echo "  kubectl logs -l app=$service_name -n $namespace"
+    echo "  kubectl get events -n $namespace --sort-by=.metadata.creationTimestamp"
+    return 1
 }
+
 
 # Get service URL (works with different cluster types)
 get_service_url() {
@@ -409,13 +404,12 @@ setup_port_forwarding() {
     echo ""
 }
 
-# Setup Grafana dashboards via API
 setup_grafana_dashboards() {
     print_step "Setting up Grafana dashboards..."
-    
+
     local grafana_url="http://localhost:$GRAFANA_PORT"
-    
-    # Wait for Grafana API to be ready
+
+    # 🕐 Wait for Grafana API to be ready
     print_info "Waiting for Grafana API to be ready..."
     local count=0
     while [ $count -lt 30 ]; do
@@ -423,7 +417,7 @@ setup_grafana_dashboards() {
             print_success "Grafana API is ready"
             break
         fi
-        
+
         count=$((count + 1))
         if [ $count -eq 30 ]; then
             print_error "Grafana API is not responding after 2.5 minutes"
@@ -433,8 +427,24 @@ setup_grafana_dashboards() {
             sleep 5
         fi
     done
-    
-    # Create Prometheus datasource
+
+    # 🧭 Auto-detect Grafana dashboards folder
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local base_dir="$(dirname "$(dirname "$script_dir")")"  # Move up 2 levels (from k8s/scripts/linux/)
+    local dashboards_dir="$base_dir/monitoring/grafana/dashboards"
+
+    # Normalize Windows backslashes if needed (in WSL)
+    dashboards_dir=$(echo "$dashboards_dir" | sed 's/\\/\//g')
+
+    if [ ! -d "$dashboards_dir" ]; then
+        print_error "❌ Dashboards directory not found: $dashboards_dir"
+        print_info "Please verify your project structure"
+        return 1
+    fi
+
+    print_success "📂 Detected dashboards directory: $dashboards_dir"
+
+    # 🧩 Create Prometheus datasource
     print_info "Creating Prometheus datasource..."
     local datasource_response=$(curl -s -X POST \
         -H "Content-Type: application/json" \
@@ -452,52 +462,46 @@ setup_grafana_dashboards() {
             }
         }" \
         "$grafana_url/api/datasources" 2>/dev/null)
-    
+
     if [[ $datasource_response == *"success"* ]] || [[ $datasource_response == *"already exists"* ]]; then
-        print_success "Prometheus datasource configured"
+        print_success "✅ Prometheus datasource configured"
     else
-        print_warning "Datasource creation may have failed - check manually"
+        print_warning "⚠️ Datasource creation may have failed - check manually"
     fi
-    
-    # Import dashboards
-    local dashboard_files=(
-        "../monitoring/grafana/dashboards/core-bank-overview.json"
-        "../monitoring/grafana/dashboards/service-details.json"
-        "../monitoring/grafana/dashboards/business-metrics.json"
-    )
-    
-    for dashboard_file in "${dashboard_files[@]}"; do
-        if [ -f "$dashboard_file" ]; then
-            local dashboard_name=$(basename "$dashboard_file" .json)
-            print_info "Importing dashboard: $dashboard_name..."
-            
-            local dashboard_content=$(cat "$dashboard_file")
-            
-            # Check if the JSON already has a dashboard wrapper
-            if echo "$dashboard_content" | jq -e '.dashboard' >/dev/null 2>&1; then
-                # JSON already has dashboard wrapper, just add overwrite flag
-                local import_payload=$(echo "$dashboard_content" | jq '. + {"overwrite": true}')
-            else
-                # Wrap the dashboard JSON
-                local import_payload="{\"dashboard\": $dashboard_content, \"overwrite\": true}"
-            fi
-            
-            local result=$(curl -s -X POST \
-                -H "Content-Type: application/json" \
-                -u "$GRAFANA_USER:$GRAFANA_PASSWORD" \
-                -d "$import_payload" \
-                "$grafana_url/api/dashboards/db" 2>/dev/null)
-            
-            if [[ $result == *"success"* ]]; then
-                print_success "Dashboard $dashboard_name imported"
-            else
-                print_warning "Dashboard $dashboard_name import may have failed"
-            fi
+
+    # 🧠 Import dashboards dynamically
+    local dashboards=( "$dashboards_dir"/*.json )
+    if [ ${#dashboards[@]} -eq 0 ]; then
+        print_warning "⚠️ No dashboard JSON files found in $dashboards_dir"
+        return 0
+    fi
+
+    for dashboard_file in "${dashboards[@]}"; do
+        local dashboard_name=$(basename "$dashboard_file" .json)
+        print_info "📊 Importing dashboard: $dashboard_name..."
+
+        local dashboard_content=$(cat "$dashboard_file")
+
+        # Wrap dashboard JSON if needed
+        if echo "$dashboard_content" | jq -e '.dashboard' >/dev/null 2>&1; then
+            local import_payload=$(echo "$dashboard_content" | jq '. + {"overwrite": true}')
         else
-            print_warning "Dashboard file not found: $dashboard_file"
+            local import_payload="{\"dashboard\": $dashboard_content, \"overwrite\": true}"
+        fi
+
+        local result=$(curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -u "$GRAFANA_USER:$GRAFANA_PASSWORD" \
+            -d "$import_payload" \
+            "$grafana_url/api/dashboards/db" 2>/dev/null)
+
+        if [[ $result == *"success"* ]]; then
+            print_success "✅ Dashboard $dashboard_name imported successfully"
+        else
+            print_warning "⚠️ Dashboard $dashboard_name import may have failed"
         fi
     done
-    
+
     echo ""
 }
 

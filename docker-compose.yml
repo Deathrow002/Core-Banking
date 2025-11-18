@@ -185,7 +185,7 @@ services:
       retries: 3
       start_period: 40s
 
-  authtication-service:
+  authentication-service:
     build:
       context: .
       dockerfile: Authentication/Dockerfile

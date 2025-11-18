@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: customer-service
-        image: customer-service:latest
+        image: core-banking-customer-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8083
