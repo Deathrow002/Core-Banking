@@ -1,0 +1,9 @@
+[submodule "Authentication"]
+	path = Authentication
+	url = https://github.com/Deathrow002/Core-Banking-Authentication.git
+[submodule "Transaction"]
+	path = Transaction
+	url = https://github.com/Deathrow002/Core-Banking-Transaction.git
+[submodule "Account"]
+	path = Account
+	url = https://github.com/Deathrow002/Core-Banking-Account.git
