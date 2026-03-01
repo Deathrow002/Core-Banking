@@ -16,7 +16,8 @@
     "files.associations": {
       "k8s/*.yml": "kubernetes",
       "k8s/*.yaml": "kubernetes"
-    }
+    },
+    "java.compile.nullAnalysis.mode": "automatic"
   },
   "extensions": {
     "recommendations": [
