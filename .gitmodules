@@ -7,3 +7,6 @@
 [submodule "Account"]
 	path = Account
 	url = https://github.com/Deathrow002/Core-Banking-Account.git
+[submodule "Customer"]
+	path = Customer
+	url = https://github.com/Deathrow002/Core-Banking-Custumer.git
