@@ -74,21 +74,6 @@ ensure_correct_directory() {
 }
 
 
-print_windows_docker_wsl_troubleshooting() {
-    echo ""
-    echo -e "${YELLOW}Windows Docker Desktop Kubernetes + WSL Troubleshooting:${NC}"
-    echo "  1. Ensure Docker Desktop is running and Kubernetes is enabled (Settings > Kubernetes)."
-    echo "  2. Enable WSL integration for your distro (Settings > Resources > WSL Integration)."
-    echo "  3. Use the Windows kubeconfig in WSL:"
-    echo "     export KUBECONFIG=/mnt/c/Users/<YourUser>/.kube/config"
-    echo "  4. Confirm your context: kubectl config current-context"
-    echo "  5. Test: kubectl get nodes"
-    echo "  6. If you see 'Unable to connect to the server', restart Docker Desktop and WSL."
-    echo "  7. Check for VPN/firewall issues blocking localhost ports."
-    echo "  8. For more info: https://docs.docker.com/desktop/wsl/"
-    echo ""
-}
-
 # Check prerequisites
 check_prerequisites() {
     print_step "Checking prerequisites..."
@@ -116,7 +101,6 @@ check_prerequisites() {
         echo "  - Docker Desktop: Enable Kubernetes"
         echo "  - minikube: minikube start"
         echo "  - kind: kind create cluster"
-        print_windows_docker_wsl_troubleshooting
         echo ""
         exit 1
     fi
@@ -133,6 +117,33 @@ check_prerequisites() {
 }
 
 # Deploy namespace and core infrastructure
+deploy_infrastructure() {
+    print_step "Deploying infrastructure services..."
+    
+    # Create namespace
+    print_info "Creating namespace: $NAMESPACE"
+    kubectl apply -f ../deployments/namespace.yml
+    
+    # Deploy PostgreSQL
+    print_info "Deploying PostgreSQL..."
+    kubectl apply -f ../deployments/postgres.yml
+    wait_for_service "postgres" "$NAMESPACE" 90
+    
+    # Deploy Redis
+    print_info "Deploying Redis..."
+    kubectl apply -f ../deployments/redis.yml
+    wait_for_service "redis" "$NAMESPACE" 60
+    
+    # Deploy Kafka (KRaft mode - no Zookeeper dependency)
+    print_info "Deploying Kafka (KRaft mode)..."
+    kubectl apply -f ../deployments/kafka.yml
+    wait_for_service "kafka" "$NAMESPACE" 120
+    
+    print_success "Infrastructure services deployed"
+    echo ""
+}
+
+# Deploy monitoring stac# Deploy namespace and core infrastructure
 deploy_infrastructure() {
     print_step "Deploying infrastructure services..."
     
@@ -158,48 +169,12 @@ deploy_infrastructure() {
     print_success "Infrastructure services deployed"
     echo ""
 }
-
-
-# Deploy monitoring stack
-deploy_monitoring() {
-    print_step "Deploying monitoring services..."
-    
-    # Deploy Prometheus
-    print_info "Deploying Prometheus..."
-    # Apply only the minimal working config to avoid conflicts
-    kubectl apply -f "$MONITORING_DIR/prometheus-config-minimal.yml"
-    # Apply Prometheus deployment without the conflicting ConfigMap
-    kubectl apply -f - << 'EOF'
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: prometheus
-  namespace: core-bank
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: prometheus
-  template:
-    metadata:
-      labels:
-        app: prometheus
-    spec:
-      containers:
-      - name: prometheus
-        image: prom/prometheus:v3.4.0
-        ports:
-        - containerPort: 9090
-        args:
-          - '--config.file=/etc/prometheus/prometheus.yml'
-          - '--storage.tsdb.path=/prometheus'
+metheus'
           - '--web.console.libraries=/etc/prometheus/console_libraries'
           - '--web.console.templates=/etc/prometheus/consoles'
           - '--storage.tsdb.retention.time=200h'
           - '--web.enable-lifecycle'
-        volumeMounts:
-        - name: prometheus-config-volume
-          mountPath: /etc/prometheus/
+       kubectl apply -f "$MONITORING_DIR/prometheus-config-minimal.yml"      mountPath: /etc/prometheus/
           readOnly: true
         resources:
           requests:
@@ -231,7 +206,7 @@ EOF
     
     # Deploy Grafana
     print_info "Deploying Grafana..."
-    kubectl apply -f "$MONITORING_DIR/grafana.yml"
+    kubectl apply -f ../monitoring/grafana.yml
     wait_for_service "grafana" "$NAMESPACE" 90
     
     print_success "Monitoring services deployed"
@@ -240,6 +215,25 @@ EOF
 
 # Deploy core banking services
 deploy_core_services() {
+    print_step "Deploying core banking services..."
+    
+    # Deploy Discovery Service
+    print_info "Deploying Discovery Service..."
+    kubectl apply -f ../deployments/discovery-service.yml
+    wait_for_service "discovery-service" "$NAMESPACE" 120
+    
+    # Deploy Authentication Service
+    print_info "Deploying Authentication Service..."
+    kubectl apply -f ../deployments/authentication-service.yml
+    wait_for_service "authentication-service" "$NAMESPACE" 90
+    
+    # Deploy Account Service
+    print_info "Deploying Account Service..."
+    kubectl apply -f ../deployments/account-service.yml
+    wait_for_service "account-service" "$NAMESkubectl apply -f "$MONITORING_DIR/grafana.yml"e
+    print_info "Deploying Customer Service..."
+    kubectl apply -f ../deployments/customer-service.yml
+    wait_for_service "customer-service" "$deploy_core_services() {
     print_step "Deploying core banking services..."
     
     # Deploy Discovery Service
@@ -269,9 +263,7 @@ deploy_core_services() {
     
     print_success "Core banking services deployed"
     echo ""
-}
-
-# Wait for service to be ready
+}  # Wait for service to be ready
 wait_for_service() {
     local service_name=$1
     local namespace=${2:-core-bank}
@@ -333,26 +325,7 @@ wait_for_service() {
     echo "  kubectl get events -n $namespace --sort-by=.metadata.creationTimestamp"
     return 1
 }
-
-
-# Get service URL (works with different cluster types)
-get_service_url() {
-    local service_name=$1
-    local port=$2
-    local namespace=${3:-$NAMESPACE}
-    
-    # Try different methods to get service URL
-    local node_port=$(kubectl get svc $service_name -n $namespace -o jsonpath='{.spec.ports[0].nodePort}' 2>/dev/null)
-    local external_ip=$(kubectl get svc $service_name -n $namespace -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
-    local external_hostname=$(kubectl get svc $service_name -n $namespace -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
-    
-    if [ -n "$external_ip" ]; then
-        echo "http://$external_ip:$port"
-    elif [ -n "$external_hostname" ]; then
-        echo "http://$external_hostname:$port"
-    elif [ -n "$node_port" ]; then
-        # Get node IP
-        local node_ip=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}')
+ nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}')
         if [ -z "$node_ip" ]; then
             node_ip=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
         fi
@@ -404,7 +377,34 @@ setup_port_forwarding() {
     echo ""
 }
 
+# Setup Grafana dashboards via API
 setup_grafana_dashboards() {
+    print_step "Setting up Grafana dashboards..."
+    
+    local grafana_url="http://localhost:$GRAFANA_PORT"
+    
+    # Wait for Grafana API to be ready
+    print_info "Waiting for Grafana API to be ready..."
+    local count=0
+    while [ $count -lt 30 ]; do
+        if curl -f -s "$grafana_url/api/health" > /dev/null 2>&1; then
+            print_success "Grafana API is ready"
+            break
+        fi
+        
+        count=$((count + 1))
+        if [ $count -eq 30 ]; then
+            print_error "Grafana API is not responding after 2.5 minutes"
+            print_info "You can setup dashboards manually later"
+            return 1
+        else
+            sleep 5
+        fi
+    done
+    
+    # Create Prometheus datasource
+    print_info "Creating Prometheus datasource..."
+    local datasou setup_grafana_dashboards() {
     print_step "Setting up Grafana dashboards..."
 
     local grafana_url="http://localhost:$GRAFANA_PORT"
@@ -504,39 +504,7 @@ setup_grafana_dashboards() {
 
     echo ""
 }
-
-# Create Kubernetes dashboard setup script
-create_k8s_dashboard_script() {
-    print_step "Creating Kubernetes dashboard setup script..."
-    
-    cat > smart-dashboard-import.sh << 'EOF'
-#!/bin/bash
-
-# Kubernetes Grafana Dashboard Setup Script
-# Run this script to setup dashboards on an existing K8s deployment
-
-set -e
-
-NAMESPACE="core-bank"
-GRAFANA_PORT="3000"
-GRAFANA_USER="myuser"
-GRAFANA_PASSWORD="mypassword"
-
-echo "🚀 Setting up Grafana dashboards for Kubernetes deployment..."
-
-# Setup port forwarding
-echo "📡 Setting up port forwarding..."
-pkill -f "kubectl.*port-forward.*grafana" 2>/dev/null || true
-kubectl port-forward svc/grafana $GRAFANA_PORT:$GRAFANA_PORT -n $NAMESPACE > /dev/null 2>&1 &
-sleep 5
-
-# Setup dashboards
-echo "📊 Configuring Grafana..."
-GRAFANA_URL="http://localhost:$GRAFANA_PORT"
-
-# Create Prometheus datasource
-curl -s -X POST \
-    -H "Content-Type: application/json" \
+-H "Content-Type: application/json" \
     -u "$GRAFANA_USER:$GRAFANA_PASSWORD" \
     -d '{
         "name": "Prometheus",
