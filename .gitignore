@@ -34,5 +34,8 @@ build/
 .vscode/
 /.metadata/
 
+### Environment / secrets ###
+.env
+
 ### Diff files ###
 *.diff
