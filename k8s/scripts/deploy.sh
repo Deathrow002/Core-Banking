@@ -5,6 +5,10 @@
 
 set -e
 
+# Always run from the project root (script lives in k8s/scripts/)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+
 echo "🚀 Deploying Core Bank Services to Kubernetes..."
 echo "================================================"
 
@@ -271,13 +275,23 @@ echo "⚖️  Setting up load balancing..."
 
 echo "🌐 Installing NGINX Ingress Controller (if not present)..."
 if ! kubectl get ingressclass nginx &>/dev/null; then
-    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
-    
-    echo "⏳ Waiting for NGINX Ingress Controller to be ready..."
-    kubectl wait --namespace ingress-nginx \
-      --for=condition=ready pod \
-      --selector=app.kubernetes.io/component=controller \
-      --timeout=300s
+    # Use minikube addon when running on minikube, otherwise use cloud manifest
+    if minikube status &>/dev/null; then
+        echo "🔧 Detected minikube — enabling ingress addon..."
+        minikube addons enable ingress
+        echo "⏳ Waiting for NGINX Ingress Controller to be ready (up to 5 min)..."
+        kubectl wait --namespace ingress-nginx \
+          --for=condition=ready pod \
+          --selector=app.kubernetes.io/component=controller \
+          --timeout=300s
+    else
+        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
+        echo "⏳ Waiting for NGINX Ingress Controller to be ready..."
+        kubectl wait --namespace ingress-nginx \
+          --for=condition=ready pod \
+          --selector=app.kubernetes.io/component=controller \
+          --timeout=300s
+    fi
 else
     echo "✅ NGINX Ingress Controller already installed"
 fi

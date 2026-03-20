@@ -67,6 +67,217 @@ docker-compose up -d authentication-service account-service customer-service tra
 
 ## ☸️ Kubernetes Deployment
 
+---
+
+## 🧊 Local Kubernetes Cluster Setup
+
+Choose one of the following local Kubernetes options before deploying.
+
+### Option A: minikube (Recommended for local dev)
+
+#### 1. Install minikube
+```bash
+# macOS (Homebrew)
+brew install minikube
+
+# Windows (winget)
+winget install Kubernetes.minikube
+
+# Linux
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+```
+
+#### 2. Start the Cluster
+```bash
+# Recommended settings for Core Bank System
+minikube start --driver=docker --memory=6144 --cpus=4 --disk-size=30g
+
+# Verify cluster is running
+minikube status
+kubectl cluster-info
+```
+
+#### 3. Enable Required Add-ons
+```bash
+# Ingress controller (required for external access)
+minikube addons enable ingress
+
+# Metrics server (required for HPA / kubectl top)
+minikube addons enable metrics-server
+
+# Storage provisioner (enabled by default, verify)
+minikube addons enable storage-provisioner
+
+# List all enabled add-ons
+minikube addons list
+```
+
+#### 4. Build & Load Docker Images (no registry needed)
+```bash
+# Point your local Docker CLI to minikube's Docker daemon
+eval $(minikube docker-env)          # Linux / macOS
+& minikube -p minikube docker-env --shell powershell | Invoke-Expression  # Windows PowerShell
+
+# Build images (run from repo root)
+docker build -t discovery-service:latest     ./Discovery
+docker build -t authentication-service:latest ./Authentication
+docker build -t account-service:latest       ./Account
+docker build -t customer-service:latest      ./Customer
+docker build -t transaction-service:latest   ./Transaction
+
+# Images are now available inside minikube — no push needed
+```
+
+> **Important**: Set `imagePullPolicy: Never` (or `IfNotPresent`) in your K8s manifests when using locally built images, otherwise Kubernetes will try to pull them from Docker Hub.
+
+#### 5. Deploy Core Bank
+```bash
+# From repo root
+cd k8s/scripts
+./deploy-with-grafana.sh
+# or on Windows:
+# cd k8s/scripts/windows && ./deploy-with-grafana.ps1
+```
+
+#### 6. Access Services via minikube Tunnel
+```bash
+# Get the minikube IP
+minikube ip
+
+# Add hosts entries (replace <MINIKUBE_IP> with the output of `minikube ip`)
+# Linux / macOS — append to /etc/hosts:
+echo "$(minikube ip) account.core-bank.local customer.core-bank.local transaction.core-bank.local auth.core-bank.local discovery.core-bank.local grafana.core-bank.local prometheus.core-bank.local" | sudo tee -a /etc/hosts
+
+# Windows PowerShell (run as Administrator):
+Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "$(minikube ip) account.core-bank.local customer.core-bank.local transaction.core-bank.local auth.core-bank.local discovery.core-bank.local grafana.core-bank.local prometheus.core-bank.local"
+
+# Alternative: use minikube tunnel for LoadBalancer services
+minikube tunnel   # keep this terminal open
+```
+
+#### 7. Open Services in Browser
+```bash
+# Open a specific service directly in the browser
+minikube service grafana -n core-bank
+minikube service discovery-service -n core-bank
+
+# List all service URLs
+minikube service list -n core-bank
+```
+
+#### 8. Useful minikube Commands
+```bash
+# Pause / resume cluster (saves resources when not in use)
+minikube pause
+minikube unpause
+
+# Stop / delete cluster
+minikube stop
+minikube delete
+
+# SSH into the cluster VM
+minikube ssh
+
+# View the Kubernetes dashboard
+minikube dashboard
+
+# Check resource usage inside minikube
+minikube ssh -- docker stats --no-stream
+```
+
+---
+
+### Option B: Kind (Kubernetes in Docker)
+
+#### 1. Install Kind
+```bash
+# macOS / Linux
+brew install kind
+# or
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-amd64 && chmod +x ./kind && sudo mv ./kind /usr/local/bin/kind
+
+# Windows
+winget install Kubernetes.kind
+```
+
+#### 2. Create a Cluster with Ingress Support
+```bash
+# Create a config file for port mapping
+cat <<EOF > kind-cluster.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP
+EOF
+
+kind create cluster --name core-bank --config kind-cluster.yaml
+```
+
+#### 3. Install NGINX Ingress Controller
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+
+# Wait for ingress to be ready
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=90s
+```
+
+#### 4. Load Images into Kind
+```bash
+# Build images first (Docker daemon does NOT need to be switched like minikube)
+docker build -t discovery-service:latest     ./Discovery
+docker build -t authentication-service:latest ./Authentication
+docker build -t account-service:latest       ./Account
+docker build -t customer-service:latest      ./Customer
+docker build -t transaction-service:latest   ./Transaction
+
+# Load each image into the Kind cluster
+kind load docker-image discovery-service:latest      --name core-bank
+kind load docker-image authentication-service:latest --name core-bank
+kind load docker-image account-service:latest        --name core-bank
+kind load docker-image customer-service:latest       --name core-bank
+kind load docker-image transaction-service:latest    --name core-bank
+```
+
+#### 5. Deploy & Access
+```bash
+cd k8s/scripts && ./deploy-with-grafana.sh
+
+# With Kind + NGINX ingress on port 80, add this to /etc/hosts (127.0.0.1):
+echo "127.0.0.1 account.core-bank.local customer.core-bank.local transaction.core-bank.local auth.core-bank.local discovery.core-bank.local grafana.core-bank.local" | sudo tee -a /etc/hosts
+```
+
+---
+
+### Option C: Docker Desktop Kubernetes
+
+1. Open **Docker Desktop** → **Settings** → **Kubernetes**
+2. Check **Enable Kubernetes** and click **Apply & Restart**
+3. Wait for the Kubernetes indicator to turn green (~2 minutes)
+4. Install the NGINX ingress controller:
+   ```bash
+   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+   ```
+5. Continue with the standard deployment steps below
+
+---
+
 All Kubernetes deployment scripts are located in `k8s/scripts/`.
 
 ### 🔧 Available Scripts
@@ -95,8 +306,10 @@ All Kubernetes deployment scripts are located in `k8s/scripts/`.
 
 This script helps configure:
 - **Docker Desktop**: Enable Kubernetes in settings
-- **minikube**: `minikube start --driver=docker --memory=4096 --cpus=2`
+- **minikube**: `minikube start --driver=docker --memory=6144 --cpus=4`
 - **Kind**: Creates a cluster with proper configuration
+
+> For detailed step-by-step instructions including image loading, add-ons, and ingress setup, see the **[Local Kubernetes Cluster Setup](#-local-kubernetes-cluster-setup)** section above.
 
 ### 📦 Deploy to Kubernetes
 
