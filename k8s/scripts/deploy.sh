@@ -495,8 +495,14 @@ echo "  - View status: ./load-balancer.sh status"
 echo "  - Test load balancing: ./load-balancer.sh test-lb <service> <port>"
 echo "  - Auto-scale all: ./load-balancer.sh auto-scale"
 echo ""
-echo "🔍 Setup hosts file for local testing:"
-echo "  ./load-balancer.sh setup-hosts"
+echo "🔍 Setting up local domains for testing:"
+if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    echo "  ⚙️  Windows environment detected. Launching automatic host setup in the background..."
+    echo "  ⚠️  Please accept the Admin/UAC prompt if it appears so your browser/Postman can connect!"
+    cmd.exe /c "k8s\scripts\setup-windows-hosts.bat"
+else
+    echo "  ./load-balancer.sh setup-hosts"
+fi
 echo ""
 echo "🎯 Core Bank is now running on Kubernetes with Load Balancing!"
 
