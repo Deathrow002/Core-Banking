@@ -49,8 +49,8 @@ wait_for_deployment() {
     local attempt=0
     
     while [ $attempt -lt $max_attempts ]; do
-        local running_pods=$(kubectl get pods -l app=$deployment_name -n $namespace --no-headers 2>/dev/null | grep -c "Running" || echo "0")
-        local total_pods=$(kubectl get pods -l app=$deployment_name -n $namespace --no-headers 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+        local running_pods=$(kubectl get pods -l app=$deployment_name -n $namespace --no-headers 2>/dev/null | grep -c "Running")
+        local total_pods=$(kubectl get pods -l app=$deployment_name -n $namespace --no-headers 2>/dev/null | wc -l | tr -d ' ')
         
         if [ "$running_pods" -gt 0 ] && [ "$total_pods" -gt 0 ]; then
             echo "✅ $deployment_name is running ($running_pods/$total_pods pods)"
@@ -68,7 +68,7 @@ wait_for_deployment() {
     done
     
     # Final check - if any pods are running, consider it a success
-    local final_running=$(kubectl get pods -l app=$deployment_name -n $namespace --no-headers 2>/dev/null | grep -c "Running" || echo "0")
+    local final_running=$(kubectl get pods -l app=$deployment_name -n $namespace --no-headers 2>/dev/null | grep -c "Running")
     if [ "$final_running" -gt 0 ]; then
         echo "⚠️ $deployment_name is running but may still be starting up"
         return 0
@@ -115,8 +115,8 @@ wait_for_service() {
     local attempt=0
     
     while [ $attempt -lt $max_attempts ]; do
-        local running_pods=$(kubectl get pods -l app=$service_name -n $namespace --no-headers 2>/dev/null | grep -c "Running" || echo "0")
-        local total_pods=$(kubectl get pods -l app=$service_name -n $namespace --no-headers 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+        local running_pods=$(kubectl get pods -l app=$service_name -n $namespace --no-headers 2>/dev/null | grep -c "Running")
+        local total_pods=$(kubectl get pods -l app=$service_name -n $namespace --no-headers 2>/dev/null | wc -l | tr -d ' ')
         
         if [ "$running_pods" -gt 0 ] && [ "$total_pods" -gt 0 ]; then
             echo "✅ $service_name is ready ($running_pods/$total_pods pods)"
@@ -134,7 +134,7 @@ wait_for_service() {
     done
     
     # Final check - if any pods are running, consider it a success
-    local final_running=$(kubectl get pods -l app=$service_name -n $namespace --no-headers 2>/dev/null | grep -c "Running" || echo "0")
+    local final_running=$(kubectl get pods -l app=$service_name -n $namespace --no-headers 2>/dev/null | grep -c "Running")
     if [ "$final_running" -gt 0 ]; then
         echo "⚠️ $service_name is running but may still be starting up"
         return 0
