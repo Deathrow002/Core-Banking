@@ -13,3 +13,6 @@
 [submodule "Discovery"]
 	path = Discovery
 	url = https://github.com/Deathrow002/Core-Banking-Discovery.git
+[submodule "loan"]
+	path = loan
+	url = https://github.com/Deathrow002/Core-Banking-Loan.git
