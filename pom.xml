@@ -19,7 +19,7 @@
 		<module>Account</module>
 		<module>Customer</module>
         <module>Authentication</module>
-		<module>loan</module>
+		<module>Loan</module>
     </modules>
 
 	<name>core-bank</name>

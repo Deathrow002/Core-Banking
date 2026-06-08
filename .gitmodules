@@ -14,5 +14,8 @@
 	path = Discovery
 	url = https://github.com/Deathrow002/Core-Banking-Discovery.git
 [submodule "loan"]
-	path = loan
+	path = Loan
+	url = https://github.com/Deathrow002/Core-Banking-Loan.git
+[submodule "Loan"]
+	path = Loan
 	url = https://github.com/Deathrow002/Core-Banking-Loan.git
