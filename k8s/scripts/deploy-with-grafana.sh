@@ -261,6 +261,16 @@ deploy_core_services() {
     kubectl apply -f "$DEPLOY_DIR/transaction-service.yml"
     wait_for_service "transaction-service" "$NAMESPACE" 90
     
+    # Deploy Investment Service
+    print_info "Deploying Investment Service..."
+    kubectl apply -f "$DEPLOY_DIR/investment-service.yml"
+    wait_for_service "investment-service" "$NAMESPACE" 90
+    
+    # Deploy Loan Service
+    print_info "Deploying Loan Service..."
+    kubectl apply -f "$DEPLOY_DIR/loan-service.yml"
+    wait_for_service "loan-service" "$NAMESPACE" 90
+    
     print_success "Core banking services deployed"
     echo ""
 }  # Wait for service to be ready

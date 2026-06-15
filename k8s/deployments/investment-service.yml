@@ -1,0 +1,145 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: investment-service
+  namespace: core-bank
+  labels:
+    app: investment-service
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: investment-service
+  template:
+    metadata:
+      labels:
+        app: investment-service
+        version: v1
+    spec:
+      containers:
+      - name: investment-service
+        image: core-banking-investment-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8085
+        env:
+        - name: SPRING_APPLICATION_NAME
+          value: "investment-service"
+        - name: SPRING_R2DBC_URL
+          value: "r2dbc:postgresql://postgres:5432/lmwn_db"
+        - name: SPRING_R2DBC_USERNAME
+          value: "lmwn_user"
+        - name: SPRING_R2DBC_PASSWORD
+          value: "12345678"
+        - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+          value: "http://discovery-service:8761/eureka"
+        - name: SPRING_DATA_REDIS_HOST
+          value: "redis"
+        - name: SPRING_DATA_REDIS_PORT
+          value: "6379"
+        - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:9092"
+        - name: ENCRYPTION_SECRET_KEY
+          value: "1234567890123456"
+        - name: MARKET_DATA_API_URL
+          value: "http://localhost:9090/market"
+        - name: MARKET_DATA_API_KEY
+          value: ""
+        - name: MARKET_DATA_SYNC_INTERVAL_MS
+          value: "60000"
+        - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+          value: "true"
+        # Enable load balancing
+        - name: EUREKA_INSTANCE_INSTANCE_ID
+          value: "${spring.application.name}:${spring.cloud.client.hostname}:${random.value}"
+        - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+          value: "true"
+        - name: SPRING_CLOUD_LOADBALANCER_RIBBON_ENABLED
+          value: "false"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "50m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8085
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8085
+          initialDelaySeconds: 40
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: investment-service
+  namespace: core-bank
+  labels:
+    app: investment-service
+spec:
+  type: ClusterIP
+  sessionAffinity: None  # Round-robin load balancing
+  ports:
+  - port: 8085
+    targetPort: 8085
+    protocol: TCP
+    name: http
+  selector:
+    app: investment-service
+
+---
+# Horizontal Pod Autoscaler for investment-service
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: investment-service-hpa
+  namespace: core-bank
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: investment-service
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 2
+        periodSeconds: 60

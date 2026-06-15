@@ -7,7 +7,7 @@ This guide shows you how to deploy the Core Bank System with monitoring using th
 - **Docker** and **Docker Compose** installed
 - **kubectl** (for Kubernetes deployment)
 - **8GB+ RAM** recommended
-- **Ports available**: 3000, 5432, 6379, 8081-8084, 9090, 9092
+- **Ports available**: 3000, 5432, 6379, 8081-8086, 9090, 9092
 
 ---
 
@@ -55,7 +55,7 @@ sleep 30  # Wait for Eureka to start
 
 #### 4. Start Core Services
 ```bash
-docker-compose up -d authentication-service account-service customer-service transaction-service
+docker-compose up -d authentication-service account-service customer-service transaction-service investment-service loan-service
 ```
 
 #### 5. Setup Grafana Dashboards
@@ -125,6 +125,8 @@ docker build -t authentication-service:latest ./Authentication
 docker build -t account-service:latest       ./Account
 docker build -t customer-service:latest      ./Customer
 docker build -t transaction-service:latest   ./Transaction
+docker build -t investment-service:latest    ./Investment
+docker build -t loan-service:latest          ./Loan
 
 # Images are now available inside minikube — no push needed
 ```
@@ -246,6 +248,8 @@ docker build -t authentication-service:latest ./Authentication
 docker build -t account-service:latest       ./Account
 docker build -t customer-service:latest      ./Customer
 docker build -t transaction-service:latest   ./Transaction
+docker build -t investment-service:latest    ./Investment
+docker build -t loan-service:latest          ./Loan
 
 # Load each image into the Kind cluster
 kind load docker-image discovery-service:latest      --name core-bank
@@ -253,6 +257,8 @@ kind load docker-image authentication-service:latest --name core-bank
 kind load docker-image account-service:latest        --name core-bank
 kind load docker-image customer-service:latest       --name core-bank
 kind load docker-image transaction-service:latest    --name core-bank
+kind load docker-image investment-service:latest     --name core-bank
+kind load docker-image loan-service:latest           --name core-bank
 ```
 
 #### 5. Deploy & Access
@@ -412,7 +418,7 @@ This displays:
 ```
 
 This removes:
-- Application services (authentication, account, customer, transaction)
+- Application services (authentication, account, customer, transaction, investment, loan)
 - Infrastructure services (kafka, discovery)
 - Monitoring services (grafana, prometheus)
 - Data services (redis, postgres)
@@ -433,6 +439,8 @@ After deployment, access these services:
 | **Customer API** | http://localhost:8083 | JWT required |
 | **Transaction API** | http://localhost:8082 | JWT required |
 | **Authentication API** | http://localhost:8084 | No auth |
+| **Investment API** | http://localhost:8085 | JWT required |
+| **Loan API** | http://localhost:8086 | JWT required |
 
 ### Kubernetes Port Forwarding
 
@@ -459,6 +467,12 @@ kubectl port-forward svc/transaction-service 8082:8082 -n core-bank
 
 # Authentication Service
 kubectl port-forward svc/authentication-service 8084:8084 -n core-bank
+
+# Investment Service
+kubectl port-forward svc/investment-service 8085:8085 -n core-bank
+
+# Loan Service
+kubectl port-forward svc/loan-service 8086:8086 -n core-bank
 ```
 
 ---
@@ -497,6 +511,8 @@ curl http://localhost:8081/actuator/health    # Account Service
 curl http://localhost:8083/actuator/health    # Customer Service
 curl http://localhost:8082/actuator/health    # Transaction Service
 curl http://localhost:8084/actuator/health    # Authentication Service
+curl http://localhost:8085/actuator/health    # Investment Service
+curl http://localhost:8086/actuator/health    # Loan Service
 ```
 
 ### Generate Test Data

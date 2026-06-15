@@ -269,6 +269,14 @@ echo "🔐 Deploying Authentication Service..."
 kubectl apply -f k8s/deployments/authentication-service.yml
 wait_for_service "authentication-service"
 
+echo "📈 Deploying Investment Service..."
+kubectl apply -f k8s/deployments/investment-service.yml
+wait_for_service "investment-service"
+
+echo "🏧 Deploying Loan Service..."
+kubectl apply -f k8s/deployments/loan-service.yml
+wait_for_service "loan-service"
+
 # 4. Deploy load balancer configurations
 echo ""
 echo "⚖️  Setting up load balancing..."
