@@ -125,8 +125,8 @@ services:
       test: [ "CMD", "curl", "--fail", "--silent", "http://localhost:8081/actuator/health" ]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 120s
 
   customer-service:
     build:
@@ -154,8 +154,8 @@ services:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8083/actuator/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 120s
 
   transaction-service:
     build:
@@ -190,8 +190,8 @@ services:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8082/actuator/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 120s
 
   authentication-service:
     build:
@@ -225,8 +225,8 @@ services:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8084/actuator/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 120s
 
   loan-service:
     build:
@@ -264,8 +264,8 @@ services:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8086/actuator/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 120s
 
   investment-service:
     build:
@@ -303,8 +303,8 @@ services:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8085/actuator/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 120s
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -393,18 +393,18 @@ services:
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
 
-  filebeat:
-    image: elastic/filebeat:8.13.4
-    container_name: filebeat
-    user: root
-    networks:
-      - core-bank-network
-    depends_on:
-      - logstash
-    volumes:
-      - ./monitoring/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+  # filebeat:
+  #   image: elastic/filebeat:8.13.4
+  #   container_name: filebeat
+  #   user: root
+  #   networks:
+  #     - core-bank-network
+  #   depends_on:
+  #     - logstash
+  #   volumes:
+  #     - ./monitoring/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+  #     - /var/lib/docker/containers:/var/lib/docker/containers:ro
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
 
 networks:
   core-bank-network:
