@@ -1,6 +1,6 @@
 # Core Bank System
 
-This project is a **microservices-based core banking system** designed for high availability, scalability, and modern cloud-native deployment. It includes multiple services such as account management, transaction processing, customer management, authentication, and service discovery, along with supporting infrastructure like PostgreSQL, Redis, Kafka, Prometheus, and Grafana.
+This project is a **microservices-based core banking system** designed for high availability, scalability, and modern cloud-native deployment. It includes multiple services such as account management, transaction processing, customer management, investment management, loan management, authentication, and service discovery, along with supporting infrastructure like PostgreSQL, Redis, Kafka, Prometheus, and Grafana.
 
 ## 🚀 Key Features
 
@@ -22,6 +22,8 @@ This project is a **microservices-based core banking system** designed for high 
 - **Account Service** (Port 8081): Account management with PostgreSQL and Redis integration
 - **Transaction Service** (Port 8082): Transaction processing with Kafka event streaming
 - **Customer Service** (Port 8083): Customer profile and address management
+- **Investment Service** (Port 8085): Investment portfolio management with reactive R2DBC and Kafka event streaming
+- **Loan Service** (Port 8086): Loan origination and management with reactive R2DBC and Kafka event streaming
 
 ### Supporting Infrastructure
 - **PostgreSQL** (Port 5432): Primary database for persistent data storage
@@ -178,6 +180,8 @@ kubectl get services -n core-bank
 - **Transaction Service**: `http://transaction.core-bank.local`  
 - **Customer Service**: `http://customer.core-bank.local`
 - **Authentication Service**: `http://auth.core-bank.local`
+- **Investment Service**: `http://investment.core-bank.local`
+- **Loan Service**: `http://loan.core-bank.local`
 - **Discovery Service**: `http://discovery.core-bank.local`
 - **Grafana Dashboard**: `http://grafana.core-bank.local`
 - **Prometheus Metrics**: `http://prometheus.core-bank.local`
@@ -192,6 +196,8 @@ kubectl port-forward svc/account-service 8081:8081 -n core-bank
 kubectl port-forward svc/transaction-service 8082:8082 -n core-bank
 kubectl port-forward svc/customer-service 8083:8083 -n core-bank
 kubectl port-forward svc/authentication-service 8084:8084 -n core-bank
+kubectl port-forward svc/investment-service 8085:8085 -n core-bank
+kubectl port-forward svc/loan-service 8086:8086 -n core-bank
 
 # Monitoring
 kubectl port-forward svc/prometheus 9090:9090 -n core-bank
@@ -399,6 +405,8 @@ eureka.client.registry-fetch-interval-seconds=30
 - **Customer Service**: HTTP `/actuator/health` (authentication bypass)
 - **Transaction Service**: HTTP `/actuator/health` (bean override enabled)
 - **Authentication Service**: TCP port 8084 (security-optimized)
+- **Investment Service**: HTTP `/actuator/health` (reactive WebFlux)
+- **Loan Service**: HTTP `/actuator/health` (reactive WebFlux)
 
 ### Startup & Resource Optimization
 - **Reduced timeouts**: 3-minute deployment timeouts (was 10 minutes)
@@ -595,6 +603,8 @@ cd monitoring/grafana
 - Transaction Service (Port 8082)  # Transaction processing metrics
 - Customer Service (Port 8083)     # Customer management metrics
 - Authentication Service (Port 8084) # Authentication metrics
+- Investment Service (Port 8085)   # Investment operations metrics
+- Loan Service (Port 8086)         # Loan operations metrics
 ```
 
 **Metrics Endpoints**: `/actuator/prometheus` (Spring Boot Actuator)

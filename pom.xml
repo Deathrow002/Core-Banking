@@ -20,6 +20,7 @@
 		<module>Customer</module>
         <module>Authentication</module>
 		<module>Loan</module>
+		<module>Investment</module>
     </modules>
 
 	<name>core-bank</name>
