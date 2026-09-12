@@ -109,8 +109,6 @@ services:
         condition: service_healthy
       discovery-service:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
     environment:
       spring.application.name: account-service
       spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
@@ -163,6 +161,7 @@ services:
       dockerfile: Transaction/Dockerfile
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN}
+        GITHUB_BRANCH: ${GITHUB_BRANCH:-main}
     ports:
       - "8082:8082"
     networks:
@@ -173,8 +172,6 @@ services:
       discovery-service:
         condition: service_healthy
       account-service:
-        condition: service_healthy
-      kafka:
         condition: service_healthy
     environment:
       spring.application.name: transaction-service
