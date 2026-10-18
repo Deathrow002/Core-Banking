@@ -22,3 +22,6 @@
 [submodule "Investment"]
 	path = Investment
 	url = https://github.com/Deathrow002/Core-Banking-Investment.git
+[submodule "Frontend"]
+	path = Frontend
+	url = https://github.com/Deathrow002/Core-Banking-Frontend.git
