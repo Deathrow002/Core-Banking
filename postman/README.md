@@ -109,7 +109,8 @@ Both collections include admin and client authentication with proper endpoint co
 ### Authentication Endpoints
 - **Login**: `POST /api/v1/auth/login` (with query parameters)
 - **Register**: `POST /api/v1/auth/register` (with JSON body)
-- **Validate Token**: `GET /api/v1/auth/validate` (with Bearer token)
+- **Current Session**: `GET /api/v1/auth/me` (uses the `SESSION` cookie)
+- **Logout**: `POST /api/v1/auth/logout` (invalidates the session)
 
 ## 📋 Testing Workflow
 
@@ -128,7 +129,7 @@ Each service has its own folder with specific operations:
 - **🔐 Authentication Service**: 
   - Admin Login, Client Login
   - User Registration (JSON body)
-  - Token validation and health checks
+  - Session check (`/me`), logout and health checks
   - Enhanced debugging with detailed console logging
 - **👤 Customer Service**: 
   - CRUD operations for customer management
@@ -154,7 +155,7 @@ Each service has its own folder with specific operations:
 The collections use variables for dynamic testing:
 
 ### Collection Variables
-- `authToken`: Automatically set after successful login (saved to **environment** variables)
+- `customerId`: Also set from the login response when the user is linked to a customer
 - `customerId`: Automatically set after customer creation
 - `accountNumber`: Automatically set after account creation (uses `accountId` from response)
 - `email`: Default customer email
@@ -164,10 +165,10 @@ The collections use variables for dynamic testing:
 - Service URLs (different for Docker Compose vs Kubernetes)
 - Base URLs and ports
 - Default credentials
-- `authToken`: JWT token storage for API authentication
+- No token variables: authentication uses the `SESSION` cookie stored in Postman's cookie jar
 
 ### Key Variable Updates (Kubernetes Collection)
-- Authentication token now properly saved to environment variables instead of collection variables
+- Login establishes a server-side session; `customerId` is saved from the login response when present
 - Account creation returns `accountId` (UUID) which is saved as `accountNumber` variable
 - Enhanced error handling and console logging for debugging
 - Account endpoints updated to use correct service paths (`/accounts/createAccount`, `/accounts/getAccount`, etc.)
@@ -183,7 +184,7 @@ The collections use variables for dynamic testing:
 2. **Authentication Failures**
    - Verify credentials in environment variables
    - Check if authentication service is healthy
-   - Ensure token is being saved correctly to **environment variables** (check Postman Console for logs)
+   - Ensure the `SESSION` cookie is present in Postman's cookie jar for the host (Cookies dialog) and that write requests send `X-XSRF-TOKEN` (a missing/invalid CSRF token returns 403)
    - **Kubernetes**: Use query parameters for login: `?email=<email>&password=<password>`
    - **Docker Compose**: Use query parameters for login: `?email=<email>&password=<password>`
    - Check Postman Console (View → Show Postman Console) for detailed authentication debugging
@@ -237,7 +238,7 @@ For Kubernetes deployments, additional monitoring endpoints are available:
 
 ## 📝 Notes
 
-- Collections include automatic token management with JWT Bearer authentication
+- Session-based auth: Postman's cookie jar keeps the `SESSION` cookie, and a collection-level pre-request script copies the `XSRF-TOKEN` cookie into the `X-XSRF-TOKEN` header for POST/PUT/PATCH/DELETE (fetching `/api/v1/auth/csrf` first if needed). Set an optional `authUrl` variable if the auth service is on a different host
 - Variables are shared across requests for seamless workflows
 - Health check endpoints don't require authentication (except auth service which may return 401)
 - Service URLs are environment-specific for easy switching between deployments

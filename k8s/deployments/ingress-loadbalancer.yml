@@ -23,7 +23,9 @@ metadata:
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: "http://localhost:8082"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
-    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, X-XSRF-TOKEN"
+    # Session cookies (SESSION, XSRF-TOKEN) must be sent cross-origin
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
 spec:
   rules:
   # Account Service Load Balancing

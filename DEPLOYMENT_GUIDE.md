@@ -435,12 +435,12 @@ After deployment, access these services:
 | **Grafana** | http://localhost:3000 | `myuser` / `mypassword` |
 | **Prometheus** | http://localhost:9090 | No auth |
 | **Discovery Service** | http://localhost:8761 | No auth |
-| **Account API** | http://localhost:8081 | JWT required |
-| **Customer API** | http://localhost:8083 | JWT required |
-| **Transaction API** | http://localhost:8082 | JWT required |
+| **Account API** | http://localhost:8081 | Session required |
+| **Customer API** | http://localhost:8083 | Session required |
+| **Transaction API** | http://localhost:8082 | Session required |
 | **Authentication API** | http://localhost:8084 | No auth |
 | **Investment API** | http://localhost:8085 | JWT required |
-| **Loan API** | http://localhost:8086 | JWT required |
+| **Loan API** | http://localhost:8086 | Session required |
 
 ### Kubernetes Port Forwarding
 
@@ -664,7 +664,7 @@ kubectl rollout restart deployment/account-service -n core-bank
 
 1. **Import Postman Collection**: `postman/CoreBank-Docker-Compose.postman_collection.json`
 2. **Explore Grafana Dashboards**: Start with "Core Bank Overview"
-3. **Test API Endpoints**: Use the authentication flow to get JWT tokens
+3. **Test API Endpoints**: Log in via `/api/v1/auth/login` to obtain a session cookie
 4. **Monitor Performance**: Generate load and watch metrics in real-time
 5. **Customize Dashboards**: Add your own metrics and panels
 

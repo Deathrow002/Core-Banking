@@ -1,9 +1,9 @@
 {
-  "info": {
-    "name": "Core Bank Postman Collection",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "item": [
+	"info": {
+		"name": "Core Bank Postman Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
 		{
 			"name": "Customer Service",
 			"item": [
@@ -154,12 +154,6 @@
 					"response": []
 				}
 			],
-			"auth": {
-				"type": "bearer",
-				"bearer": {
-					"token": "{{authToken}}"
-				}
-			},
 			"event": [
 				{
 					"listen": "prerequest",
@@ -189,12 +183,6 @@
 				{
 					"name": "Validate Account",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "{{authToken}}"
-							}
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -221,12 +209,6 @@
 				{
 					"name": "Get Account",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "{{authToken}}"
-							}
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -348,12 +330,6 @@
 					"response": []
 				}
 			],
-			"auth": {
-				"type": "bearer",
-				"bearer": {
-					"token": "{{authToken}}"
-				}
-			},
 			"event": [
 				{
 					"listen": "prerequest",
@@ -461,12 +437,6 @@
 					"response": []
 				}
 			],
-			"auth": {
-				"type": "bearer",
-				"bearer": {
-					"token": "{{authToken}}"
-				}
-			},
 			"event": [
 				{
 					"listen": "prerequest",
@@ -576,8 +546,60 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8084/api/v1/auth/logout"
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Session invalidated (204)', function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								]
+							}
+						}
+					]
 				}
 			]
 		}
-	]
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Session auth: Postman's cookie jar keeps SESSION and XSRF-TOKEN (cookies are shared across ports on the same host).",
+					"// Spring Security requires the XSRF-TOKEN cookie value echoed in X-XSRF-TOKEN on state-changing requests.",
+					"const method = pm.request.method.toUpperCase();",
+					"if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {",
+					"    const send = (token) => pm.request.headers.upsert({ key: 'X-XSRF-TOKEN', value: token });",
+					"    const existing = pm.cookies.get('XSRF-TOKEN');",
+					"    if (existing) {",
+					"        send(existing);",
+					"    } else {",
+					"        const url = pm.request.url;",
+					"        const authBase = pm.variables.get('authUrl') || (url.protocol || 'http') + '://' + url.getRemote();",
+					"        pm.sendRequest({ url: authBase + '/api/v1/auth/csrf', method: 'GET' }, (err, res) => {",
+					"            const cookie = res && res.cookies.get('XSRF-TOKEN');",
+					"            if (cookie) { send(cookie); } else { console.warn('Could not obtain XSRF-TOKEN', err); }",
+					"        });",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": []
 }

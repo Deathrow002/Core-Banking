@@ -12,11 +12,6 @@
       "type": "string"
     },
     {
-      "key": "authToken",
-      "value": "",
-      "type": "string"
-    },
-    {
       "key": "customerId",
       "value": "",
       "type": "string"
@@ -53,23 +48,16 @@
                   "});",
                   "",
                   "if (pm.response.code === 200) {",
-                  "    try {",
-                  "        const response = pm.response.json();",
-                  "        if (response.token) {",
-                  "            pm.environment.set('authToken', response.token);",
-                  "            console.log('Auth token saved:', response.token);",
-                  "            pm.test('Token received and saved', function () {",
-                  "                pm.expect(response.token).to.be.a('string');",
-                  "            });",
-                  "        } else {",
-                  "            console.error('No token in response:', response);",
-                  "        }",
-                  "    } catch (e) {",
-                  "        console.error('Error parsing response:', e.message);",
+                  "    const user = pm.response.json();",
+                  "    pm.test('Session established (SESSION cookie set)', function () {",
+                  "        pm.expect(pm.cookies.has('SESSION')).to.be.true;",
+                  "        pm.expect(user.username).to.be.a('string');",
+                  "    });",
+                  "    if (user.customerId) {",
+                  "        pm.environment.set('customerId', user.customerId);",
                   "    }",
                   "} else {",
-                  "    console.error('Login failed with status:', pm.response.code);",
-                  "    console.error('Response body:', pm.response.text());",
+                  "    console.error('Login failed with status:', pm.response.code, pm.response.text());",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -86,9 +74,16 @@
             ],
             "url": {
               "raw": "{{baseUrl}}:8084/api/v1/auth/login?email=admin@example.com&password=SecureAdminP@ssw0rd!",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8084",
-              "path": ["api", "v1", "auth", "login"],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ],
               "query": [
                 {
                   "key": "email",
@@ -109,33 +104,21 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "console.log('Response status:', pm.response.code);",
-                  "console.log('Response body:', pm.response.text());",
-                  "",
                   "pm.test('Status code is 200', function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
                   "if (pm.response.code === 200) {",
-                  "    try {",
-                  "        const response = pm.response.json();",
-                  "        console.log('Parsed response:', response);",
-                  "        ",
-                  "        if (response.token) {",
-                  "            pm.environment.set('authToken', response.token);",
-                  "            console.log('Auth token saved to environment:', response.token);",
-                  "            pm.test('Token received and saved', function () {",
-                  "                pm.expect(response.token).to.be.a('string');",
-                  "            });",
-                  "        } else {",
-                  "            console.error('No token found in response');",
-                  "        }",
-                  "    } catch (e) {",
-                  "        console.error('Error parsing response:', e.message);",
+                  "    const user = pm.response.json();",
+                  "    pm.test('Session established (SESSION cookie set)', function () {",
+                  "        pm.expect(pm.cookies.has('SESSION')).to.be.true;",
+                  "        pm.expect(user.username).to.be.a('string');",
+                  "    });",
+                  "    if (user.customerId) {",
+                  "        pm.environment.set('customerId', user.customerId);",
                   "    }",
                   "} else {",
-                  "    console.error('Login failed with status:', pm.response.code);",
-                  "    console.error('Response body:', pm.response.text());",
+                  "    console.error('Login failed with status:', pm.response.code, pm.response.text());",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -147,9 +130,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8084/api/v1/auth/login?email={{email}}&password=123456",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8084",
-              "path": ["api", "v1", "auth", "login"],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ],
               "query": [
                 {
                   "key": "email",
@@ -179,27 +169,36 @@
             },
             "url": {
               "raw": "{{baseUrl}}:8084/api/v1/auth/register",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8084",
-              "path": ["api", "v1", "auth", "register"]
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
             }
           }
         },
         {
-          "name": "Validate Token",
+          "name": "Current Session (me)",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}:8084/api/v1/auth/validate",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{baseUrl}}:8084/api/v1/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8084",
-              "path": ["api", "v1", "auth", "validate"]
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
             }
           }
         },
@@ -210,28 +209,57 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8084/actuator/health",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8084",
-              "path": ["actuator", "health"]
+              "path": [
+                "actuator",
+                "health"
+              ]
             }
           }
         },
         {
           "name": "Get All Users",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8084/api/v1/auth/getAllUsers",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8084",
-              "path": ["api", "v1", "auth", "getAllUsers"]
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "getAllUsers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Session invalidated (204)', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8084/api/v1/auth/logout"
             }
           }
         }
@@ -278,12 +306,6 @@
             }
           ],
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "POST",
             "header": [
               {
@@ -297,28 +319,30 @@
             },
             "url": {
               "raw": "{{baseUrl}}:8083/customers",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8083",
-              "path": ["customers"]
+              "path": [
+                "customers"
+              ]
             }
           }
         },
         {
           "name": "Get Customer by ID",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8083/customers?customerId={{customerId}}",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8083",
-              "path": ["customers"],
+              "path": [
+                "customers"
+              ],
               "query": [
                 {
                   "key": "customerId",
@@ -331,38 +355,36 @@
         {
           "name": "Get All Customers",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8083/customers/all",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8083",
-              "path": ["customers", "all"]
+              "path": [
+                "customers",
+                "all"
+              ]
             }
           }
         },
         {
           "name": "Validate Customer by ID",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8083/customers/validate?customerId={{customerId}}",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8083",
-              "path": ["customers", "validate"],
+              "path": [
+                "customers",
+                "validate"
+              ],
               "query": [
                 {
                   "key": "customerId",
@@ -375,12 +397,6 @@
         {
           "name": "Update Customer",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "PUT",
             "header": [
               {
@@ -394,9 +410,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}:8083/customers?customerId={{customerId}}",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8083",
-              "path": ["customers"],
+              "path": [
+                "customers"
+              ],
               "query": [
                 {
                   "key": "customerId",
@@ -456,12 +476,6 @@
             }
           ],
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "POST",
             "header": [
               {
@@ -475,28 +489,32 @@
             },
             "url": {
               "raw": "{{baseUrl}}:8081/accounts/createAccount",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8081",
-              "path": ["accounts", "createAccount"]
+              "path": [
+                "accounts",
+                "createAccount"
+              ]
             }
           }
         },
         {
           "name": "Get Account",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8081/accounts/getAccount?accNo={{accountNumber}}",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8081",
-              "path": ["accounts", "getAccount"],
+              "path": [
+                "accounts",
+                "getAccount"
+              ],
               "query": [
                 {
                   "key": "accNo",
@@ -509,19 +527,18 @@
         {
           "name": "Get Account By Customer ID",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8081/accounts/getAccountByCustomerId?customerId={{customerId}}",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8081",
-              "path": ["accounts", "getAccountByCustomerId"],
+              "path": [
+                "accounts",
+                "getAccountByCustomerId"
+              ],
               "query": [
                 {
                   "key": "customerId",
@@ -534,19 +551,18 @@
         {
           "name": "Get All Accounts",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8081/accounts/getAllAccounts",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8081",
-              "path": ["accounts", "getAllAccounts"]
+              "path": [
+                "accounts",
+                "getAllAccounts"
+              ]
             }
           }
         },
@@ -554,17 +570,17 @@
           "name": "Get Account Balance",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}:8081/accounts/balance?accountNumber={{accountNumber}}",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8081",
-              "path": ["accounts", "balance"],
+              "path": [
+                "accounts",
+                "balance"
+              ],
               "query": [
                 {
                   "key": "accountNumber",
@@ -577,19 +593,18 @@
         {
           "name": "Validate Account",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8081/accounts/validateAccount?customerId={{customerId}}",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8081",
-              "path": ["accounts", "validateAccount"],
+              "path": [
+                "accounts",
+                "validateAccount"
+              ],
               "query": [
                 {
                   "key": "customerId",
@@ -602,12 +617,6 @@
         {
           "name": "Update Account Balance",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "PUT",
             "header": [
               {
@@ -621,28 +630,32 @@
             },
             "url": {
               "raw": "{{baseUrl}}:8081/accounts/updateAccountBalance",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8081",
-              "path": ["accounts", "updateAccountBalance"]
+              "path": [
+                "accounts",
+                "updateAccountBalance"
+              ]
             }
           }
         },
         {
           "name": "Delete Account",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "DELETE",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8081/accounts/deleteAccount?accNo={{accountNumber}}",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8081",
-              "path": ["accounts", "deleteAccount"],
+              "path": [
+                "accounts",
+                "deleteAccount"
+              ],
               "query": [
                 {
                   "key": "accNo",
@@ -659,9 +672,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8081/actuator/health",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8081",
-              "path": ["actuator", "health"]
+              "path": [
+                "actuator",
+                "health"
+              ]
             }
           }
         }
@@ -673,12 +691,6 @@
         {
           "name": "Deposit",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "POST",
             "header": [
               {
@@ -692,21 +704,20 @@
             },
             "url": {
               "raw": "{{baseUrl}}:8082/transactions/deposit",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8082",
-              "path": ["transactions", "deposit"]
+              "path": [
+                "transactions",
+                "deposit"
+              ]
             }
           }
         },
         {
           "name": "Withdraw",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "POST",
             "header": [
               {
@@ -720,21 +731,20 @@
             },
             "url": {
               "raw": "{{baseUrl}}:8082/transactions/withdraw",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8082",
-              "path": ["transactions", "withdraw"]
+              "path": [
+                "transactions",
+                "withdraw"
+              ]
             }
           }
         },
         {
           "name": "Transfer Transaction",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "POST",
             "header": [
               {
@@ -748,28 +758,32 @@
             },
             "url": {
               "raw": "{{baseUrl}}:8082/transactions/transaction",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8082",
-              "path": ["transactions", "transaction"]
+              "path": [
+                "transactions",
+                "transaction"
+              ]
             }
           }
         },
         {
           "name": "Get Transactions by Account",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8082/transactions/GetTransByAccNo?AccNo={{accountNumber}}",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8082",
-              "path": ["transactions", "GetTransByAccNo"],
+              "path": [
+                "transactions",
+                "GetTransByAccNo"
+              ],
               "query": [
                 {
                   "key": "AccNo",
@@ -786,9 +800,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8082/actuator/health",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8082",
-              "path": ["actuator", "health"]
+              "path": [
+                "actuator",
+                "health"
+              ]
             }
           }
         }
@@ -804,9 +823,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8761/actuator/health",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8761",
-              "path": ["actuator", "health"]
+              "path": [
+                "actuator",
+                "health"
+              ]
             }
           }
         },
@@ -817,9 +841,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8761/",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8761",
-              "path": [""]
+              "path": [
+                ""
+              ]
             }
           }
         },
@@ -830,9 +858,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:9090/metrics",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "9090",
-              "path": ["metrics"]
+              "path": [
+                "metrics"
+              ]
             }
           }
         },
@@ -843,9 +875,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:3000/",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "3000",
-              "path": [""]
+              "path": [
+                ""
+              ]
             }
           }
         }
@@ -866,19 +902,16 @@
                   "});",
                   "",
                   "if (pm.response.code === 200) {",
-                  "    try {",
-                  "        const response = pm.response.json();",
-                  "        if (response.token) {",
-                  "            pm.environment.set('authToken', response.token);",
-                  "            console.log('✅ Admin authenticated successfully');",
-                  "        } else {",
-                  "            console.error('❌ No token in response');",
-                  "        }",
-                  "    } catch (e) {",
-                  "        console.error('❌ Error parsing response:', e.message);",
+                  "    const user = pm.response.json();",
+                  "    pm.test('Session established (SESSION cookie set)', function () {",
+                  "        pm.expect(pm.cookies.has('SESSION')).to.be.true;",
+                  "        pm.expect(user.username).to.be.a('string');",
+                  "    });",
+                  "    if (user.customerId) {",
+                  "        pm.environment.set('customerId', user.customerId);",
                   "    }",
                   "} else {",
-                  "    console.error('❌ Admin authentication failed');",
+                  "    console.error('Login failed with status:', pm.response.code, pm.response.text());",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -890,9 +923,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}:8084/api/v1/auth/login?email=admin@example.com&password=SecureAdminP@ssw0rd!",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8084",
-              "path": ["api", "v1", "auth", "login"],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ],
               "query": [
                 {
                   "key": "email",
@@ -943,10 +983,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
               }
             ],
             "body": {
@@ -955,9 +991,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}:8083/customers",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8083",
-              "path": ["customers"]
+              "path": [
+                "customers"
+              ]
             }
           }
         },
@@ -1001,10 +1041,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
               }
             ],
             "body": {
@@ -1013,9 +1049,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}:8081/accounts/createAccount",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8081",
-              "path": ["accounts", "createAccount"]
+              "path": [
+                "accounts",
+                "createAccount"
+              ]
             }
           }
         },
@@ -1046,10 +1087,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
               }
             ],
             "body": {
@@ -1058,9 +1095,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}:8082/transactions/deposit",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8082",
-              "path": ["transactions", "deposit"]
+              "path": [
+                "transactions",
+                "deposit"
+              ]
             }
           }
         },
@@ -1092,17 +1134,17 @@
           ],
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}:8081/accounts/balance?accountNumber={{accountNumber}}",
-              "host": ["{{baseUrl}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
               "port": "8081",
-              "path": ["accounts", "balance"],
+              "path": [
+                "accounts",
+                "balance"
+              ],
               "query": [
                 {
                   "key": "accountNumber",
@@ -1113,6 +1155,33 @@
           }
         }
       ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Session auth: Postman's cookie jar keeps SESSION and XSRF-TOKEN (cookies are shared across ports on the same host).",
+          "// Spring Security requires the XSRF-TOKEN cookie value echoed in X-XSRF-TOKEN on state-changing requests.",
+          "const method = pm.request.method.toUpperCase();",
+          "if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {",
+          "    const send = (token) => pm.request.headers.upsert({ key: 'X-XSRF-TOKEN', value: token });",
+          "    const existing = pm.cookies.get('XSRF-TOKEN');",
+          "    if (existing) {",
+          "        send(existing);",
+          "    } else {",
+          "        const url = pm.request.url;",
+          "        const authBase = pm.variables.get('authUrl') || (url.protocol || 'http') + '://' + url.getRemote();",
+          "        pm.sendRequest({ url: authBase + '/api/v1/auth/csrf', method: 'GET' }, (err, res) => {",
+          "            const cookie = res && res.cookies.get('XSRF-TOKEN');",
+          "            if (cookie) { send(cookie); } else { console.warn('Could not obtain XSRF-TOKEN', err); }",
+          "        });",
+          "    }",
+          "}"
+        ]
+      }
     }
   ]
 }

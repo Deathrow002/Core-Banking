@@ -8,7 +8,7 @@ This project is a **microservices-based core banking system** designed for high 
 - **Container-Ready**: Docker and Kubernetes support with optimized configurations
 - **Load Balancing**: Horizontal Pod Autoscaling (HPA) and service mesh ready
 - **Service Discovery**: Eureka-based service registry for dynamic service discovery
-- **Security**: JWT-based authentication with role-based access control
+- **Security**: Server-side session authentication (Spring Session + Redis) with role-based access control
 - **Monitoring**: Comprehensive observability with Prometheus and Grafana
 - **Message Streaming**: Event-driven architecture using Apache Kafka
 - **Caching**: Redis integration for high-performance data access
@@ -18,7 +18,7 @@ This project is a **microservices-based core banking system** designed for high 
 
 ### Core Services
 - **Discovery Service** (Port 8761): Service registry using Eureka Server
-- **Authentication Service** (Port 8084): JWT-based user authentication and authorization
+- **Authentication Service** (Port 8084): Session-based user authentication and authorization (HttpOnly `SESSION` cookie)
 - **Account Service** (Port 8081): Account management with PostgreSQL and Redis integration
 - **Transaction Service** (Port 8082): Transaction processing with Kafka event streaming
 - **Customer Service** (Port 8083): Customer profile and address management
@@ -42,8 +42,9 @@ The Core Bank System operates as a **cloud-native microservices architecture** w
    - Load balancing across multiple service instances
 
 2. **Authentication & Security**:
-   - JWT-based authentication with role-based access control (ADMIN, MANAGER, USER)
-   - Secure inter-service communication
+   - Session-based authentication shared through Redis, with role-based access control (ADMIN, MANAGER, USER)
+   - CSRF protection (`XSRF-TOKEN` cookie / `X-XSRF-TOKEN` header)
+   - Inter-service calls forward the caller's session cookie; Kafka events carry an `X-Session-Id` header
    - Protected actuator endpoints with health checks
 
 3. **Business Logic Processing**:
@@ -324,7 +325,7 @@ The system includes comprehensive Postman collections for testing both Docker Co
 - **Client**: `john.doe@example.com` / `123456`
 
 ### Automated Features
-- **Token Management**: JWT tokens automatically saved and used
+- **Session Management**: Postman keeps the `SESSION` cookie and copies `XSRF-TOKEN` into the `X-XSRF-TOKEN` header
 - **Variable Handling**: Customer IDs and account numbers auto-populated
 - **Health Checks**: All services include health monitoring endpoints
 - **Complete Workflows**: End-to-end testing scenarios included
@@ -366,11 +367,11 @@ The system uses Resilience4j Circuit Breaker to protect remote service calls in 
    import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
    @CircuitBreaker(name = "accountServiceCB", fallbackMethod = "fallbackMethod")
-   public boolean validateCustomer(UUID customerId, String jwtToken) {
+   public boolean validateCustomer(UUID customerId) {
       // ...remote call logic...
    }
 
-   public boolean fallbackMethod(UUID customerId, String jwtToken, Throwable t) {
+   public boolean fallbackMethod(UUID customerId, Throwable t) {
       // Fallback logic, e.g., log and return false
       return false;
    }
@@ -388,7 +389,7 @@ eureka.client.registry-fetch-interval-seconds=30
 
 #### Docker Compose Environment
 - **PostgreSQL**: `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
-- **Redis**: `spring.redis.host`, `spring.redis.port`
+- **Redis** (cache + shared sessions): `spring.data.redis.host`, `spring.data.redis.port`
 - **Kafka**: `KAFKA_ZOOKEEPER_CONNECT`, `KAFKA_LISTENERS`, `KAFKA_ADVERTISED_LISTENERS`
 
 #### Kubernetes Environment
@@ -443,7 +444,7 @@ kubectl scale deployment <service-name> --replicas=1 -n core-bank
 ```
 
 #### Issue: "Authentication Service Readiness Probe Failed"
-- **Root Cause**: HTTP health endpoints protected by JWT authentication
+- **Root Cause**: HTTP health endpoints protected by authentication
 - **Solution**: Uses TCP probes instead of HTTP probes (already implemented)
 
 #### Issue: "Transaction Service Bean Definition Conflict" 
@@ -487,8 +488,9 @@ kubectl scale deployment <service-name> --replicas=1 -n core-bank
 
 ## 🔐 Security Features
 
-- **JWT Authentication**: Role-based access control (ADMIN, MANAGER, USER)
-- **Secured Endpoints**: All business APIs require valid JWT tokens
+- **Session Authentication**: Spring Session in Redis, HttpOnly `SESSION` cookie, role-based access control (ADMIN, MANAGER, USER)
+- **CSRF Protection**: State-changing requests require the `X-XSRF-TOKEN` header
+- **Secured Endpoints**: All business APIs require a valid session
 - **Health Endpoint Security**: Bypassed for Kubernetes probes
 - **Inter-service Communication**: Service discovery with Eureka
 - **Database Security**: PostgreSQL with credential management
@@ -511,7 +513,7 @@ This Core Bank System with the following features:
 - Performance metrics and alerting
 
 ### ✅ Security
-- JWT-based authentication and authorization
+- Session-based authentication and authorization
 - Role-based access control (RBAC)
 - Secured inter-service communication
 - Database credential management
