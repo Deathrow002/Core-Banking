@@ -307,6 +307,38 @@ services:
       retries: 5
       start_period: 120s
 
+  frontend-service:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    expose:
+      - "4000"
+    networks:
+      - core-bank-network
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+
+  frontend-gateway:
+    image: nginx:1.28-alpine
+    ports:
+      - "8080:80"
+    networks:
+      - core-bank-network
+    depends_on:
+      frontend-service:
+        condition: service_healthy
+      authentication-service:
+        condition: service_healthy
+    volumes:
+      - ./frontend-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/login"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     ports:

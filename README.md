@@ -119,7 +119,13 @@ npm.cmd run build
 npm.cmd test -- --watch=false
 ```
 
-The frontend is started separately; Docker Compose does not currently deploy it.
+For a containerized frontend with same-origin authentication routing, run from the repository root:
+
+```powershell
+docker compose up -d --build frontend-gateway
+```
+
+Open `http://localhost:8080/login`. Compose starts the Angular SSR container (`frontend-service`, internal port 4000), an Nginx gateway (`frontend-gateway`, host port 8080), and their backend dependencies. The gateway routes `/api/v1/auth/` to Authentication and UI requests to Angular; other `/api/` paths are not routed yet.
 
 ### Quick Start Options
 
