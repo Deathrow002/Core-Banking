@@ -9,6 +9,7 @@ This project is a **microservices-based core banking system** designed for high 
 - **Load Balancing**: Horizontal Pod Autoscaling (HPA) and service mesh ready
 - **Service Discovery**: Eureka-based service registry for dynamic service discovery
 - **Security**: Server-side session authentication (Spring Session + Redis) with role-based access control
+- **Angular Frontend**: Login page, session-aware route guards, and server-side logout
 - **Monitoring**: Comprehensive observability with Prometheus and Grafana
 - **Message Streaming**: Event-driven architecture using Apache Kafka
 - **Caching**: Redis integration for high-performance data access
@@ -25,9 +26,15 @@ This project is a **microservices-based core banking system** designed for high 
 - **Investment Service** (Port 8085): Investment portfolio management with reactive R2DBC and Kafka event streaming
 - **Loan Service** (Port 8086): Loan origination and management with reactive R2DBC and Kafka event streaming
 
+### Frontend
+- **Angular Application** (Development port 4200): Located in the `Frontend` Git submodule. Includes login, a protected welcome page, session restoration, and sign-out.
+- **Development API Proxy**: Requests to `/api` are forwarded to the Authentication Service at `http://localhost:8084`. Other business services are not routed by this proxy yet.
+
+> Shared session authentication is implemented in Authentication, Account, Customer, Transaction, and Loan. Investment still uses Spring Boot's default reactive security and is not integrated with these sessions.
+
 ### Supporting Infrastructure
 - **PostgreSQL** (Port 5432): Primary database for persistent data storage
-- **Redis** (Port 6379): In-memory cache for performance optimization
+- **Redis** (Port 6379): In-memory cache and shared server-side session store
 - **Apache Kafka** (Port 9092): Message broker for event-driven communication
 - **Prometheus** (Port 9090): Metrics collection and monitoring
 - **Grafana** (Port 3000): Data visualization and analytics dashboards
@@ -74,15 +81,54 @@ The Core Bank System operates as a **cloud-native microservices architecture** w
 - **Kubernetes** (for production deployment)
 - **kubectl** (for Kubernetes management)
 - **Java 21+** & **Maven** (for development)
+- **Node.js 24 LTS** & **npm** (for Angular frontend development)
+
+### Clone with Submodules
+
+The backend services and Angular frontend are separate repositories registered as Git submodules.
+
+```powershell
+git clone --recurse-submodules https://github.com/Deathrow002/Core-Banking.git
+cd Core-Banking
+```
+
+For an existing clone, initialize the submodules at the revisions recorded by this repository:
+
+```powershell
+git submodule update --init --recursive
+```
+
+### Run the Angular Frontend
+
+Start the backend infrastructure and Authentication Service first, then run:
+
+```powershell
+cd Frontend
+npm.cmd ci
+npm.cmd start
+```
+
+Open `http://localhost:4200/login`. The development proxy keeps authentication requests same-origin, so the browser sends cookies and Angular adds the CSRF header automatically. No global Angular CLI installation is required.
+
+On Linux/macOS, use `npm` instead of `npm.cmd`. On Windows, the `.cmd` commands avoid PowerShell execution-policy errors from `npm.ps1`.
+
+To build or test the frontend from its directory:
+
+```powershell
+npm.cmd run build
+npm.cmd test -- --watch=false
+```
+
+The frontend is started separately; Docker Compose does not currently deploy it.
 
 ### Quick Start Options
 
 #### Option 1: Automated Docker Deployment (Recommended)
 Linux / macOS:
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd core-bank
+# Clone the repository and its service/frontend submodules
+git clone --recurse-submodules https://github.com/Deathrow002/Core-Banking.git
+cd Core-Banking
 
 # One-command deployment with monitoring
 ./deploy.sh
@@ -95,9 +141,9 @@ cd core-bank
 ```
 Windows (PowerShell):
 ```powershell
-# Clone the repository
-git clone <repository-url>
-cd core-bank
+# Clone the repository and its service/frontend submodules
+git clone --recurse-submodules https://github.com/Deathrow002/Core-Banking.git
+cd Core-Banking
 
 # One-command deployment with monitoring
 ./deployment-guide.ps1 -Docker
@@ -249,7 +295,59 @@ kubectl top nodes
 kubectl port-forward svc/discovery-service 8761:8761 -n core-bank
 ```
 
-## 📋 API Testing with Postman
+## Session Authentication
+
+Authentication is session-based, not JWT-based. Login stores the security context in Redis and sets an HttpOnly `SESSION` cookie. No bearer token is returned or stored in browser localStorage.
+
+### Authentication Flow
+
+1. Call `GET /api/v1/auth/csrf` to obtain the readable `XSRF-TOKEN` cookie.
+2. Call `POST /api/v1/auth/login` with form-encoded `email` and `password`, keeping cookies enabled and sending the cookie's value in the `X-XSRF-TOKEN` header.
+3. A successful login returns the user profile below and sets the `SESSION` cookie. An existing session id is rotated on login.
+4. Send the session cookie with subsequent requests. State-changing requests also require the CSRF header. Use the current `XSRF-TOKEN` cookie value rather than caching it.
+5. Call `GET /api/v1/auth/me` to check or restore the current session.
+6. Call `POST /api/v1/auth/logout` with cookies and the CSRF header to invalidate the session in Redis.
+
+Example login response:
+
+```json
+{
+  "username": "admin@example.com",
+  "customerId": null,
+  "roles": ["ROLE_ADMIN"]
+}
+```
+
+| Method | Endpoint | Access / purpose |
+|--------|----------|------------------|
+| GET | `/api/v1/auth/csrf` | Public; issues CSRF cookie (204) |
+| POST | `/api/v1/auth/login` | Public with CSRF; form-encoded credentials |
+| GET | `/api/v1/auth/me` | Authenticated session; returns current user |
+| POST | `/api/v1/auth/logout` | CSRF required; invalidates session (204) |
+| POST | `/api/v1/auth/register` | Authenticated session + CSRF; JSON body |
+| GET | `/api/v1/auth/getAllUsers` | ADMIN role |
+
+Protected requests without a valid session return `401`; missing/invalid CSRF tokens or insufficient permissions return `403`. Invalid login credentials currently return `400`. The former `/api/v1/auth/validate` endpoint is replaced by `/api/v1/auth/me`.
+
+### Shared Redis and Cookie Configuration
+
+Authentication, Account, Customer, Transaction, and Loan must connect to the same Redis instance and use the same session namespace:
+
+```properties
+spring.data.redis.host=redis
+spring.data.redis.port=6379
+spring.session.data.redis.namespace=core-banking:session
+spring.session.timeout=30m
+app.session.cookie.secure=false
+app.session.cookie.same-site=Lax
+```
+
+- Sessions expire after 30 minutes of inactivity by default. Multiple concurrent sessions per user are allowed; the previous token allow-list is no longer used.
+- HTTP service-to-service calls forward the caller's cookie and CSRF header. Transaction and Loan Kafka producers attach `X-Session-Id`; Account resolves it against Redis.
+- Use HTTPS and set `app.session.cookie.secure=true` for production. Keep session ids out of logs.
+- Prefer a same-origin frontend/API gateway. The current cookies are host-only: logging in at `auth.core-bank.local` does **not** automatically authenticate calls to `account.core-bank.local` or other ingress hostnames. Sharing Redis alone does not make browsers share cookies across hosts.
+- A cross-origin deployment also needs an explicit credentialed CORS policy and client credential handling. Cross-site cookies require `SameSite=None; Secure`; Angular's built-in XSRF handling only adds the header to same-origin requests.
+- Investment is not part of this shared session contract yet.
 
 ## 🧪 API Testing with Postman
 
@@ -273,12 +371,12 @@ The project includes ready-to-use Postman collections and environment files for 
    - Use the "Complete Workflow" folder for end-to-end tests.
 
 ### Tips
-- Environment variables (tokens, IDs) are auto-populated by test scripts.
+- Customer/account IDs are auto-populated by test scripts; authentication uses Postman's cookie jar, not a token variable.
 - Use the "Pre-request Script" and "Tests" tabs in Postman for automation and validation.
 - See `postman/README.md` for advanced usage and troubleshooting.
 
 ### Example Endpoints Covered
-- Authentication: Login, token validation
+- Authentication: Login, current session (`/me`), logout
 - Account: Create, get, update, delete, check balance
 - Customer: Register, update, validate
 - Transaction: Deposit, withdraw, transfer, history
@@ -314,7 +412,7 @@ The system includes comprehensive Postman collections for testing both Docker Co
 4. **Test**: Run the "Complete Workflow" folder for end-to-end testing
 
 ### Available Endpoints
-- **🔐 Authentication Service**: Login, token validation, health checks
+- **🔐 Authentication Service**: Login, current session (`/me`), logout, health checks
 - **👤 Customer Service**: CRUD operations for customer management
 - **🏦 Account Service**: Account creation, balance checks, status updates
 - **💰 Transaction Service**: Deposits, withdrawals, transfers, transaction history
@@ -358,6 +456,8 @@ resilience4j.circuitbreaker.instances.customerServiceCB.waitDurationInOpenState=
 resilience4j.circuitbreaker.instances.transactionServiceCB.slidingWindowSize=10
 resilience4j.circuitbreaker.instances.transactionServiceCB.failureRateThreshold=50
 resilience4j.circuitbreaker.instances.transactionServiceCB.waitDurationInOpenState=5s
+```
+
 ### Circuit Breaker Integration
 
 The system uses Resilience4j Circuit Breaker to protect remote service calls in each microservice. To use circuit breakers:
@@ -379,7 +479,9 @@ The system uses Resilience4j Circuit Breaker to protect remote service calls in 
 2. Circuit breaker configuration is set in `loadbalancer.properties` or `application.properties` as shown above.
 3. No extra endpoint is needed for circuit breaker functionality; it is handled at the method level.
 
-# Eureka Configuration for Load Balancing
+Eureka configuration for load balancing:
+
+```properties
 eureka.instance.lease-renewal-interval-in-seconds=30
 eureka.instance.lease-expiration-duration-in-seconds=90
 eureka.client.registry-fetch-interval-seconds=30
@@ -490,7 +592,7 @@ kubectl scale deployment <service-name> --replicas=1 -n core-bank
 
 - **Session Authentication**: Spring Session in Redis, HttpOnly `SESSION` cookie, role-based access control (ADMIN, MANAGER, USER)
 - **CSRF Protection**: State-changing requests require the `X-XSRF-TOKEN` header
-- **Secured Endpoints**: All business APIs require a valid session
+- **Secured Endpoints**: Account, Customer, Transaction, and Loan APIs require a valid shared session; Investment integration is pending
 - **Health Endpoint Security**: Bypassed for Kubernetes probes
 - **Inter-service Communication**: Service discovery with Eureka
 - **Database Security**: PostgreSQL with credential management
@@ -630,7 +732,7 @@ cd monitoring/grafana
 - **Account Operations**: Creation, lookup, balance checks, updates
 - **Transaction Operations**: Deposits, withdrawals, transfers, history
 - **Customer Operations**: Registration, profile updates, validation
-- **Authentication Operations**: Login, token validation, user management
+- **Authentication Operations**: Login, session checks, logout, user management
 
 ### 🔧 Customization
 
