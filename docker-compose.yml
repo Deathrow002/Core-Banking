@@ -114,6 +114,8 @@ services:
     environment:
       spring.application.name: account-service
       server.port: 8081
+      app.oauth.issuer: ${OAUTH_ISSUER:-http://localhost:8080}
+      app.oauth.jwk-set-uri: http://authentication-service:8084/oauth2/jwks
       spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
       spring.datasource.username: lmwn_user
       spring.datasource.password: 12345678
@@ -146,6 +148,8 @@ services:
         condition: service_healthy
     environment:
       spring.application.name: customer-service
+      app.oauth.issuer: ${OAUTH_ISSUER:-http://localhost:8080}
+      app.oauth.jwk-set-uri: http://authentication-service:8084/oauth2/jwks
       spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
       spring.datasource.username: lmwn_user
       spring.datasource.password: 12345678
@@ -182,6 +186,8 @@ services:
         condition: service_healthy
     environment:
       spring.application.name: transaction-service
+      app.oauth.issuer: ${OAUTH_ISSUER:-http://localhost:8080}
+      app.oauth.jwk-set-uri: http://authentication-service:8084/oauth2/jwks
       spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
       spring.datasource.username: lmwn_user
       spring.datasource.password: 12345678
@@ -218,6 +224,9 @@ services:
         condition: service_healthy
     environment:
       spring.application.name: authentication-service
+      app.oauth.issuer: ${OAUTH_ISSUER:-http://localhost:8080}
+      app.oauth.mobile.redirect-uri: ${OAUTH_MOBILE_REDIRECT_URI:-com.corebanking.mobile:/oauth2/callback}
+      server.forward-headers-strategy: framework
       spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
       spring.datasource.username: lmwn_user
       spring.datasource.password: 12345678
@@ -255,6 +264,8 @@ services:
         condition: service_healthy
     environment:
       spring.application.name: loan-service
+      app.oauth.issuer: ${OAUTH_ISSUER:-http://localhost:8080}
+      app.oauth.jwk-set-uri: http://authentication-service:8084/oauth2/jwks
       spring.r2dbc.url: r2dbc:postgresql://postgres:5432/lmwn_db
       spring.r2dbc.username: lmwn_user
       spring.r2dbc.password: 12345678

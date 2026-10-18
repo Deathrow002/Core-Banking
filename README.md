@@ -125,7 +125,7 @@ For a containerized frontend with same-origin authentication routing, run from t
 docker compose up -d --build frontend-gateway
 ```
 
-Open `http://localhost:8080/login`. Compose starts the Angular SSR container (`frontend-service`, internal port 4000), an Nginx gateway (`frontend-gateway`, host port 8080), and their backend dependencies. The gateway routes `/api/v1/auth/` to Authentication and UI requests to Angular; other `/api/` paths are not routed yet.
+Open `http://localhost:8080/login`. Compose starts the Angular SSR container (`frontend-service`, internal port 4000), an Nginx gateway (`frontend-gateway`, host port 8080), and their backend dependencies. The gateway routes `/api/v1/auth/` and OAuth/OIDC endpoints to Authentication, `/api/mobile/**` to the corresponding backend services, and UI requests to Angular. Unconfigured `/api/` paths return 404.
 
 ### Quick Start Options
 
@@ -303,7 +303,7 @@ kubectl port-forward svc/discovery-service 8761:8761 -n core-bank
 
 ## Session Authentication
 
-Authentication is session-based, not JWT-based. Login stores the security context in Redis and sets an HttpOnly `SESSION` cookie. No bearer token is returned or stored in browser localStorage.
+Angular web authentication is session-based. Login stores the security context in Redis and sets an HttpOnly `SESSION` cookie. No bearer token is returned by web login or stored in browser localStorage. Native mobile clients use the separate OAuth/OIDC flow described below.
 
 ### Authentication Flow
 
@@ -354,6 +354,24 @@ app.session.cookie.same-site=Lax
 - Prefer a same-origin frontend/API gateway. The current cookies are host-only: logging in at `auth.core-bank.local` does **not** automatically authenticate calls to `account.core-bank.local` or other ingress hostnames. Sharing Redis alone does not make browsers share cookies across hosts.
 - A cross-origin deployment also needs an explicit credentialed CORS policy and client credential handling. Cross-site cookies require `SameSite=None; Secure`; Angular's built-in XSRF handling only adds the header to same-origin requests.
 - Investment is not part of this shared session contract yet.
+
+### Mobile OAuth/OIDC (Phase 1)
+
+Spring Authorization Server reuses the same accounts and password hashes. The public native client `core-banking-mobile` uses Authorization Code + S256 PKCE, with development issuer `http://localhost:8080` and exact callback `com.corebanking.mobile:/oauth2/callback`. There is no mobile client secret or refresh-token grant; the app reauthorizes through the system browser after token expiry.
+
+- Discovery: `/.well-known/openid-configuration`; authorization: `/oauth2/authorize`; token exchange: `/oauth2/token`; public keys: `/oauth2/jwks`.
+- OAuth browser login: `/oauth/login`. Angular's `/login` and session flow remain unchanged.
+- Mobile APIs: prepend `/api/mobile` to the original service path (for example `/api/mobile/accounts/getAccount`).
+- Bearer-only mobile chains validate signature, issuer, audience `core-banking-api`, expiry and `banking` scope, then enforce existing business roles. Session cookies do not authenticate mobile routes, and bearer tokens do not authenticate web routes.
+- Access tokens expire after five minutes. Persistent PostgreSQL authorization records and signing keys survive Authentication restarts.
+- Mobile identity: `GET /api/mobile/api/v1/auth/me`; mobile grant logout: `POST /api/mobile/api/v1/auth/logout`. Logout removes the server grant but does not instantly revoke a self-contained access JWT; it remains usable until expiry plus clock skew. Web logout independently invalidates its Redis session immediately.
+- **Phase 1:** mobile transaction/deposit/withdrawal mutations require `transactions.write` as well as `banking`, but return **503 before persistence** even with both scopes. Missing scopes return 403. Existing browser money workflows remain unchanged.
+- Account mobile balance updates, nonzero opening balances and account deletion are also gated; zero-balance account creation and read-only operations remain available.
+- **Phase 2 is not implemented:** backend-signed Kafka commands, consumer verification, durable replay/idempotency protection and transactional outbox processing are required before enabling mobile money operations. Scopes alone do not make an unsigned Kafka message trustworthy.
+
+Start additional mobile services with `docker compose up -d --build transaction-service loan-service`. Gateway routing preserves the entire mobile path, and Docker DNS is re-resolved so backend recreation does not leave stale gateway addresses. The backend Dockerfiles build local working-tree sources rather than cloning remote `main`.
+
+See the [Authentication README](./Authentication/README.md) for request parameters, environment overrides, production key-management limitations and physical-device setup. The development `localhost` issuer is not reachable as your PC from a physical phone; use a consistent reachable hostname and HTTPS for production.
 
 ## 🧪 API Testing with Postman
 
