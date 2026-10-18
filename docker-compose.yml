@@ -103,6 +103,8 @@ services:
     networks:
       - core-bank-network
     depends_on:
+      kafka:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
@@ -111,6 +113,7 @@ services:
         condition: service_healthy
     environment:
       spring.application.name: account-service
+      server.port: 8081
       spring.datasource.url: jdbc:postgresql://postgres:5432/lmwn_db
       spring.datasource.username: lmwn_user
       spring.datasource.password: 12345678
