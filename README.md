@@ -24,7 +24,7 @@ This project is a **microservices-based core banking system** designed for high 
 - **Account Service** (Port 8081): Account management with PostgreSQL and Redis integration
 - **Transaction Service** (Port 8082): Transaction processing with Kafka event streaming
 - **Customer Service** (Port 8083): Customer profile and address management
-- **Investment Service** (Port 8085): Investment portfolio management with reactive R2DBC and Kafka event streaming
+- **Investment Service** (Port 8085): Simulated stock trading (market/limit orders, holdings with P&L, price charts and live price stream) and investment products with reactive R2DBC
 - **Loan Service** (Port 8086): Loan origination and management with reactive R2DBC and Kafka event streaming
 
 ### Frontend
