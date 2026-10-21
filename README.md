@@ -18,6 +18,7 @@ This project is a **microservices-based core banking system** designed for high 
 ## Services Overview
 
 ### Core Services
+
 - **Discovery Service** (Port 8761): Service registry using Eureka Server
 - **Authentication Service** (Port 8084): Session-based user authentication and authorization (HttpOnly `SESSION` cookie)
 - **Account Service** (Port 8081): Account management with PostgreSQL and Redis integration
@@ -27,12 +28,14 @@ This project is a **microservices-based core banking system** designed for high 
 - **Loan Service** (Port 8086): Loan origination and management with reactive R2DBC and Kafka event streaming
 
 ### Frontend
+
 - **Angular Application** (Development port 4200): Located in the `Frontend` Git submodule. Includes login, a protected welcome page, session restoration, and sign-out.
 - **Development API Proxy**: Requests to `/api` are forwarded to the Authentication Service at `http://localhost:8084`. Other business services are not routed by this proxy yet.
 
 > Shared session authentication is implemented in Authentication, Account, Customer, Transaction, and Loan. Investment still uses Spring Boot's default reactive security and is not integrated with these sessions.
 
 ### Supporting Infrastructure
+
 - **PostgreSQL** (Port 5432): Primary database for persistent data storage
 - **Redis** (Port 6379): In-memory cache and shared server-side session store
 - **Apache Kafka** (Port 9092): Message broker for event-driven communication
@@ -44,32 +47,33 @@ This project is a **microservices-based core banking system** designed for high 
 The Core Bank System operates as a **cloud-native microservices architecture** with the following workflow:
 
 1. **Service Discovery & Registration**:
+
    - All services automatically register with Eureka Discovery Service
    - Dynamic service discovery enables resilient communication
    - Load balancing across multiple service instances
-
 2. **Authentication & Security**:
-   - Session-based authentication shared through Redis, with role-based access control (ADMIN, MANAGER, USER)
+
+   - Session-based authentication shared through Redis, with role-based access control (ADMIN, MANAGER, CUSTOMER)
    - CSRF protection (`XSRF-TOKEN` cookie / `X-XSRF-TOKEN` header)
    - Inter-service calls forward the caller's session cookie; Kafka events carry an `X-Session-Id` header
    - Protected actuator endpoints with health checks
-
 3. **Business Logic Processing**:
+
    - **Account Service**: Account CRUD operations with Redis caching
    - **Transaction Service**: Real-time transaction processing with Kafka events
    - **Customer Service**: Customer profile management with validation
-
 4. **Event-Driven Communication**:
+
    - Kafka streams for asynchronous transaction events
    - Microservices communicate via events for loose coupling
    - Real-time data synchronization across services
-
 5. **Monitoring & Observability**:
+
    - Prometheus metrics collection from all services
    - Grafana dashboards for system health visualization
    - Health checks and readiness probes for reliability
-
 6. **Data Persistence & Caching**:
+
    - PostgreSQL for ACID-compliant data storage
    - Redis for high-performance caching and session management
    - Persistent volumes for data durability
@@ -77,6 +81,7 @@ The Core Bank System operates as a **cloud-native microservices architecture** w
 ## 🛠️ Prerequisites & Setup
 
 ### Requirements
+
 - **Docker** & **Docker Compose** (for local development)
 - **Kubernetes** (for production deployment)
 - **kubectl** (for Kubernetes management)
@@ -125,12 +130,14 @@ For a containerized frontend with same-origin authentication routing, run from t
 docker compose up -d --build frontend-gateway
 ```
 
-Open `http://localhost:8080/login`. Compose starts the Angular SSR container (`frontend-service`, internal port 4000), an Nginx gateway (`frontend-gateway`, host port 8080), and their backend dependencies. The gateway routes `/api/v1/auth/` to Authentication and UI requests to Angular; other `/api/` paths are not routed yet.
+Open `http://localhost:8080/login`. Compose starts the Angular SSR container (`frontend-service`, internal port 4000), an Nginx gateway (`frontend-gateway`, host port 8080), and their backend dependencies. The gateway routes `/api/v1/auth/` and OAuth/OIDC endpoints to Authentication, `/api/mobile/**` to the corresponding backend services, and UI requests to Angular. Unconfigured `/api/` paths return 404.
 
 ### Quick Start Options
 
 #### Option 1: Automated Docker Deployment (Recommended)
+
 Linux / macOS:
+
 ```bash
 # Clone the repository and its service/frontend submodules
 git clone --recurse-submodules https://github.com/Deathrow002/Core-Banking.git
@@ -145,7 +152,9 @@ cd Core-Banking
 # Setup Grafana dashboards only
 ./k8s/scripts/setup-grafana.sh
 ```
+
 Windows (PowerShell):
+
 ```powershell
 # Clone the repository and its service/frontend submodules
 git clone --recurse-submodules https://github.com/Deathrow002/Core-Banking.git
@@ -162,6 +171,7 @@ cd Core-Banking
 ```
 
 #### Option 2: Manual Docker Compose (Development)
+
 ```bash
 # Start all services manually
 docker-compose up -d
@@ -171,7 +181,9 @@ docker-compose ps
 ```
 
 #### Option 3: Kubernetes with Grafana (Production)
+
 Linux / macOS:
+
 ```bash
 # Deploy to Kubernetes with monitoring and dashboards
 cd k8s
@@ -184,7 +196,9 @@ cd k8s
 # Setup dashboards only
 ./setup-k8s-grafana-dashboards.sh
 ```
+
 Windows (PowerShell):
+
 ```powershell
 cd k8s/scripts/windows
 # Deploy with monitoring + dashboards
@@ -200,7 +214,9 @@ cd k8s/scripts/windows
 ```
 
 #### Option 4: Standard Kubernetes (Production)
+
 Linux / macOS:
+
 ```bash
 # Deploy to Kubernetes with optimized configuration
 cd k8s
@@ -210,7 +226,9 @@ cd k8s
 kubectl get pods -n core-bank
 kubectl get services -n core-bank
 ```
+
 Windows (PowerShell):
+
 ```powershell
 cd k8s/scripts/windows
 ./deploy.ps1
@@ -224,13 +242,15 @@ kubectl get services -n core-bank
 ```
 
 ### 📋 Complete Deployment Guide
+
 📚 **See all options**: [`./deployment-guide.sh`](deployment-guide.sh) or run `./deployment-guide.sh`
 
 ## 🎯 Service Endpoints
 
 ### External Access (via Ingress)
+
 - **Account Service**: `http://account.core-bank.local`
-- **Transaction Service**: `http://transaction.core-bank.local`  
+- **Transaction Service**: `http://transaction.core-bank.local`
 - **Customer Service**: `http://customer.core-bank.local`
 - **Authentication Service**: `http://auth.core-bank.local`
 - **Investment Service**: `http://investment.core-bank.local`
@@ -240,6 +260,7 @@ kubectl get services -n core-bank
 - **Prometheus Metrics**: `http://prometheus.core-bank.local`
 
 ### Direct Access (via port-forward)
+
 ```bash
 # Service Discovery
 kubectl port-forward svc/discovery-service 8761:8761 -n core-bank
@@ -258,6 +279,7 @@ kubectl port-forward svc/grafana 3000:3000 -n core-bank
 ```
 
 ### Default Credentials
+
 - **Grafana**: Username: `myuser`, Password: `mypassword`
 - **Admin User**: Email: `admin@example.com` (configured in Authentication Service)
 
@@ -266,18 +288,21 @@ kubectl port-forward svc/grafana 3000:3000 -n core-bank
 The system includes production-ready load balancing and auto-scaling:
 
 ### Horizontal Pod Autoscaling (HPA)
+
 - **Account Service**: 2-10 pods (CPU: 70%, Memory: 80%)
-- **Transaction Service**: 2-10 pods (CPU: 70%, Memory: 80%)  
+- **Transaction Service**: 2-10 pods (CPU: 70%, Memory: 80%)
 - **Customer Service**: 1-5 pods (CPU: 70%, Memory: 80%)
 - **Authentication Service**: 1-5 pods (CPU: 70%, Memory: 80%)
 
 ### Load Balancer Features
+
 - Round-robin load balancing
 - Health-based routing
 - Session affinity support
 - Circuit breaker patterns (Resilience4j @CircuitBreaker annotation in service classes for remote calls)
 
 ### Resource Optimization
+
 - **CPU Requests**: Optimized for scheduling (50m-100m per service)
 - **Memory Requests**: Right-sized for efficient resource usage (128Mi-512Mi)
 - **Readiness Probes**: Fast startup detection (TCP-based for secured services)
@@ -303,7 +328,7 @@ kubectl port-forward svc/discovery-service 8761:8761 -n core-bank
 
 ## Session Authentication
 
-Authentication is session-based, not JWT-based. Login stores the security context in Redis and sets an HttpOnly `SESSION` cookie. No bearer token is returned or stored in browser localStorage.
+Angular web authentication is session-based. Login stores the security context in Redis and sets an HttpOnly `SESSION` cookie. No bearer token is returned by web login or stored in browser localStorage. Native mobile clients use the separate OAuth/OIDC flow described below.
 
 ### Authentication Flow
 
@@ -320,18 +345,26 @@ Example login response:
 {
   "username": "admin@example.com",
   "customerId": null,
-  "roles": ["ROLE_ADMIN"]
+  "roles": ["ROLE_ADMIN"],
+  "permissions": ["PERM_ADD", "PERM_EDIT", "PERM_DELETE"]
 }
 ```
 
-| Method | Endpoint | Access / purpose |
-|--------|----------|------------------|
-| GET | `/api/v1/auth/csrf` | Public; issues CSRF cookie (204) |
-| POST | `/api/v1/auth/login` | Public with CSRF; form-encoded credentials |
-| GET | `/api/v1/auth/me` | Authenticated session; returns current user |
-| POST | `/api/v1/auth/logout` | CSRF required; invalidates session (204) |
-| POST | `/api/v1/auth/register` | Authenticated session + CSRF; JSON body |
-| GET | `/api/v1/auth/getAllUsers` | ADMIN role |
+`permissions` comes from the `can_add` / `can_edit` / `can_delete` flags on the user's row in the `roles` table (seeded: ADMIN all three, MANAGER add and edit, CUSTOMER none). The same `PERM_*` values are session authorities, so services can check them with `hasAuthority(...)`.
+
+| Method | Endpoint                     | Access / purpose                                                                                                         |
+| ------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| GET    | `/api/v1/auth/csrf`        | Public; issues CSRF cookie (204)                                                                                         |
+| POST   | `/api/v1/auth/login`       | Public with CSRF; form-encoded credentials                                                                               |
+| GET    | `/api/v1/auth/me`          | Authenticated session; returns current user                                                                              |
+| POST   | `/api/v1/auth/logout`      | CSRF required; invalidates session (204)                                                                                 |
+| POST   | `/api/v1/auth/register`    | ADMIN or MANAGER with `PERM_ADD`: create a login for an existing customer; returns email, customerId and role (no password) |
+| GET    | `/api/v1/auth/getAllUsers` | ADMIN role                                                                                                               |
+| GET    | `/api/v1/auth/users`       | ADMIN or MANAGER: paged list of login accounts (`page`, `size` 1–100)                                                    |
+| GET    | `/api/v1/auth/users/{id}`  | ADMIN or MANAGER: view one login account                                                                                 |
+| POST   | `/api/v1/auth/users`       | ADMIN or MANAGER with `PERM_ADD`: create a login for an existing customer                                                |
+| PUT    | `/api/v1/auth/users/{id}`  | ADMIN or MANAGER with `PERM_EDIT`: update email, optional password, role, and enabled; MANAGER cannot act on ADMIN accounts |
+| DELETE | `/api/v1/auth/users/{id}`  | ADMIN or MANAGER with `PERM_DELETE`: permanently delete a login account (204)                                            |
 
 Protected requests without a valid session return `401`; missing/invalid CSRF tokens or insufficient permissions return `403`. Invalid login credentials currently return `400`. The former `/api/v1/auth/validate` endpoint is replaced by `/api/v1/auth/me`.
 
@@ -355,6 +388,24 @@ app.session.cookie.same-site=Lax
 - A cross-origin deployment also needs an explicit credentialed CORS policy and client credential handling. Cross-site cookies require `SameSite=None; Secure`; Angular's built-in XSRF handling only adds the header to same-origin requests.
 - Investment is not part of this shared session contract yet.
 
+### Mobile OAuth/OIDC (Phase 1)
+
+Spring Authorization Server reuses the same accounts and password hashes. The public native client `core-banking-mobile` uses Authorization Code + S256 PKCE, with development issuer `http://localhost:8080` and exact callback `com.corebanking.mobile:/oauth2/callback`. There is no mobile client secret or refresh-token grant; the app reauthorizes through the system browser after token expiry.
+
+- Discovery: `/.well-known/openid-configuration`; authorization: `/oauth2/authorize`; token exchange: `/oauth2/token`; public keys: `/oauth2/jwks`.
+- OAuth browser login: `/oauth/login`. Angular's `/login` and session flow remain unchanged.
+- Mobile APIs: prepend `/api/mobile` to the original service path (for example `/api/mobile/accounts/getAccount`).
+- Bearer-only mobile chains validate signature, issuer, audience `core-banking-api`, expiry and `banking` scope, then enforce existing business roles. Session cookies do not authenticate mobile routes, and bearer tokens do not authenticate web routes.
+- Access tokens expire after five minutes. Persistent PostgreSQL authorization records and signing keys survive Authentication restarts.
+- Mobile identity: `GET /api/mobile/api/v1/auth/me`; mobile grant logout: `POST /api/mobile/api/v1/auth/logout`. Logout removes the server grant but does not instantly revoke a self-contained access JWT; it remains usable until expiry plus clock skew. Web logout independently invalidates its Redis session immediately.
+- **Phase 1:** mobile transaction/deposit/withdrawal mutations require `transactions.write` as well as `banking`, but return **503 before persistence** even with both scopes. Missing scopes return 403. Existing browser money workflows remain unchanged.
+- Account mobile balance updates, nonzero opening balances and account deletion are also gated; zero-balance account creation and read-only operations remain available.
+- **Phase 2 is not implemented:** backend-signed Kafka commands, consumer verification, durable replay/idempotency protection and transactional outbox processing are required before enabling mobile money operations. Scopes alone do not make an unsigned Kafka message trustworthy.
+
+Start additional mobile services with `docker compose up -d --build transaction-service loan-service`. Gateway routing preserves the entire mobile path, and Docker DNS is re-resolved so backend recreation does not leave stale gateway addresses. The backend Dockerfiles build local working-tree sources rather than cloning remote `main`.
+
+See the [Authentication README](./Authentication/README.md) for request parameters, environment overrides, production key-management limitations and physical-device setup. The development `localhost` issuer is not reachable as your PC from a physical phone; use a consistent reachable hostname and HTTPS for production.
+
 ## 🧪 API Testing with Postman
 
 The project includes ready-to-use Postman collections and environment files for testing all core banking APIs in both Docker Compose and Kubernetes environments.
@@ -377,11 +428,13 @@ The project includes ready-to-use Postman collections and environment files for 
    - Use the "Complete Workflow" folder for end-to-end tests.
 
 ### Tips
+
 - Customer/account IDs are auto-populated by test scripts; authentication uses Postman's cookie jar, not a token variable.
 - Use the "Pre-request Script" and "Tests" tabs in Postman for automation and validation.
 - See `postman/README.md` for advanced usage and troubleshooting.
 
 ### Example Endpoints Covered
+
 - Authentication: Login, current session (`/me`), logout
 - Account: Create, get, update, delete, check balance
 - Customer: Register, update, validate
@@ -392,18 +445,21 @@ For more details, see the `postman/README.md` file in the repository.
 The system includes comprehensive Postman collections for testing both Docker Compose and Kubernetes deployments:
 
 ### Collections Available
+
 - **[CoreBank-Docker-Compose.postman_collection.json](./postman/CoreBank-Docker-Compose.postman_collection.json)**: For localhost testing (Docker Compose)
 - **[CoreBank-Kubernetes.postman_collection.json](./postman/CoreBank-Kubernetes.postman_collection.json)**: For Ingress-based testing (Kubernetes)
 
 ### Environment Files
-- **Docker Compose**: 
+
+- **Docker Compose**:
   - `Docker-Compose-Admin-Core-Banking.postman_environment.json`
   - `Docker-Compose-Client-Core-Banking.postman_environment.json`
-- **Kubernetes**: 
+- **Kubernetes**:
   - `Kubernetes-Admin-Core-Banking.postman_environment.json`
   - `Kubernetes-Client-Core-Banking.postman_environment.json`
 
 ### Quick Setup
+
 1. **Import Collection**: Choose the appropriate collection for your deployment
 2. **Import Environment**: Select admin or client environment file
 3. **Configure Hosts** (Kubernetes only): Add entries to `/etc/hosts`:
@@ -418,6 +474,7 @@ The system includes comprehensive Postman collections for testing both Docker Co
 4. **Test**: Run the "Complete Workflow" folder for end-to-end testing
 
 ### Available Endpoints
+
 - **🔐 Authentication Service**: Login, current session (`/me`), logout, health checks
 - **👤 Customer Service**: CRUD operations for customer management
 - **🏦 Account Service**: Account creation, balance checks, status updates
@@ -425,10 +482,12 @@ The system includes comprehensive Postman collections for testing both Docker Co
 - **🔍 Discovery Service**: Service registry status, Eureka dashboard
 
 ### Authentication
+
 - **Admin**: `admin@example.com` / `SecureAdminP@ssw0rd!`
 - **Client**: `john.doe@example.com` / `123456`
 
 ### Automated Features
+
 - **Session Management**: Postman keeps the `SESSION` cookie and copies `XSRF-TOKEN` into the `X-XSRF-TOKEN` header
 - **Variable Handling**: Customer IDs and account numbers auto-populated
 - **Health Checks**: All services include health monitoring endpoints
@@ -439,6 +498,7 @@ For detailed instructions, see [Postman Collections README](./postman/README.md)
 ## 🔧 Configuration & Environment
 
 ### Load Balancer Configuration
+
 The system includes optimized load balancing settings in `loadbalancer.properties`:
 
 ```properties
@@ -496,11 +556,13 @@ eureka.client.registry-fetch-interval-seconds=30
 ### Environment Variables
 
 #### Docker Compose Environment
+
 - **PostgreSQL**: `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
 - **Redis** (cache + shared sessions): `spring.data.redis.host`, `spring.data.redis.port`
 - **Kafka**: `KAFKA_ZOOKEEPER_CONNECT`, `KAFKA_LISTENERS`, `KAFKA_ADVERTISED_LISTENERS`
 
 #### Kubernetes Environment
+
 - **Database Connection**: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`
 - **Service Discovery**: `EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE`
 - **Load Balancing**: `EUREKA_INSTANCE_PREFER_IP_ADDRESS`, `SPRING_CLOUD_LOADBALANCER_RIBBON_ENABLED`
@@ -509,8 +571,9 @@ eureka.client.registry-fetch-interval-seconds=30
 ## 🏥 Health Checks & Monitoring
 
 ### Optimized Health Check Configuration
+
 - **Discovery Service**: HTTP `/actuator/health` (standalone server mode)
-- **Account Service**: HTTP `/actuator/health` (authentication bypass)  
+- **Account Service**: HTTP `/actuator/health` (authentication bypass)
 - **Customer Service**: HTTP `/actuator/health` (authentication bypass)
 - **Transaction Service**: HTTP `/actuator/health` (bean override enabled)
 - **Authentication Service**: TCP port 8084 (security-optimized)
@@ -518,12 +581,14 @@ eureka.client.registry-fetch-interval-seconds=30
 - **Loan Service**: HTTP `/actuator/health` (reactive WebFlux)
 
 ### Startup & Resource Optimization
+
 - **Reduced timeouts**: 3-minute deployment timeouts (was 10 minutes)
 - **Efficient probes**: Combined deployment and pod readiness checks
 - **Resource-aware**: CPU and memory requests tuned for scheduling
 - **Fast startup**: TCP probes for authentication-protected services
 
 ### Monitoring Capabilities
+
 ```bash
 # Check system health
 kubectl get pods -n core-bank
@@ -542,6 +607,7 @@ kubectl logs -l app=account-service -n core-bank --follow
 ### Deployment Issues
 
 #### Issue: "Insufficient CPU/Memory"
+
 ```bash
 # Check resource usage
 kubectl describe nodes
@@ -552,30 +618,36 @@ kubectl scale deployment <service-name> --replicas=1 -n core-bank
 ```
 
 #### Issue: "Authentication Service Readiness Probe Failed"
+
 - **Root Cause**: HTTP health endpoints protected by authentication
 - **Solution**: Uses TCP probes instead of HTTP probes (already implemented)
 
-#### Issue: "Transaction Service Bean Definition Conflict" 
+#### Issue: "Transaction Service Bean Definition Conflict"
+
 - **Root Cause**: Duplicate `loadBalancedWebClientBuilder` beans
 - **Solution**: Added `SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING=true` (already implemented)
 
 #### Issue: "Discovery Service Connection Refused"
+
 - **Root Cause**: Eureka server trying to register as client to itself
 - **Solution**: Disabled client registration with `EUREKA_CLIENT_REGISTER_WITH_EUREKA=false`
 
 ### Performance Optimization
 
 #### Fast Health Checks
+
 - Reduced initial delays and timeouts
 - TCP-based probes for secured services
 - Combined deployment and readiness checks
 
-#### Resource Efficiency  
+#### Resource Efficiency
+
 - Right-sized CPU/memory requests
 - Horizontal Pod Autoscaling (HPA) enabled
 - Load balancer caching and circuit breakers
 
 #### Startup Time Optimization
+
 - 80% faster deployment times (3 min vs 15 min)
 - Parallel service deployment where possible
 - Optimized Docker image caching
@@ -583,12 +655,14 @@ kubectl scale deployment <service-name> --replicas=1 -n core-bank
 ## 📊 System Performance
 
 ### Deployment Metrics
+
 - **Total deployment time**: ~5-8 minutes (optimized from 20+ minutes)
 - **Service startup time**: 30-90 seconds per service
 - **Resource efficiency**: 92% CPU, 93% memory utilization
 - **Health check frequency**: 10-30 second intervals
 
 ### Scaling Capabilities
+
 - **Horizontal scaling**: 1-10 pods per service
 - **Auto-scaling triggers**: CPU 70%, Memory 80%
 - **Load balancing**: Round-robin with health checks
@@ -596,7 +670,7 @@ kubectl scale deployment <service-name> --replicas=1 -n core-bank
 
 ## 🔐 Security Features
 
-- **Session Authentication**: Spring Session in Redis, HttpOnly `SESSION` cookie, role-based access control (ADMIN, MANAGER, USER)
+- **Session Authentication**: Spring Session in Redis, HttpOnly `SESSION` cookie, role-based access control (ADMIN, MANAGER, CUSTOMER)
 - **CSRF Protection**: State-changing requests require the `X-XSRF-TOKEN` header
 - **Secured Endpoints**: Account, Customer, Transaction, and Loan APIs require a valid shared session; Investment integration is pending
 - **Health Endpoint Security**: Bypassed for Kubernetes probes
@@ -609,30 +683,35 @@ kubectl scale deployment <service-name> --replicas=1 -n core-bank
 This Core Bank System with the following features:
 
 ### ✅ High Availability
+
 - Multi-replica deployments with HPA
 - Health checks and automatic failover
 - Load balancing across service instances
 - Circuit breaker patterns for resilience
 
 ### ✅ Observability
+
 - Comprehensive monitoring with Prometheus
-- Visual dashboards with Grafana  
+- Visual dashboards with Grafana
 - Centralized logging capabilities
 - Performance metrics and alerting
 
 ### ✅ Security
+
 - Session-based authentication and authorization
 - Role-based access control (RBAC)
 - Secured inter-service communication
 - Database credential management
 
 ### ✅ Scalability
+
 - Horizontal Pod Autoscaling (HPA)
 - Event-driven architecture with Kafka
 - Caching layer with Redis
 - Microservices architecture
 
 ### ✅ DevOps Ready
+
 - Container-native deployment
 - Kubernetes orchestration
 - Infrastructure as Code
@@ -645,6 +724,7 @@ The Core Bank System includes comprehensive monitoring and observability with **
 ### 🚀 Quick Setup
 
 #### Option 1: Automated Setup (Recommended)
+
 ```bash
 # 1. Start the system with monitoring stack
 docker-compose up -d
@@ -658,6 +738,7 @@ cd monitoring/grafana
 ```
 
 #### Option 2: Manual Setup
+
 1. **Access Grafana**: http://localhost:3000
 2. **Login**: Username: `myuser`, Password: `mypassword`
 3. **Add Prometheus Data Source**:
@@ -668,9 +749,11 @@ cd monitoring/grafana
 ### 📈 Available Dashboards
 
 #### 1. **Core Bank System - Microservices Overview**
+
 **Location**: `monitoring/grafana/dashboards/core-bank-overview.json`
 
 **Key Metrics**:
+
 - ✅ **Service Health Status** - Real-time UP/DOWN status for all microservices
 - 📊 **HTTP Request Rate** - Requests per second across all services
 - ⏱️ **Response Time (95th percentile)** - Performance monitoring
@@ -680,9 +763,11 @@ cd monitoring/grafana
 - ❌ **Error Rate (4xx/5xx)** - HTTP error tracking
 
 #### 2. **Core Bank System - Service Details**
+
 **Location**: `monitoring/grafana/dashboards/service-details.json`
 
 **Features**:
+
 - 🎯 **Service-specific drill-down** with dynamic service selection
 - 📊 **Detailed HTTP metrics** by status code and endpoint
 - 📈 **Response time distribution** (50th, 95th, 99th percentiles)
@@ -691,9 +776,11 @@ cd monitoring/grafana
 - 🔗 **Database connection details** (active, idle, pending, max)
 
 #### 3. **Core Bank System - Business Metrics**
+
 **Location**: `monitoring/grafana/dashboards/business-metrics.json`
 
 **Business KPIs**:
+
 - 🏦 **Account Operations Rate** - Account creation, lookup, balance checks
 - 💰 **Transaction Rate** - Deposits, withdrawals, transfers
 - 👥 **Customer Operations Rate** - Customer management activities
@@ -704,9 +791,11 @@ cd monitoring/grafana
 ### 🛠️ Configuration Details
 
 #### Prometheus Configuration
+
 **File**: `monitoring/prometheus/prometheus.yml`
 
 **Monitored Services**:
+
 ```yaml
 - Discovery Service (Port 8761)    # Service registry metrics
 - Account Service (Port 8081)      # Account operations metrics  
@@ -721,12 +810,14 @@ cd monitoring/grafana
 **Scrape Interval**: 15 seconds
 
 #### Grafana Provisioning
+
 **Data Source**: `monitoring/grafana/provisioning/datasources/prometheus.yml`
 **Dashboards**: `monitoring/grafana/provisioning/dashboards/dashboards.yml`
 
 ### 📋 Key Metrics Explained
 
 #### System Health Metrics
+
 - **`up`** - Service availability (1=UP, 0=DOWN)
 - **`http_server_requests_seconds_count`** - HTTP request count
 - **`http_server_requests_seconds_bucket`** - Response time histograms
@@ -735,6 +826,7 @@ cd monitoring/grafana
 - **`hikaricp_connections_*`** - Database connection pool metrics
 
 #### Business Metrics
+
 - **Account Operations**: Creation, lookup, balance checks, updates
 - **Transaction Operations**: Deposits, withdrawals, transfers, history
 - **Customer Operations**: Registration, profile updates, validation
@@ -743,17 +835,19 @@ cd monitoring/grafana
 ### 🔧 Customization
 
 #### Adding Custom Metrics
+
 1. **In Spring Boot Services**:
+
    ```java
    @Autowired
    private MeterRegistry meterRegistry;
-   
+
    // Custom counter
    Counter.builder("bank.transactions.total")
        .tag("type", "deposit")
        .register(meterRegistry)
        .increment();
-   
+
    // Custom timer
    Timer.Sample sample = Timer.start(meterRegistry);
    // ... business logic ...
@@ -761,10 +855,10 @@ cd monitoring/grafana
        .tag("operation", "account.creation")
        .register(meterRegistry));
    ```
-
 2. **Add to Dashboard**: Create new panels using PromQL queries
 
 #### Custom Alerts (Prometheus Alertmanager)
+
 ```yaml
 # Example alert rule
 groups:
@@ -784,37 +878,39 @@ groups:
 #### Common Issues
 
 1. **No Data in Dashboards**
+
    ```bash
    # Check Prometheus targets
    curl http://localhost:9090/api/v1/targets
-   
+
    # Verify service metrics endpoints
    curl http://localhost:8081/actuator/prometheus
    ```
-
 2. **Services Not Discovered**
+
    - Verify `/actuator/prometheus` endpoints are accessible
    - Check Docker network connectivity
    - Confirm services have Spring Boot Actuator dependency
-
 3. **Dashboard Import Failed**
+
    - Ensure Prometheus data source exists
    - Check dashboard JSON syntax
    - Verify Grafana API access (username/password)
-
 4. **YAML Validation Errors in VS Code**
+
    ```
    ❌ Property datasources is not allowed.
    ❌ Property apiVersion is not allowed.
    ```
-   
+
    **Issue**: VS Code applies Kubernetes schema to Grafana provisioning files
-   
+
    **Solutions**:
+
    - ✅ **Use JSON format**: `monitoring/grafana/provisioning/datasources/prometheus.json` (already created)
    - ✅ **Ignore warnings**: Files work correctly despite validation errors
    - ✅ **See detailed fix**: `monitoring/YAML_VALIDATION_FIX.md`
-   
+
    **Status**: ✅ Both JSON and YAML versions work correctly
 
 ### 📊 Accessing Dashboards
